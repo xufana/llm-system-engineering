@@ -233,7 +233,8 @@ main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
 .kv{display:grid; grid-template-columns:auto 1fr; gap:.3rem 1rem; font-size:.9rem}
 .kv dt{color:var(--ink-2)} .kv dd{margin:0; font-family:var(--font-mono); font-size:.88rem}
 #selfhost dd{font-family:var(--font-body); font-size:.92rem}
-.hw{background:var(--accent-soft); border-radius:12px; padding:1rem 1.2rem; max-width:72ch}
+.hw{background:var(--accent-soft); border-radius:12px; padding:1.1rem 1.4rem; margin-top:1.4rem}
+.hw ol{max-width:80ch}
 .hw h3{margin-top:0}
 footer{max-width:1180px; margin:0 auto; padding:1rem 1.2rem 3rem; font-size:.8rem; color:var(--ink-3)}
 
@@ -288,6 +289,17 @@ body.present .stage{font-size:1rem; margin:1rem 0}
 .wsq.ok{background:var(--ok-soft)} .wsq.bad{background:var(--bad-soft)}
 .wsq input{width:100%}
 .teacher{display:none}
+/* question to the audience with a hidden answer */
+.qa{margin:1.4rem 0 1.8rem; border:1px solid var(--line-2); border-radius:12px; background:var(--surface); box-shadow:var(--shadow)}
+.qa summary{cursor:pointer; list-style:none; padding:.8rem 1.1rem; display:flex; gap:.7rem; align-items:baseline}
+.qa summary::-webkit-details-marker{display:none}
+.qa summary .tag{font-family:var(--font-mono); font-size:.72rem; color:var(--warm); background:var(--warm-soft); padding:.15rem .5rem; border-radius:4px; letter-spacing:.05em; white-space:nowrap}
+.qa summary .q{font-family:var(--font-head); font-size:1.05rem}
+.qa summary .hintx{margin-left:auto; font-size:.78rem; color:var(--ink-3); white-space:nowrap}
+.qa[open] summary .hintx{display:none}
+.qa .a{padding:.85rem 1.1rem .4rem; font-size:.95rem; border-top:1px solid var(--line); columns:2; column-gap:2.2rem}
+@media (max-width:860px){.qa .a{columns:1}}
+.qa .a p{margin:0 0 .6rem; break-inside:avoid}
 body.teacher .teacher{display:block}
 .calc-out{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:.6rem}
 
@@ -320,7 +332,7 @@ body.teacher .teacher{display:block}
   <p class="lede">Что физически происходит на одном шаге генерации, почему prefill и decode — разные режимы, из чего складываются TTFT, TPOT и цена токена, и как на салфетке посчитать, сколько запросов поместится на GPU.</p>
   <div class="thesis">Каждый выходной токен — полный проход через все веса. Prefill упирается в вычисления, decode — в пропускную способность памяти. KV-cache ограничивает число одновременных запросов. Всё это уже реализовано в vLLM, SGLang и llama.cpp — руками пишется только чтобы понять.</div>
   <div class="prose">
-    <p class="kicker">Сквозной пример</p>
+    <p class="kicker">Зафиксируем сетап:</p>
     <dl class="kv">
       <dt>Модель</dt><dd>Llama-3-8B: L = 32, d = 4096, 32 heads × 128, 8 KV-heads (GQA), d_ff = 14336, словарь 128 256</dd>
       <dt>GPU</dt><dd>H100 80 ГБ: HBM ≈ 3.35 ТБ/с, bf16 ≈ 990 TFLOPS пиковых (реально достижимо 40–60 %)</dd>
@@ -333,12 +345,12 @@ body.teacher .teacher{display:block}
 <section id="s1" class="sec" data-short="Мост">
   <div class="sec-head">
     <h2>Три наблюдения с прошлой пары</h2>
-    <p class="lede">Сегодня каждое из них получит физическое объяснение.</p>
+    <p class="lede">Помните про кэширование? И про то, как модель что-то генерирует? Сегодня каждое явление с прошлой пары получит физическое объяснение.</p>
   </div>
   <div class="cols">
-    <div class="card"><div class="k">Наблюдение 1</div>У провайдеров выходной токен стоит в несколько раз дороже входного.</div>
-    <div class="card"><div class="k">Наблюдение 2</div>Первый токен приходит быстро, а дальше модель «печатает» с постоянной скоростью.</div>
-    <div class="card"><div class="k">Наблюдение 3</div>Тот же промпт второй раз — дешевле (prompt caching).</div>
+    <div class="card"><div class="k">Воспоминание 1</div>У провайдеров выходной токен стоит в несколько раз дороже входного.</div>
+    <div class="card"><div class="k">Воспоминание 2</div>Первый токен приходит быстро, а дальше модель «печатает» с постоянной скоростью.</div>
+    <div class="card"><div class="k">Воспоминание 3</div>Тот же промпт второй раз — дешевле (prompt caching).</div>
   </div>
 </section>
 
@@ -347,6 +359,120 @@ body.teacher .teacher{display:block}
     <h2>Модель как стопка весов</h2>
     <p class="lede">Decoder-only transformer = embedding → L × [norm → attention → norm → FFN] → norm → lm_head. Во время инференса это набор матриц, которые нужно где-то хранить и через которые нужно прогнать данные.</p>
   </div>
+  <figure class="figure" id="attnFig">
+    <svg viewBox="0 0 980 500" role="img" aria-label="Блок multi-head attention: вход X умножается на W_Q, W_K, W_V каждой головы, внутри головы считается softmax(QKᵀ/√d_h)·V, результаты Z_i склеиваются и умножаются на W_O">
+<defs><pattern id="cell12" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0H0V12" fill="none" stroke="var(--surface)" stroke-width="1.4"/></pattern><pattern id="cell14" width="14" height="14" patternUnits="userSpaceOnUse"><path d="M14 0H0V14" fill="none" stroke="var(--surface)" stroke-width="1.4"/></pattern><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="var(--ink-3)"/></marker></defs>
+<text x="16" y="24" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="600" fill="var(--ink)">1) Вход: T токенов,</text>
+<text x="16" y="40" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink)">каждый — вектор</text>
+<text x="16" y="56" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink)">длины d</text>
+<text x="160" y="24" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="600" fill="var(--ink)">2) Умножаем X на</text>
+<text x="160" y="40" font-family="var(--font-body)" font-size="12" font-weight="600" fill="var(--ink)"><tspan fill="#9b5de5">W_Q</tspan>, <tspan fill="var(--s2)">W_K</tspan>, <tspan fill="var(--s1)">W_V</tspan> каждой</text>
+<text x="160" y="56" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink)">из h голов (h = 32, d_h = 128)</text>
+<text x="345" y="24" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="600" fill="var(--ink)">3) Внутри головы:</text>
+<text x="345" y="40" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink)">softmax(Q·Kᵀ / √d_h) · V — единственное место,</text>
+<text x="345" y="56" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink)">где токены смотрят друг на друга</text>
+<text x="650" y="24" font-family="var(--font-body)" font-size="12" font-weight="600" fill="var(--ink)">4) Склеиваем <tspan fill="#d9488f">Z₀…Z₃₁</tspan>, умножаем на <tspan fill="#d9488f">W_O</tspan></text>
+<text x="650" y="40" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink)">выход блока — снова [T, d],</text>
+<text x="650" y="56" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink)">дальше residual, norm, FFN</text>
+<text x="58" y="207" text-anchor="end" font-family="var(--font-body)" font-size="11" font-weight="500" fill="var(--s3)">модель</text>
+<text x="58" y="221" text-anchor="end" font-family="var(--font-body)" font-size="11" font-weight="500" fill="var(--s3)">читает</text>
+<text x="58" y="235" text-anchor="end" font-family="var(--font-body)" font-size="11" font-weight="500" fill="var(--s3)">веса</text>
+<text x="68" y="187" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="var(--s3)">X</text>
+<g transform="translate(68,195)"><rect width="70" height="42" fill="var(--s3)" fill-opacity=".28" stroke="var(--s3)" stroke-width="1.2"/><rect width="70" height="42" fill="url(#cell14)"/></g>
+<text x="68" y="250" text-anchor="start" class="svgtxt m" style="font-size:10px">[T, d]</text>
+<text x="68" y="264" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-3)">decode: T = 1</text>
+<text x="68" y="276" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-3)">(одна строка)</text>
+<line x1="140" y1="216" x2="156" y2="130" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr)"/>
+<line x1="140" y1="216" x2="156" y2="250" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr)"/>
+<line x1="140" y1="216" x2="156" y2="390" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr)"/>
+<g transform="translate(178,108)"><rect width="60" height="84" fill="var(--s1)" fill-opacity=".28" stroke="var(--s1)" stroke-width="1.2"/><rect width="60" height="84" fill="url(#cell12)"/></g>
+<g transform="translate(169,99)"><rect width="60" height="84" fill="var(--s2)" fill-opacity=".28" stroke="var(--s2)" stroke-width="1.2"/><rect width="60" height="84" fill="url(#cell12)"/></g>
+<g transform="translate(160,90)"><rect width="60" height="84" fill="#9b5de5" fill-opacity=".28" stroke="#9b5de5" stroke-width="1.2"/><rect width="60" height="84" fill="url(#cell12)"/></g>
+<text x="252" y="100" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="#9b5de5">W<tspan dy="4" font-size="9">Q,0</tspan></text>
+<text x="252" y="120" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="var(--s2)">W<tspan dy="4" font-size="9">K,0</tspan></text>
+<text x="252" y="140" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="var(--s1)">W<tspan dy="4" font-size="9">V,0</tspan></text>
+<text x="160" y="204" text-anchor="start" class="svgtxt m" style="font-size:10px">[d, d_h] × 3</text>
+<line x1="300" y1="138" x2="326" y2="138" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr)"/>
+<g transform="translate(348,132)"><rect width="42" height="42" fill="var(--s1)" fill-opacity=".28" stroke="var(--s1)" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<g transform="translate(339,123)"><rect width="42" height="42" fill="var(--s2)" fill-opacity=".28" stroke="var(--s2)" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<g transform="translate(330,114)"><rect width="42" height="42" fill="#9b5de5" fill-opacity=".28" stroke="#9b5de5" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<text x="398" y="118" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="#9b5de5">Q<tspan dy="4" font-size="9">0</tspan></text>
+<text x="398" y="136" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="var(--s2)">K<tspan dy="4" font-size="9">0</tspan></text>
+<text x="398" y="154" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="var(--s1)">V<tspan dy="4" font-size="9">0</tspan></text>
+<text x="330" y="192" text-anchor="start" class="svgtxt m" style="font-size:10px">[T, d_h]</text>
+<line x1="430" y1="138" x2="556" y2="138" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr)"/>
+<text x="493" y="130" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">softmax(Q·Kᵀ/√d_h)·V</text>
+<text x="493" y="152" text-anchor="middle" font-family="var(--font-body)" font-size="9" font-weight="400" fill="var(--ink-3)">скоры [T, T]</text>
+<text x="560" y="108" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="#d9488f">Z<tspan dy="4" font-size="9">0</tspan></text>
+<g transform="translate(560,117)"><rect width="42" height="42" fill="#d9488f" fill-opacity=".28" stroke="#d9488f" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<text x="560" y="171" text-anchor="start" class="svgtxt m" style="font-size:10px">[T, d_h]</text>
+<rect x="336" y="120" width="58" height="56" rx="4" fill="none" stroke="var(--s2)" stroke-dasharray="3 2" stroke-width="1"/>
+<text x="365" y="104" text-anchor="middle" font-family="var(--font-body)" font-size="9" font-weight="600" fill="var(--s2)">K, V → в KV-cache</text>
+<g transform="translate(178,228)"><rect width="60" height="84" fill="var(--s1)" fill-opacity=".28" stroke="var(--s1)" stroke-width="1.2"/><rect width="60" height="84" fill="url(#cell12)"/></g>
+<g transform="translate(169,219)"><rect width="60" height="84" fill="var(--s2)" fill-opacity=".28" stroke="var(--s2)" stroke-width="1.2"/><rect width="60" height="84" fill="url(#cell12)"/></g>
+<g transform="translate(160,210)"><rect width="60" height="84" fill="#9b5de5" fill-opacity=".28" stroke="#9b5de5" stroke-width="1.2"/><rect width="60" height="84" fill="url(#cell12)"/></g>
+<text x="252" y="220" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="#9b5de5">W<tspan dy="4" font-size="9">Q,1</tspan></text>
+<text x="252" y="240" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="var(--s2)">W<tspan dy="4" font-size="9">K,1</tspan></text>
+<text x="252" y="260" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="var(--s1)">W<tspan dy="4" font-size="9">V,1</tspan></text>
+<text x="160" y="324" text-anchor="start" class="svgtxt m" style="font-size:10px">[d, d_h] × 3</text>
+<line x1="300" y1="258" x2="326" y2="258" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr)"/>
+<g transform="translate(348,252)"><rect width="42" height="42" fill="var(--s1)" fill-opacity=".28" stroke="var(--s1)" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<g transform="translate(339,243)"><rect width="42" height="42" fill="var(--s2)" fill-opacity=".28" stroke="var(--s2)" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<g transform="translate(330,234)"><rect width="42" height="42" fill="#9b5de5" fill-opacity=".28" stroke="#9b5de5" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<text x="398" y="238" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="#9b5de5">Q<tspan dy="4" font-size="9">1</tspan></text>
+<text x="398" y="256" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="var(--s2)">K<tspan dy="4" font-size="9">1</tspan></text>
+<text x="398" y="274" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="var(--s1)">V<tspan dy="4" font-size="9">1</tspan></text>
+<text x="330" y="312" text-anchor="start" class="svgtxt m" style="font-size:10px">[T, d_h]</text>
+<line x1="430" y1="258" x2="556" y2="258" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr)"/>
+<text x="493" y="250" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">softmax(Q·Kᵀ/√d_h)·V</text>
+<text x="493" y="272" text-anchor="middle" font-family="var(--font-body)" font-size="9" font-weight="400" fill="var(--ink-3)">скоры [T, T]</text>
+<text x="560" y="228" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="#d9488f">Z<tspan dy="4" font-size="9">1</tspan></text>
+<g transform="translate(560,237)"><rect width="42" height="42" fill="#d9488f" fill-opacity=".28" stroke="#d9488f" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<text x="560" y="291" text-anchor="start" class="svgtxt m" style="font-size:10px">[T, d_h]</text>
+<g transform="translate(178,368)"><rect width="60" height="84" fill="var(--s1)" fill-opacity=".28" stroke="var(--s1)" stroke-width="1.2"/><rect width="60" height="84" fill="url(#cell12)"/></g>
+<g transform="translate(169,359)"><rect width="60" height="84" fill="var(--s2)" fill-opacity=".28" stroke="var(--s2)" stroke-width="1.2"/><rect width="60" height="84" fill="url(#cell12)"/></g>
+<g transform="translate(160,350)"><rect width="60" height="84" fill="#9b5de5" fill-opacity=".28" stroke="#9b5de5" stroke-width="1.2"/><rect width="60" height="84" fill="url(#cell12)"/></g>
+<text x="252" y="360" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="#9b5de5">W<tspan dy="4" font-size="9">Q,31</tspan></text>
+<text x="252" y="380" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="var(--s2)">W<tspan dy="4" font-size="9">K,31</tspan></text>
+<text x="252" y="400" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="var(--s1)">W<tspan dy="4" font-size="9">V,31</tspan></text>
+<text x="160" y="464" text-anchor="start" class="svgtxt m" style="font-size:10px">[d, d_h] × 3</text>
+<line x1="300" y1="398" x2="326" y2="398" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr)"/>
+<g transform="translate(348,392)"><rect width="42" height="42" fill="var(--s1)" fill-opacity=".28" stroke="var(--s1)" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<g transform="translate(339,383)"><rect width="42" height="42" fill="var(--s2)" fill-opacity=".28" stroke="var(--s2)" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<g transform="translate(330,374)"><rect width="42" height="42" fill="#9b5de5" fill-opacity=".28" stroke="#9b5de5" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<text x="398" y="378" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="#9b5de5">Q<tspan dy="4" font-size="9">31</tspan></text>
+<text x="398" y="396" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="var(--s2)">K<tspan dy="4" font-size="9">31</tspan></text>
+<text x="398" y="414" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="var(--s1)">V<tspan dy="4" font-size="9">31</tspan></text>
+<text x="330" y="452" text-anchor="start" class="svgtxt m" style="font-size:10px">[T, d_h]</text>
+<line x1="430" y1="398" x2="556" y2="398" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr)"/>
+<text x="493" y="390" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">softmax(Q·Kᵀ/√d_h)·V</text>
+<text x="493" y="412" text-anchor="middle" font-family="var(--font-body)" font-size="9" font-weight="400" fill="var(--ink-3)">скоры [T, T]</text>
+<text x="560" y="368" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="13" fill="#d9488f">Z<tspan dy="4" font-size="9">31</tspan></text>
+<g transform="translate(560,377)"><rect width="42" height="42" fill="#d9488f" fill-opacity=".28" stroke="#d9488f" stroke-width="1.2"/><rect width="42" height="42" fill="url(#cell14)"/></g>
+<text x="560" y="431" text-anchor="start" class="svgtxt m" style="font-size:10px">[T, d_h]</text>
+<text x="200" y="344" text-anchor="middle" font-family="var(--font-body)" font-size="18" font-weight="600" fill="var(--ink-3)">⋯</text>
+<text x="360" y="344" text-anchor="middle" font-family="var(--font-body)" font-size="18" font-weight="600" fill="var(--ink-3)">⋯</text>
+<text x="581" y="344" text-anchor="middle" font-family="var(--font-body)" font-size="18" font-weight="600" fill="var(--ink-3)">⋯</text>
+<text x="160" y="490" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">W_Q, W_K, W_V, W_O — веса: лежат в HBM и читаются на каждом шаге; всё остальное — активации</text>
+<path d="M612 116 H626 V434 H612" fill="none" stroke="var(--ink-3)" stroke-width="1.3"/>
+<line x1="602" y1="138" x2="612" y2="138" stroke="var(--ink-3)" stroke-width="1.3"/>
+<line x1="602" y1="258" x2="612" y2="258" stroke="var(--ink-3)" stroke-width="1.3"/>
+<line x1="602" y1="398" x2="612" y2="398" stroke="var(--ink-3)" stroke-width="1.3"/>
+<text x="637" y="278" transform="rotate(-90 637 278)" text-anchor="middle" font-family="var(--font-body)" font-size="10" fill="var(--ink-2)">concat</text>
+<text x="637" y="447" text-anchor="middle" class="svgtxt m" style="font-size:10px">[T, h·d_h]</text>
+<line x1="650" y1="275" x2="686" y2="275" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr)"/>
+<text x="700" y="100" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="#d9488f">W<tspan dy="4" font-size="9">O</tspan></text>
+<g transform="translate(700,110)"><rect width="60" height="240" fill="#d9488f" fill-opacity=".28" stroke="#d9488f" stroke-width="1.2"/><rect width="60" height="240" fill="url(#cell12)"/></g>
+<text x="700" y="364" text-anchor="start" class="svgtxt m" style="font-size:10px">[h·d_h, d]</text>
+<line x1="770" y1="275" x2="806" y2="275" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr)"/>
+<text x="788" y="268" text-anchor="middle" font-family="var(--font-body)" font-size="14" font-weight="400" fill="var(--ink-2)">×</text>
+<text x="815" y="245" text-anchor="start" font-family="var(--font-body)" font-weight="600" font-size="14" fill="#d9488f">Z</text>
+<g transform="translate(815,254)"><rect width="70" height="42" fill="#d9488f" fill-opacity=".28" stroke="#d9488f" stroke-width="1.2"/><rect width="70" height="42" fill="url(#cell14)"/></g>
+<text x="815" y="310" text-anchor="start" class="svgtxt m" style="font-size:10px">[T, d]</text>
+<text x="815" y="324" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-3)">→ residual, norm, FFN</text>
+</svg>
+    <figcaption>Блок attention одного слоя. Матрицы с индексами W — параметры: их <b>читают из памяти на каждом шаге</b>, и именно они попадают в таблицу параметров ниже. X, Q, V, Z — активации, живут только внутри шага. K и V — единственные активации, которые сохраняют между шагами: это KV-cache. В Llama-3-8B W_K и W_V есть только для 8 голов (GQA), четыре головы Q делят одну пару K/V — поэтому в таблице они в четыре раза меньше W_Q.</figcaption>
+  </figure>
   <div class="cols">
     <div>
       <p class="kicker">Считаем параметры по конфигу — вместе со студентами</p>
@@ -394,6 +520,191 @@ body.teacher .teacher{display:block}
     <h2>Prefill и decode — два разных режима</h2>
     <p class="lede"><b>Prefill:</b> промпт из T токенов обрабатывается за один проход, тензор [T, d] умножается на веса — большие матричные умножения, GPU загружен. Результат — KV-cache для T позиций и первый токен. Это TTFT. <b>Decode:</b> каждый следующий токен — проход вектора [1, d] через все веса. GPU считает быстрее, чем память отдаёт веса, значит время шага ≈ объём весов / пропускная способность памяти.</p>
   </div>
+  <figure class="figure" id="pdFig">
+    <svg viewBox="0 0 980 432" role="img" aria-label="Prefill: матрица [T, d] умножается на веса, веса читаются один раз на T токенов, GPU загружен. Decode: вектор [1, d] умножается на те же веса, веса читаются заново на каждый токен, GPU простаивает. Внизу шкала времени: TTFT около 80 мс и 100 шагов decode по 5 мс">
+<defs><pattern id="cell12" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0H0V12" fill="none" stroke="var(--surface)" stroke-width="1.4"/></pattern><marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+<text x="16" y="22" font-family="var(--font-body)" font-size="13" font-weight="600" fill="var(--s3)">Prefill<tspan fill="var(--ink)" font-weight="400"> · промпт из T токенов за один проход</tspan></text>
+<text x="16" y="38" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink-2)">compute-bound: GPU считает</text>
+<text x="26" y="68" text-anchor="start" font-family="var(--font-body)" font-size="13" font-weight="600" fill="var(--s3)">X</text>
+<g transform="translate(26,76)"><rect width="60" height="72" fill="var(--s3)" fill-opacity=".28" stroke="var(--s3)" stroke-width="1.2"/><rect width="60" height="72" fill="url(#cell12)"/></g>
+<text x="26" y="162" text-anchor="start" font-family="var(--font-mono)" font-size="10" font-weight="400" fill="var(--ink-2)">[T, d]</text>
+<text x="100" y="118" text-anchor="middle" font-family="var(--font-body)" font-size="16" font-weight="400" fill="var(--ink-2)">×</text>
+<text x="116" y="56" text-anchor="start" font-family="var(--font-body)" font-size="13" font-weight="600" fill="var(--accent)">W</text>
+<g transform="translate(116,64)"><rect width="60" height="96" fill="var(--accent)" fill-opacity=".28" stroke="var(--accent)" stroke-width="1.2"/><rect width="60" height="96" fill="url(#cell12)"/></g>
+<text x="116" y="174" text-anchor="start" font-family="var(--font-mono)" font-size="10" font-weight="400" fill="var(--ink-2)">[d, d′]</text>
+<text x="190" y="118" text-anchor="middle" font-family="var(--font-body)" font-size="16" font-weight="400" fill="var(--ink-2)">=</text>
+<g transform="translate(206,76)"><rect width="60" height="72" fill="#d9488f" fill-opacity=".28" stroke="#d9488f" stroke-width="1.2"/><rect width="60" height="72" fill="url(#cell12)"/></g>
+<text x="206" y="162" text-anchor="start" font-family="var(--font-mono)" font-size="10" font-weight="400" fill="var(--ink-2)">[T, d′]</text>
+<text x="284" y="92" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="600" fill="var(--ink)">матрица × матрица</text>
+<text x="284" y="110" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink-2)">2·N·T операций,</text>
+<text x="284" y="128" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink-2)">веса прочитаны 1 раз</text>
+<text x="284" y="146" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink-2)">на T токенов сразу</text>
+<rect x="26" y="198" width="100" height="62" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/>
+<text x="76" y="214" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--accent)" letter-spacing=".06em">HBM</text>
+<g transform="translate(46,222)"><rect width="60" height="24" fill="var(--accent)" fill-opacity=".28" stroke="var(--accent)" stroke-width="1.2"/><rect width="60" height="24" fill="url(#cell12)"/></g>
+<text x="76" y="254" text-anchor="middle" font-family="var(--font-mono)" font-size="10" font-weight="400" fill="var(--ink-2)">веса 16 ГБ</text>
+<line x1="128" y1="229" x2="214" y2="229" stroke="var(--s3)" stroke-width="3" marker-end="url(#arr2)"/>
+<text x="171" y="218" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--s3)">1 раз</text>
+<text x="171" y="274" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">2000 токенов: 32 TFLOP ≈ 80 мс</text>
+<rect x="216" y="198" width="100" height="62" rx="6" fill="var(--surface-2)" stroke="var(--line-2)" stroke-width="1"/>
+<text x="266" y="214" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--ink-2)" letter-spacing=".06em">GPU</text>
+<rect x="228" y="224" width="76" height="10" rx="3" fill="var(--surface)" stroke="var(--line)"/>
+<rect x="228" y="224" width="72" height="10" rx="3" fill="var(--s3)"/>
+<text x="266" y="250" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--s3)">загружен</text>
+<line x1="318" y1="229" x2="344" y2="229" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr2)"/>
+<text x="350" y="217" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink)">KV-cache для</text>
+<text x="350" y="232" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink)">T позиций</text>
+<text x="350" y="247" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink-2)">+ первый токен</text>
+<text x="506" y="22" font-family="var(--font-body)" font-size="13" font-weight="600" fill="var(--s2)">Decode<tspan fill="var(--ink)" font-weight="400"> · каждый следующий токен отдельно</tspan></text>
+<text x="506" y="38" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink-2)">memory-bound: GPU ждёт веса из памяти</text>
+<text x="516" y="98" text-anchor="start" font-family="var(--font-body)" font-size="13" font-weight="600" fill="var(--s3)">x</text>
+<g transform="translate(516,106)"><rect width="60" height="12" fill="var(--s3)" fill-opacity=".28" stroke="var(--s3)" stroke-width="1.2"/><rect width="60" height="12" fill="url(#cell12)"/></g>
+<text x="516" y="132" text-anchor="start" font-family="var(--font-mono)" font-size="10" font-weight="400" fill="var(--ink-2)">[1, d]</text>
+<text x="590" y="118" text-anchor="middle" font-family="var(--font-body)" font-size="16" font-weight="400" fill="var(--ink-2)">×</text>
+<text x="606" y="56" text-anchor="start" font-family="var(--font-body)" font-size="13" font-weight="600" fill="var(--accent)">W</text>
+<g transform="translate(606,64)"><rect width="60" height="96" fill="var(--accent)" fill-opacity=".28" stroke="var(--accent)" stroke-width="1.2"/><rect width="60" height="96" fill="url(#cell12)"/></g>
+<text x="606" y="174" text-anchor="start" font-family="var(--font-mono)" font-size="10" font-weight="400" fill="var(--ink-2)">[d, d′]</text>
+<text x="680" y="118" text-anchor="middle" font-family="var(--font-body)" font-size="16" font-weight="400" fill="var(--ink-2)">=</text>
+<g transform="translate(696,106)"><rect width="60" height="12" fill="#d9488f" fill-opacity=".28" stroke="#d9488f" stroke-width="1.2"/><rect width="60" height="12" fill="url(#cell12)"/></g>
+<text x="696" y="132" text-anchor="start" font-family="var(--font-mono)" font-size="10" font-weight="400" fill="var(--ink-2)">[1, d′]</text>
+<text x="774" y="92" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="600" fill="var(--ink)">вектор × матрица</text>
+<text x="774" y="110" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink-2)">2·N операций,</text>
+<text x="774" y="128" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink-2)">веса прочитаны 1 раз</text>
+<text x="774" y="146" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="400" fill="var(--ink-2)">ради одного токена</text>
+<rect x="516" y="198" width="100" height="62" rx="6" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="1"/>
+<text x="566" y="214" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--accent)" letter-spacing=".06em">HBM</text>
+<g transform="translate(536,222)"><rect width="60" height="24" fill="var(--accent)" fill-opacity=".28" stroke="var(--accent)" stroke-width="1.2"/><rect width="60" height="24" fill="url(#cell12)"/></g>
+<text x="566" y="254" text-anchor="middle" font-family="var(--font-mono)" font-size="10" font-weight="400" fill="var(--ink-2)">веса 16 ГБ</text>
+<line x1="618" y1="229" x2="704" y2="229" stroke="var(--s2)" stroke-width="3" marker-end="url(#arr2)"/>
+<text x="661" y="218" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--s2)">на каждый токен</text>
+<text x="661" y="274" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">1 токен: 16 ГБ / 3.35 ТБ/с ≈ 5 мс</text>
+<rect x="706" y="198" width="100" height="62" rx="6" fill="var(--surface-2)" stroke="var(--line-2)" stroke-width="1"/>
+<text x="756" y="214" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--ink-2)" letter-spacing=".06em">GPU</text>
+<rect x="718" y="224" width="76" height="10" rx="3" fill="var(--surface)" stroke="var(--line)"/>
+<rect x="718" y="224" width="3" height="10" rx="3" fill="var(--s2)"/>
+<text x="756" y="250" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--s2)">простаивает</text>
+<line x1="808" y1="229" x2="834" y2="229" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr2)"/>
+<text x="840" y="217" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink)">1 токен</text>
+<text x="840" y="232" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink)">+ 1 позиция</text>
+<text x="840" y="247" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink-2)">в KV-cache</text>
+<line x1="490" y1="12" x2="490" y2="284" stroke="var(--line-2)" stroke-dasharray="4 3"/>
+<line x1="16" y1="292" x2="964" y2="292" stroke="var(--line)"/>
+<text x="16" y="314" text-anchor="start" font-family="var(--font-body)" font-size="12" font-weight="600" fill="var(--ink)">Во времени</text>
+<text x="95" y="314" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink-2)">Llama-3-8B bf16 на H100, промпт 2000 токенов, ответ 100 токенов, batch = 1</text>
+<line x1="150" y1="364" x2="940" y2="364" stroke="var(--line-2)"/>
+<rect x="150" y="342" width="109.0" height="22" fill="var(--s3)" fill-opacity=".35" stroke="var(--s3)"/>
+<rect x="259.0" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="265.8" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="272.6" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="279.4" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="286.2" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="293.0" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="299.8" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="306.6" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="313.4" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="320.3" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="327.1" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="333.9" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="340.7" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="347.5" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="354.3" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="361.1" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="367.9" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="374.7" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="381.6" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="388.4" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="395.2" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="402.0" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="408.8" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="415.6" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="422.4" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="429.2" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="436.0" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="442.8" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="449.7" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="456.5" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="463.3" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="470.1" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="476.9" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="483.7" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="490.5" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="497.3" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="504.1" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="510.9" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="517.8" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="524.6" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="531.4" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="538.2" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="545.0" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="551.8" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="558.6" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="565.4" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="572.2" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="579.1" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="585.9" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="592.7" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="599.5" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="606.3" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="613.1" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="619.9" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="626.7" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="633.5" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="640.3" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="647.2" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="654.0" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="660.8" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="667.6" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="674.4" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="681.2" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="688.0" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="694.8" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="701.6" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="708.4" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="715.3" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="722.1" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="728.9" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="735.7" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="742.5" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="749.3" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="756.1" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="762.9" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="769.7" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="776.6" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="783.4" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="790.2" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="797.0" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="803.8" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="810.6" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="817.4" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="824.2" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="831.0" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="837.8" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="844.7" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="851.5" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="858.3" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="865.1" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="871.9" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="878.7" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="885.5" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="892.3" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="899.1" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="905.9" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="912.8" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="919.6" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="926.4" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<rect x="933.2" y="342" width="2.4" height="22" fill="var(--s2)"/>
+<text x="150" y="334" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="600" fill="var(--s3)">prefill · TTFT ≈ 80 мс</text>
+<text x="940" y="334" text-anchor="end" font-family="var(--font-body)" font-size="11" font-weight="600" fill="var(--s2)">decode · 100 × TPOT ≈ 500 мс</text>
+<text x="204.48275862068965" y="382" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">32 TFLOP / 400 TFLOPS</text>
+<text x="280.9655172413793" y="382" text-anchor="start" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">каждый штрих: TPOT ≈ 5 мс = 16 ГБ / 3.35 ТБ/с</text>
+<text x="940" y="382" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">≈ 0.58 с</text>
+<line x1="259.0" y1="364" x2="259.0" y2="396" stroke="var(--s3)" stroke-width="1"/>
+<text x="258.9655172413793" y="408" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--s3)">первый токен</text>
+<text x="940" y="408" text-anchor="end" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink)">e2e ≈ TTFT + N_out × TPOT. Prefill 2000 токенов стоит столько же, сколько 16 выходных.</text>
+<text x="16" y="342" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-3)">время →</text>
+</svg>
+    <figcaption>Одни и те же веса, разная форма активаций. В prefill одно чтение весов из памяти обслуживает T токенов, и GPU упирается в вычисления. В decode ради каждого токена веса читаются заново, а вычислений на прочитанный байт почти нет: время шага задаёт пропускная способность памяти, а не FLOPS. Шкала внизу в масштабе: TTFT для промпта в 2000 токенов равен всего 16 шагам decode.</figcaption>
+  </figure>
   <div class="stage" id="stream">
     <div class="stage-head"><span class="tag">интерактив</span><h3>Симулятор стриминга</h3>
       <p class="hint">Текст появляется с расчётной скоростью для выбранной модели и железа. TTFT — из prefill (вычисления), TPOT — из decode (память). Это верхние границы при batch = 1; реальные цифры ниже на 20–40 %, но порядок совпадает с тем, что видно в llama.cpp и Ollama.</p></div>
@@ -447,6 +758,228 @@ body.teacher .teacher{display:block}
   </div>
   <pre><code>bytes_per_token = 2 (K и V) × L × n_kv_heads × head_dim × bytes_per_value
 Llama-3-8B, bf16: 2 × 32 × 8 × 128 × 2 = 131 072 байт = 128 КБ на токен</code></pre>
+  <figure class="figure" id="kvFig">
+    <svg viewBox="0 0 980 470" role="img" aria-label="Зачем нужен KV-cache: причинная матрица attention заполняется по одной строке за шаг генерации; старые строки не меняются, поэтому k и v прошлых токенов считают один раз и хранят, а на шаге считают только q, k, v нового токена и одну строку">
+<defs><marker id="arr4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker><pattern id="hatch2" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-3)" stroke-width="1" stroke-opacity=".6"/></pattern></defs>
+<text x="16" y="22" text-anchor="start" font-family="var(--font-body)" font-size="13" font-weight="600" fill="var(--ink)">Зачем нужен KV-cache: матрица attention при генерации</text>
+<text x="16" y="38" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink-2)">строка i = q_i против k₁…k_i (маска: будущее не видно). На шаге t добавляется только строка t, а старые строки не меняются.</text>
+<text x="86.0" y="58" text-anchor="middle" font-family="var(--font-body)" font-size="11" font-weight="600" fill="var(--ink)">шаг 1: пришёл токен 1</text>
+<text x="53.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₁</text>
+<text x="75.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">k₂</text>
+<text x="97.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">k₃</text>
+<text x="119.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">k₄</text>
+<text x="37" y="88.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s3)">q₁</text>
+<rect x="42" y="74" width="22" height="22" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1.2"/>
+<rect x="64" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="70" y1="80" x2="80" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="86" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="92" y1="80" x2="102" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="108" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="114" y1="80" x2="124" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<text x="37" y="110.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">q₂</text>
+<rect x="42" y="96" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="64" y="96" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="86" y="96" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="92" y1="102" x2="102" y2="112" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="108" y="96" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="114" y1="102" x2="124" y2="112" stroke="var(--line-2)" stroke-width="1"/>
+<text x="37" y="132.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">q₃</text>
+<rect x="42" y="118" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="64" y="118" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="86" y="118" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="108" y="118" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="114" y1="124" x2="124" y2="134" stroke="var(--line-2)" stroke-width="1"/>
+<text x="37" y="154.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">q₄</text>
+<rect x="42" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="64" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="86" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="108" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<text x="136" y="88.0" text-anchor="start" font-family="var(--font-body)" font-size="9" font-weight="600" fill="var(--s3)">новая</text>
+<text x="42" y="180" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--ink-2)">без кэша:</text>
+<text x="100" y="180" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">forward для 1 ток., 1 скор.</text>
+<text x="42" y="194" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--s3)">с кэшем:</text>
+<text x="100" y="194" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--s3)">forward для 1 ток., 1 скор.</text>
+<line x1="174" y1="118.0" x2="214" y2="118.0" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr4)"/>
+<text x="276.0" y="58" text-anchor="middle" font-family="var(--font-body)" font-size="11" font-weight="600" fill="var(--ink)">шаг 2: пришёл токен 2</text>
+<text x="243.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₁</text>
+<text x="265.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₂</text>
+<text x="287.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">k₃</text>
+<text x="309.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">k₄</text>
+<text x="227" y="88.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">q₁</text>
+<rect x="232" y="74" width="22" height="22" rx="0" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="0.8"/>
+<rect x="254" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="260" y1="80" x2="270" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="276" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="282" y1="80" x2="292" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="298" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="304" y1="80" x2="314" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<text x="227" y="110.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s3)">q₂</text>
+<rect x="232" y="96" width="22" height="22" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1.2"/>
+<rect x="254" y="96" width="22" height="22" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1.2"/>
+<rect x="276" y="96" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="282" y1="102" x2="292" y2="112" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="298" y="96" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="304" y1="102" x2="314" y2="112" stroke="var(--line-2)" stroke-width="1"/>
+<text x="227" y="132.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">q₃</text>
+<rect x="232" y="118" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="254" y="118" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="276" y="118" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="298" y="118" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="304" y1="124" x2="314" y2="134" stroke="var(--line-2)" stroke-width="1"/>
+<text x="227" y="154.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">q₄</text>
+<rect x="232" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="254" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="276" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="298" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<text x="326" y="110.0" text-anchor="start" font-family="var(--font-body)" font-size="9" font-weight="600" fill="var(--s3)">новая</text>
+<text x="232" y="180" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--ink-2)">без кэша:</text>
+<text x="290" y="180" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">forward для 2 ток., 3 скор.</text>
+<text x="232" y="194" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--s3)">с кэшем:</text>
+<text x="290" y="194" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--s3)">forward для 1 ток., 2 скор.</text>
+<line x1="364" y1="118.0" x2="404" y2="118.0" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr4)"/>
+<text x="466.0" y="58" text-anchor="middle" font-family="var(--font-body)" font-size="11" font-weight="600" fill="var(--ink)">шаг 3: пришёл токен 3</text>
+<text x="433.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₁</text>
+<text x="455.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₂</text>
+<text x="477.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₃</text>
+<text x="499.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">k₄</text>
+<text x="417" y="88.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">q₁</text>
+<rect x="422" y="74" width="22" height="22" rx="0" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="0.8"/>
+<rect x="444" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="450" y1="80" x2="460" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="466" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="472" y1="80" x2="482" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="488" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="494" y1="80" x2="504" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<text x="417" y="110.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">q₂</text>
+<rect x="422" y="96" width="22" height="22" rx="0" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="0.8"/>
+<rect x="444" y="96" width="22" height="22" rx="0" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="0.8"/>
+<rect x="466" y="96" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="472" y1="102" x2="482" y2="112" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="488" y="96" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="494" y1="102" x2="504" y2="112" stroke="var(--line-2)" stroke-width="1"/>
+<text x="417" y="132.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s3)">q₃</text>
+<rect x="422" y="118" width="22" height="22" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1.2"/>
+<rect x="444" y="118" width="22" height="22" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1.2"/>
+<rect x="466" y="118" width="22" height="22" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1.2"/>
+<rect x="488" y="118" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="494" y1="124" x2="504" y2="134" stroke="var(--line-2)" stroke-width="1"/>
+<text x="417" y="154.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-3)">q₄</text>
+<rect x="422" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="444" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="466" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<rect x="488" y="140" width="22" height="22" rx="0" fill="none" fill-opacity="1" stroke="var(--line)" stroke-width="0.6" stroke-dasharray="2 2"/>
+<text x="516" y="132.0" text-anchor="start" font-family="var(--font-body)" font-size="9" font-weight="600" fill="var(--s3)">новая</text>
+<text x="422" y="180" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--ink-2)">без кэша:</text>
+<text x="480" y="180" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">forward для 3 ток., 6 скор.</text>
+<text x="422" y="194" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--s3)">с кэшем:</text>
+<text x="480" y="194" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--s3)">forward для 1 ток., 3 скор.</text>
+<line x1="554" y1="118.0" x2="594" y2="118.0" stroke="var(--ink-3)" stroke-width="1.3" marker-end="url(#arr4)"/>
+<text x="656.0" y="58" text-anchor="middle" font-family="var(--font-body)" font-size="11" font-weight="600" fill="var(--ink)">шаг 4: пришёл токен 4</text>
+<text x="623.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₁</text>
+<text x="645.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₂</text>
+<text x="667.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₃</text>
+<text x="689.0" y="70" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₄</text>
+<text x="607" y="88.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">q₁</text>
+<rect x="612" y="74" width="22" height="22" rx="0" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="0.8"/>
+<rect x="634" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="640" y1="80" x2="650" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="656" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="662" y1="80" x2="672" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="678" y="74" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="684" y1="80" x2="694" y2="90" stroke="var(--line-2)" stroke-width="1"/>
+<text x="607" y="110.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">q₂</text>
+<rect x="612" y="96" width="22" height="22" rx="0" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="0.8"/>
+<rect x="634" y="96" width="22" height="22" rx="0" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="0.8"/>
+<rect x="656" y="96" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="662" y1="102" x2="672" y2="112" stroke="var(--line-2)" stroke-width="1"/>
+<rect x="678" y="96" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="684" y1="102" x2="694" y2="112" stroke="var(--line-2)" stroke-width="1"/>
+<text x="607" y="132.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">q₃</text>
+<rect x="612" y="118" width="22" height="22" rx="0" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="0.8"/>
+<rect x="634" y="118" width="22" height="22" rx="0" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="0.8"/>
+<rect x="656" y="118" width="22" height="22" rx="0" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="0.8"/>
+<rect x="678" y="118" width="22" height="22" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="684" y1="124" x2="694" y2="134" stroke="var(--line-2)" stroke-width="1"/>
+<text x="607" y="154.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s3)">q₄</text>
+<rect x="612" y="140" width="22" height="22" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1.2"/>
+<rect x="634" y="140" width="22" height="22" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1.2"/>
+<rect x="656" y="140" width="22" height="22" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1.2"/>
+<rect x="678" y="140" width="22" height="22" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1.2"/>
+<text x="706" y="154.0" text-anchor="start" font-family="var(--font-body)" font-size="9" font-weight="600" fill="var(--s3)">новая</text>
+<text x="612" y="180" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--ink-2)">без кэша:</text>
+<text x="670" y="180" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">forward для 4 ток., 10 скор.</text>
+<text x="612" y="194" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--s3)">с кэшем:</text>
+<text x="670" y="194" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--s3)">forward для 1 ток., 4 скор.</text>
+<rect x="812" y="68" width="12" height="12" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1"/>
+<text x="830" y="78" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">считается на этом шаге</text>
+<rect x="812" y="88" width="12" height="12" rx="0" fill="var(--accent)" fill-opacity="0.18" stroke="var(--accent)" stroke-width="0.8"/>
+<text x="830" y="98" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">посчитано раньше</text>
+<rect x="812" y="108" width="12" height="12" rx="0" fill="var(--surface-2)" fill-opacity="1" stroke="var(--line)" stroke-width="0.6"/>
+<line x1="815" y1="111" x2="821" y2="117" stroke="var(--line-2)"/>
+<text x="830" y="118" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">маска: будущее</text>
+<text x="16" y="222" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink)">Без кэша шаг t заново прогоняет все t токенов через модель ради k и v, которые уже считали на прошлых шагах.</text>
+<text x="16" y="237" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink-2)">За T шагов это 1 + 2 + … + T ≈ T²/2 проходов токенов через веса; с кэшем: T проходов.</text>
+<line x1="16" y1="256" x2="964" y2="256" stroke="var(--line)"/>
+<text x="16" y="278" text-anchor="start" font-family="var(--font-body)" font-size="13" font-weight="600" fill="var(--ink)">Идея: k_i и v_i зависят только от токена i и весов, а старые строки не меняются. Значит, считаем k, v один раз и храним.</text>
+<text x="16" y="294" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink-2)">На шаге t считаем только q_t, k_t, v_t для нового токена и одну строку attention. q хранить не нужно: он нужен только своей строке.</text>
+<text x="35" y="338.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s3)">q₄</text>
+<rect x="40" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.55" stroke="var(--s3)" stroke-width="1"/>
+<rect x="58" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.55" stroke="var(--s3)" stroke-width="1"/>
+<rect x="76" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.55" stroke="var(--s3)" stroke-width="1"/>
+<rect x="94" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.55" stroke="var(--s3)" stroke-width="1"/>
+<text x="126" y="339.0" text-anchor="start" font-family="var(--font-body)" font-size="16" font-weight="400" fill="var(--ink-2)">·</text>
+<text x="194" y="318" text-anchor="middle" font-family="var(--font-body)" font-size="11" font-weight="600" fill="var(--s2)">K</text>
+<rect x="158" y="326" width="72" height="18" rx="0" fill="var(--s2)" fill-opacity="0.3" stroke="var(--s2)" stroke-width="1"/>
+<rect x="158" y="326" width="72" height="18" rx="0" fill="url(#hatch2)" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="153" y="338.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₁</text>
+<rect x="158" y="344" width="72" height="18" rx="0" fill="var(--s2)" fill-opacity="0.3" stroke="var(--s2)" stroke-width="1"/>
+<rect x="158" y="344" width="72" height="18" rx="0" fill="url(#hatch2)" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="153" y="356.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₂</text>
+<rect x="158" y="362" width="72" height="18" rx="0" fill="var(--s2)" fill-opacity="0.3" stroke="var(--s2)" stroke-width="1"/>
+<rect x="158" y="362" width="72" height="18" rx="0" fill="url(#hatch2)" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="153" y="374.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₃</text>
+<rect x="158" y="380" width="72" height="18" rx="0" fill="var(--s2)" fill-opacity="0.55" stroke="var(--s2)" stroke-width="1"/>
+<text x="153" y="392.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s2)">k₄</text>
+<path d="M234 326 h5 v54 h-5" fill="none" stroke="var(--ink-3)"/>
+<text x="243" y="356.0" text-anchor="start" font-family="var(--font-body)" font-size="9" font-weight="400" fill="var(--ink-2)">из кэша</text>
+<path d="M234 380 h5 v18 h-5" fill="none" stroke="var(--s3)"/>
+<text x="243" y="392.0" text-anchor="start" font-family="var(--font-body)" font-size="9" font-weight="600" fill="var(--s3)">новое</text>
+<text x="300" y="339.0" text-anchor="start" font-family="var(--font-body)" font-size="14" font-weight="400" fill="var(--ink-2)">→</text>
+<text x="358" y="318" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--s3)">строка 4</text>
+<rect x="322" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1"/>
+<rect x="340" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1"/>
+<rect x="358" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1"/>
+<rect x="376" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.5" stroke="var(--s3)" stroke-width="1"/>
+<text x="358" y="358" text-anchor="middle" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--ink-2)">softmax</text>
+<text x="408" y="339.0" text-anchor="start" font-family="var(--font-body)" font-size="16" font-weight="400" fill="var(--ink-2)">·</text>
+<text x="476" y="318" text-anchor="middle" font-family="var(--font-body)" font-size="11" font-weight="600" fill="var(--s1)">V</text>
+<rect x="440" y="326" width="72" height="18" rx="0" fill="var(--s1)" fill-opacity="0.3" stroke="var(--s1)" stroke-width="1"/>
+<rect x="440" y="326" width="72" height="18" rx="0" fill="url(#hatch2)" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="435" y="338.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s1)">v₁</text>
+<rect x="440" y="344" width="72" height="18" rx="0" fill="var(--s1)" fill-opacity="0.3" stroke="var(--s1)" stroke-width="1"/>
+<rect x="440" y="344" width="72" height="18" rx="0" fill="url(#hatch2)" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="435" y="356.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s1)">v₂</text>
+<rect x="440" y="362" width="72" height="18" rx="0" fill="var(--s1)" fill-opacity="0.3" stroke="var(--s1)" stroke-width="1"/>
+<rect x="440" y="362" width="72" height="18" rx="0" fill="url(#hatch2)" fill-opacity="1" stroke="none" stroke-width="1"/>
+<text x="435" y="374.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s1)">v₃</text>
+<rect x="440" y="380" width="72" height="18" rx="0" fill="var(--s1)" fill-opacity="0.55" stroke="var(--s1)" stroke-width="1"/>
+<text x="435" y="392.0" text-anchor="end" font-family="var(--font-mono)" font-size="9" font-weight="400" fill="var(--s1)">v₄</text>
+<path d="M516 326 h5 v54 h-5" fill="none" stroke="var(--ink-3)"/>
+<text x="525" y="356.0" text-anchor="start" font-family="var(--font-body)" font-size="9" font-weight="400" fill="var(--ink-2)">из кэша</text>
+<path d="M516 380 h5 v18 h-5" fill="none" stroke="var(--s3)"/>
+<text x="525" y="392.0" text-anchor="start" font-family="var(--font-body)" font-size="9" font-weight="600" fill="var(--s3)">новое</text>
+<text x="582" y="339.0" text-anchor="start" font-family="var(--font-body)" font-size="14" font-weight="400" fill="var(--ink-2)">=</text>
+<text x="640" y="318" text-anchor="middle" font-family="var(--font-body)" font-size="10" font-weight="600" fill="var(--ink)">выход для токена 4</text>
+<rect x="604" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.55" stroke="var(--s3)" stroke-width="1"/>
+<rect x="622" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.55" stroke="var(--s3)" stroke-width="1"/>
+<rect x="640" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.55" stroke="var(--s3)" stroke-width="1"/>
+<rect x="658" y="326" width="18" height="18" rx="0" fill="var(--s3)" fill-opacity="0.55" stroke="var(--s3)" stroke-width="1"/>
+<text x="604" y="360" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">k₄, v₄ → в кэш:</text>
+<text x="604" y="374" text-anchor="start" font-family="var(--font-body)" font-size="10" font-weight="400" fill="var(--ink-2)">на шаге 5 они уже «из кэша»</text>
+<text x="16" y="432" text-anchor="start" font-family="var(--font-body)" font-size="11" font-weight="400" fill="var(--ink-2)">Цена: кэш надо хранить, 128 КБ на токен у Llama-3-8B, и читать целиком на каждом шаге. Выигрыш: шаг стоит как один токен, а не как весь контекст.</text>
+</svg>
+    <figcaption>Причинная маска делает старые строки матрицы attention неизменными: новый токен добавляет только свою строку. Без кэша каждый шаг заново прогоняет весь контекст через модель, чтобы получить те же k и v, что уже были. Кэш хранит их и превращает шаг генерации в проход одного токена плюс чтение кэша.</figcaption>
+  </figure>
   <div class="stage" id="kvcalc">
     <div class="stage-head"><span class="tag">интерактив</span><h3>Калькулятор KV-cache</h3>
       <p class="hint">Сколько одновременных запросов помещается на карту. Переключатель «как MHA» показывает, зачем ввели GQA; квантизация кэша — второй рычаг.</p></div>
@@ -469,8 +1002,19 @@ Llama-3-8B, bf16: 2 × 32 × 8 × 128 × 2 = 131 072 байт = 128 КБ на т
     <div class="note" id="kvNote"></div>
   </div>
 
+  <details class="qa" id="qaShared">
+    <summary><span class="tag">вопрос в зал</span><span class="q">Одна модель обслуживает сразу несколько чат-ботов. Как тогда работает KV-cache: хранится несколько?</span><span class="hintx">раскрыть ответ</span></summary>
+    <div class="a">
+      <p><b>Да, кэш свой у каждого запроса, а веса общие.</b> KV-cache привязан не к модели, а к последовательности: это k и v конкретных токенов конкретного диалога. Если на шаге decode в батче B запросов, через веса проходит B векторов [B, d], а attention каждый q считает только против своего кэша. Запросы друг друга не видят, поэтому кэш нельзя «поделить» между ними, как веса.</p>
+      <p><b>Отсюда предел на число одновременных запросов.</b> Веса занимают память один раз, а кэш растёт с каждым запросом и с каждой позицией: 128 КБ на токен у Llama-3-8B, значит 8k контекста это 1 ГБ на один диалог. На H100 после весов остаётся около 60 ГБ, то есть порядка 60 таких диалогов одновременно. Именно кэш, а не веса, задаёт, сколько чат-ботов одна карта потянет: это и считает калькулятор выше.</p>
+      <p><b>Между ходами диалога кэш не «живёт» сам по себе.</b> API без состояния: клиент каждый раз присылает всю историю, и сервер делает prefill заново. Но если кэш прошлого хода ещё в памяти, движок узнаёт совпадающий префикс и переиспользует его, а prefill делает только для новых токенов. Это prefix caching.</p>
+      <p><b>Общий системный промпт считается один раз.</b> У одного чат-бота тысяча пользователей, и у всех одинаковое начало промпта. vLLM хранит кэш страницами, и страницы одинакового префикса разделяются между запросами: prefill делается один раз, дальше только ссылка на те же блоки. Так «повторный промпт дешевле» из первой пары превращается в конкретный механизм: PagedAttention плюс prefix caching. Всё это уже есть в движке, руками не пишется.</p>
+    </div>
+  </details>
+
   <div class="cols">
     <div class="prose">
+      <p class="kicker">Что из этого следует</p>
       <ul>
         <li>Длинный контекст — не бесплатная фича, а прямой расход памяти и денег.</li>
         <li>Раньше движки резервировали кэш на максимальную длину заранее — память простаивала. <b>PagedAttention</b> (vLLM) выделяет её страницами по факту — это то, что не надо писать самим.</li>
@@ -558,7 +1102,7 @@ Llama-3-8B, bf16: 2 × 32 × 8 × 128 × 2 = 131 072 байт = 128 КБ на т
   <div class="cols">
     <div class="prose">
       <h3 style="margin-top:0">Минимальная реализация — разбор</h3>
-      <p>Полный ноутбук — в домашнем задании; здесь структура. Маленькая модель (0.5–1.5B), чтобы бегало в Colab на T4 или локально.</p>
+      <p>Весь цикл генерации с кэшем — восемь строк; всё остальное внутри <code>model</code>. Для экспериментов хватает маленькой модели (0.5–1.5B) на T4 в Colab или локально.</p>
       <pre><code>out  = model(prompt_ids, use_cache=True)     # prefill
 past = out.past_key_values                   # KV-cache, T позиций
 tok  = sample(out.logits[:, -1])
@@ -569,7 +1113,7 @@ for _ in range(max_new_tokens):              # decode
     tok  = sample(out.logits[:, -1])</code></pre>
     </div>
     <div class="prose">
-      <h3 style="margin-top:0">Что измеряем в ноутбуке</h3>
+      <h3 style="margin-top:0">Что стоит измерить, если запустить самому</h3>
       <ol>
         <li>Время prefill против среднего времени шага decode.</li>
         <li>Размер <code>past</code> в байтах после генерации — сравнить с расчётом 128 КБ × T.</li>
@@ -592,21 +1136,20 @@ for _ in range(max_new_tokens):              # decode
       <tr><td><b>Качество</b></td><td>размер модели и точность весов</td><td>торгуется за два предыдущих через размер и квантизацию</td></tr>
     </tbody>
   </table></div>
-  <div class="cols" style="margin-top:1.2rem">
-    <div class="prose">
-      <h3 style="margin-top:0">Self-host против API — оценка на салфетке</h3>
-      <dl class="kv" id="selfhost" style="grid-template-columns:auto 1fr"></dl>
-      <p class="note">Цена аренды — иллюстративная, подставьте актуальную. Формула важнее числа: стоимость токена падает с загрузкой, а загрузка — это батч.</p>
-      <p><b>Что не писать руками:</b> движок инференса (vLLM, SGLang, TensorRT-LLM), локальный запуск (llama.cpp, Ollama, MLX), батчинг и PagedAttention, prompt caching. Руками пишется только учебный ноутбук.</p>
-    </div>
-    <div class="hw">
-      <h3>Домашнее задание</h3>
-      <ol>
-        <li>Заполнить расчётный лист для модели, которую планируете использовать в проекте.</li>
-        <li>Посчитать стоимость 1M выходных токенов при self-host на арендованной карте с реалистичной загрузкой против цены у провайдера.</li>
-        <li>Пройти ноутбук и приложить измеренные времена prefill / decode — это станет разделом «бюджет задержки» вашего design doc.</li>
-      </ol>
-    </div>
+  <div class="stage" id="selfhostBlock">
+    <div class="stage-head"><span class="tag">расчёт</span><h3>Self-host против API — оценка на салфетке</h3>
+      <p class="hint">Тот же decode-калькулятор, что и выше, но переведённый в деньги: сколько стоит миллион выходных токенов на арендованной карте при разной загрузке.</p></div>
+    <dl class="kv" id="selfhost" style="grid-template-columns:auto 1fr"></dl>
+    <p class="note">Цена аренды — иллюстративная, подставьте актуальную. Формула важнее числа: стоимость токена падает с загрузкой, а загрузка — это батч.</p>
+    <p><b>Что не писать руками:</b> движок инференса (vLLM, SGLang, TensorRT-LLM), локальный запуск (llama.cpp, Ollama, MLX), батчинг и PagedAttention, prompt caching.</p>
+  </div>
+
+  <div class="hw" id="homework">
+    <h3>Домашнее задание</h3>
+    <ol>
+      <li>Заполнить расчётный лист для модели, которую планируете использовать в проекте.</li>
+      <li>Посчитать стоимость 1M выходных токенов при self-host на арендованной карте с реалистичной загрузкой против цены у провайдера. Результат — раздел «бюджет стоимости» вашего design doc.</li>
+    </ol>
   </div>
 </section>
 
@@ -1012,7 +1555,7 @@ const opt = (sel, obj) => { for(const k in obj){ const o = el('option', null, ob
   render();
   // teacher toggle
   const tb = g('teacherBtn');
-  tb.onclick = () => { const on = !document.body.classList.contains('teacher'); document.body.classList.toggle('teacher', on); tb.setAttribute('aria-pressed', on); tb.textContent = on ? 'Ответы: показаны' : 'Ответы: скрыты'; };
+  tb.onclick = () => { const on = !document.body.classList.contains('teacher'); document.body.classList.toggle('teacher', on); tb.setAttribute('aria-pressed', on); tb.textContent = on ? 'Ответы: показаны' : 'Ответы: скрыты'; document.querySelectorAll('details.qa').forEach(d => { d.open = on; }); };
 })();
 
 /* ================= self-host vs API (статика, считается) ================= */

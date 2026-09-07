@@ -17,6 +17,7 @@
   --code-bg:#F6F8FA;
   --shadow:0 1px 2px rgba(21,26,33,.06), 0 8px 24px -12px rgba(21,26,33,.18);
   --radius:10px;
+  --measure:104ch;
   --font-body:"IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
   --font-head:"IBM Plex Serif", Georgia, "Times New Roman", serif;
   --font-mono:"IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -46,6 +47,7 @@
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
 }
 *{box-sizing:border-box}
+abbr[title]{text-decoration:underline dotted; text-decoration-color:var(--ink-3); text-decoration-thickness:1px; text-underline-offset:3px; cursor:help}
 html{font-size:17px; scroll-behavior:smooth}
 @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important; animation:none!important} }
 body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; -webkit-font-smoothing:antialiased}
@@ -91,17 +93,17 @@ label{font-size:.85rem; color:var(--ink-2)}
 main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
 .sec{padding:3.2rem 0 2.2rem; border-bottom:1px solid var(--line)}
 .sec:last-child{border-bottom:0}
-.sec-head{max-width:72ch; margin-bottom:1.2rem}
+.sec-head{max-width:var(--measure); margin-bottom:1.2rem}
 .time{display:inline-block; font-family:var(--font-mono); font-size:.75rem; color:var(--accent); background:var(--accent-soft); padding:.15rem .5rem; border-radius:4px; margin-bottom:.6rem; letter-spacing:.03em}
 .lede{font-size:1.08rem; color:var(--ink-2); margin-top:.5rem}
-.prose{max-width:72ch}
+.prose{max-width:var(--measure)}
 .prose.wide{max-width:none}
 .cols{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.2rem 2rem}
 .hero{padding:4rem 0 3rem}
 .hero .eyebrow{font-family:var(--font-mono); font-size:.8rem; color:var(--ink-3); letter-spacing:.06em; text-transform:uppercase}
 .hero h1{margin:.5rem 0 .8rem; font-size:clamp(2rem,4.5vw,3.2rem)}
-.hero .lede{max-width:64ch}
-.thesis{border-left:3px solid var(--accent); padding:.4rem 1rem; margin:1.2rem 0; color:var(--ink); font-family:var(--font-head); font-size:1.1rem; max-width:72ch}
+.hero .lede{max-width:80ch}
+.thesis{border-left:3px solid var(--accent); padding:.4rem 1rem; margin:1.2rem 0; color:var(--ink); font-family:var(--font-head); font-size:1.1rem; max-width:var(--measure)}
 .note{font-size:.85rem; color:var(--ink-2); border:1px dashed var(--line-2); border-radius:8px; padding:.5rem .8rem; margin:.8rem 0}
 .slot{color:var(--warm); font-style:italic}
 .kicker{font-size:.78rem; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3); font-weight:600}
@@ -144,6 +146,19 @@ main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
 .explain{background:var(--surface-2); border-radius:var(--radius); padding:.9rem 1rem; font-size:.92rem; min-height:100px}
 .explain.hidden-x{color:var(--ink-3)}
 
+/* autoregression figure */
+.arfig{margin:1.1rem 0 .4rem}
+.arfig svg{width:100%; max-width:860px; height:auto; display:block}
+.arfig .tok{font-family:var(--font-mono); font-size:12.5px; text-anchor:middle; dominant-baseline:central}
+.arfig .llm{font-family:var(--font-mono); font-size:13px; font-weight:600; text-anchor:middle; dominant-baseline:central}
+.arfig .hd{font-family:var(--font-body); font-size:11px; text-transform:uppercase; letter-spacing:.06em; fill:var(--ink-3)}
+.arfig .lbl{font-family:var(--font-body); font-size:11.5px; fill:var(--ink-3); dominant-baseline:central}
+.arfig .cap{font-family:var(--font-body); font-size:12px; fill:var(--ink-3)}
+.arfig .arr{stroke:var(--ink-3); stroke-width:1.4; fill:none; marker-end:url(#ah)}
+.arfig .arr.warm{stroke:var(--warm)}
+.arfig .fb{stroke:var(--warm); stroke-width:1.6; stroke-dasharray:4 4; fill:none; marker-end:url(#ah)}
+.arfig figcaption{margin-top:.5rem}
+
 /* anatomy */
 .blocks{display:grid; grid-template-columns:repeat(7,1fr); gap:.5rem; align-items:stretch}
 @media (max-width:900px){.blocks{grid-template-columns:repeat(4,1fr)}}
@@ -152,7 +167,6 @@ main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
 .blk .k{font-size:.7rem; color:var(--ink-3); font-family:var(--font-mono)}
 .blk .n{font-weight:600; font-size:.9rem}
 .blk[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
-.blk.obs{grid-column:1 / -1; min-height:auto; flex-direction:row; align-items:center; gap:.8rem}
 .detail{margin-top:.8rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:.8rem}
 .detail .cell{background:var(--surface-2); border-radius:8px; padding:.6rem .8rem; font-size:.9rem}
 .detail .cell .k{font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); margin-bottom:.2rem}
@@ -164,22 +178,28 @@ main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
 .jclock small{font-size:.8rem; color:var(--ink-3); margin-left:.6rem}
 .jmarks{display:flex; gap:1.2rem; font-size:.8rem; color:var(--ink-2); margin-top:.3rem; flex-wrap:wrap}
 
-/* autoregression */
-.ar{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:1.2rem}
+/* autoregression / memory */
+.ar{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:1.2rem}
 @media (max-width:860px){.ar{grid-template-columns:1fr}}
-.seq{min-height:90px; background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.8rem 1rem; font-size:1.05rem; line-height:1.8}
-.seq .tok{padding:.05em .1em; border-radius:3px}
-.seq .tok.gen{background:var(--accent-soft); color:var(--accent)}
-.seq .tok.last{outline:2px solid var(--accent)}
-.dist{display:flex; flex-direction:column; gap:.35rem}
-.dist .d{display:grid; grid-template-columns:8em 1fr 3.5em; align-items:center; gap:.5rem; font-size:.88rem}
-.dist .d .w{font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.dist .d .b{height:12px; background:var(--surface-2); border-radius:3px; overflow:hidden}
-.dist .d .b i{display:block; height:100%; background:var(--s1); border-radius:3px; transition:width .3s}
-.dist .d .p{font-family:var(--font-mono); font-size:.8rem; text-align:right; color:var(--ink-2)}
-.dist .d.pick .b i{background:var(--s2)}
-.prompt-view{font-family:var(--font-mono); font-size:.78rem; background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.7rem .9rem; white-space:pre-wrap; line-height:1.5}
-.prompt-view .sys{color:var(--ink-3)} .prompt-view .u{color:var(--accent)} .prompt-view .a{color:var(--s3)} .prompt-view .new{background:var(--warm-soft)}
+.chat{min-height:220px; display:flex; flex-direction:column; gap:.5rem; background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.8rem .9rem}
+.chat .empty{color:var(--ink-3); font-size:.85rem; margin:auto; text-align:center}
+.chat .msg{max-width:88%; padding:.45rem .75rem; border-radius:12px; font-size:.92rem; line-height:1.45}
+.chat .msg.user{align-self:flex-end; background:var(--accent); color:var(--accent-ink); border-bottom-right-radius:4px}
+.chat .msg.bot{align-self:flex-start; background:var(--surface); border:1px solid var(--line-2); border-bottom-left-radius:4px}
+.chat .msg.bot .cur{display:inline-block; width:.5em; height:1em; background:var(--warm); vertical-align:-2px; margin-left:1px; animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.compose{display:flex; gap:.5rem; align-items:stretch; margin-top:.6rem; flex-wrap:wrap}
+.compose .draft{flex:1 1 200px; border:1px dashed var(--line-2); border-radius:8px; padding:.4rem .7rem; font-size:.9rem; color:var(--ink-2); display:flex; align-items:center; min-height:2.2rem}
+.compose .draft.done{color:var(--ink-3); font-style:italic}
+.src{font-family:var(--font-mono); font-size:.68rem; padding:.05rem .4rem; border-radius:4px; margin-left:.3rem; vertical-align:1px}
+.src.hist{background:var(--ok-soft); color:var(--ok)} .src.doc{background:#fff3d6; color:#8a5a00}
+:root[data-theme="dark"] .src.doc{background:#3b2f10; color:var(--s4)}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .src.doc{background:#3b2f10; color:var(--s4)} }
+.prompt-view{font-family:var(--font-mono); font-size:.78rem; background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.7rem .9rem; white-space:pre-wrap; line-height:1.55; min-height:220px}
+.prompt-view .sys{color:var(--ink-3)} .prompt-view .doc{color:var(--s4)} .prompt-view .h{color:var(--s3)} .prompt-view .u{color:var(--accent); font-weight:600}
+.prompt-view .gen{color:var(--warm)} .prompt-view .gen .last{background:var(--warm-soft); outline:1px solid var(--warm); border-radius:2px}
+.prompt-view .off{color:var(--ink-3); font-style:italic; opacity:.75}
+.prompt-view .lbl{display:inline-block; font-size:.68rem; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-3); margin-top:.35rem}
 
 /* budget */
 .budget{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1.4rem}
@@ -191,15 +211,21 @@ main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
 .breakdown{font-size:.85rem; color:var(--ink-2); margin-top:.6rem}
 
 /* cases */
-.cases{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:.9rem}
-.case{border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem; background:var(--surface); cursor:pointer; display:flex; flex-direction:column; gap:.5rem}
+.cases{display:flex; flex-direction:column; gap:.6rem}
+.case{border:1px solid var(--line); border-radius:12px; padding:.7rem .9rem; background:var(--surface); cursor:pointer; display:grid; grid-template-columns:minmax(170px,.75fr) repeat(4,minmax(0,1fr)); gap:.6rem; align-items:stretch}
 .case:hover{border-color:var(--accent)}
-.case h4{font-family:var(--font-head); font-size:1.05rem; font-weight:600}
-.case .st{display:none; font-size:.9rem; padding:.45rem .6rem; border-radius:6px; background:var(--surface-2)}
+.case .ttl{display:flex; flex-direction:column; gap:.3rem; padding-right:.4rem}
+.case h4{font-family:var(--font-head); font-size:1.02rem; font-weight:600; margin:0; line-height:1.3}
+.case .st{font-size:.86rem; padding:.45rem .6rem; border-radius:6px; background:var(--surface-2); min-height:3.2rem; line-height:1.4}
 .case .st .k{font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); display:block; margin-bottom:.15rem}
-.case .st.on{display:block}
+.case .st:not(.on){background:transparent; border:1px dashed var(--line-2)}
+.case .st:not(.on) .body{display:none}
+.case .st:not(.on) .k::after{content:" …"}
+.case .st.next{border-color:var(--accent)} .case .st.next .k{color:var(--accent)}
 .case .st.on.last{background:var(--accent-soft)}
 .case .more{font-size:.78rem; color:var(--ink-3); margin-top:auto}
+@media (max-width:980px){.case{grid-template-columns:1fr 1fr} .case .ttl{grid-column:1 / -1}}
+@media (max-width:560px){.case{grid-template-columns:1fr}}
 
 /* sorter */
 .sorter{display:grid; grid-template-columns:1fr; gap:1rem}
@@ -209,7 +235,12 @@ main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
 .tcard .b button{font-size:.7rem; padding:.1rem .4rem; border-radius:5px}
 .tcard.right{border-color:var(--ok); background:var(--ok-soft)}
 .tcard.wrong{border-color:var(--bad); background:var(--bad-soft)}
-.bins{display:grid; grid-template-columns:repeat(3,1fr); gap:.8rem}
+.bins{display:grid; grid-template-columns:repeat(2,1fr); gap:.8rem}
+.tcard .since{font-family:var(--font-mono); font-size:.68rem; color:var(--warm); background:var(--warm-soft); border-radius:4px; padding:.05rem .35rem; white-space:nowrap}
+.tcard .fix{font-size:.74rem; color:var(--ink-2); white-space:nowrap}
+.tl{list-style:none; padding:0; margin:.4rem 0 .6rem}
+.tl li{display:grid; grid-template-columns:5.2em 1fr; gap:.5rem; padding:.2rem 0; font-size:.92rem}
+.tl .y{font-family:var(--font-mono); font-size:.8rem; color:var(--warm)}
 @media (max-width:820px){.bins{grid-template-columns:1fr}}
 .bin{border:1px dashed var(--line-2); border-radius:10px; padding:.6rem; min-height:110px}
 .bin h4{margin-bottom:.4rem; font-size:.85rem}
@@ -218,6 +249,9 @@ main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
 /* misc */
 .two{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
 @media (max-width:820px){.two{grid-template-columns:1fr}}
+.chain{background:var(--surface-2); border-radius:10px; padding:.7rem .9rem; font-size:.9rem; line-height:1.7}
+.chain .step{font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); margin-right:.15rem}
+.chain .arw{color:var(--accent); font-weight:600; margin:0 .15rem}
 .cardgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:.9rem}
 .card{background:var(--surface-2); border-radius:10px; padding:.8rem 1rem; font-size:.92rem}
 .card.bad{border-left:3px solid var(--bad)} .card.good{border-left:3px solid var(--ok)}
@@ -225,6 +259,39 @@ main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
 .steps{counter-reset:s; list-style:none; padding:0; margin:.8rem 0}
 .steps li{counter-increment:s; display:grid; grid-template-columns:2.2rem 1fr; gap:.6rem; padding:.55rem 0; border-top:1px solid var(--line)}
 .steps li::before{content:counter(s); font-family:var(--font-mono); color:var(--accent); font-size:1.1rem}
+
+/* order of work: flow + constraint cuts */
+.flow{list-style:none; padding:0; margin:0 0 1.2rem; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1.6rem}
+.flow li{position:relative; background:var(--surface-2); border-radius:12px; padding:.9rem 1rem 1rem; display:flex; flex-direction:column; gap:.35rem; font-size:.92rem}
+.flow li .n{font-family:var(--font-mono); font-size:.78rem; color:var(--accent); font-weight:600}
+.flow li b{font-size:1.02rem}
+.flow li p{margin:0; color:var(--ink-2); line-height:1.45; flex:1}
+.flow li .art{font-family:var(--font-mono); font-size:.72rem; color:var(--ink-2); background:var(--surface); border:1px solid var(--line-2); border-radius:6px; padding:.2rem .5rem; align-self:flex-start; margin-top:.3rem}
+.flow li .art::before{content:"→ "; color:var(--ink-3)}
+.flow li:not(:last-child)::after{content:""; position:absolute; right:-1.6rem; top:50%; width:1.6rem; height:2px; background:var(--line-2)}
+.flow li:not(:last-child)::before{content:""; position:absolute; right:-1.6rem; top:calc(50% - 4px); width:0; height:0; border:5px solid transparent; border-left:7px solid var(--line-2); transform:translateX(1px)}
+.flow li.loop .back{font-family:var(--font-mono); font-size:.72rem; color:var(--warm); margin-top:.2rem}
+.flow li .when{font-style:italic; font-size:.8rem; color:var(--warm); margin-top:.3rem}
+@media (max-width:900px){.flow{grid-template-columns:1fr 1fr; gap:1.2rem} .flow li:not(:last-child)::after,.flow li:not(:last-child)::before{display:none}}
+@media (max-width:520px){.flow{grid-template-columns:1fr}}
+.cutwrap{display:grid; grid-template-columns:minmax(220px,.9fr) minmax(0,2fr); gap:1.2rem 1.6rem; align-items:start}
+@media (max-width:820px){.cutwrap{grid-template-columns:1fr}}
+.cons{display:flex; flex-direction:column; gap:.45rem}
+.cons .chip{display:flex; gap:.55rem; align-items:flex-start; padding:.55rem .7rem; border:1px solid var(--line-2); border-radius:10px; font-size:.9rem; cursor:pointer; background:var(--surface); transition:border-color .15s, background .15s}
+.cons .chip:hover{border-color:var(--accent)}
+.cons .chip.on{background:var(--accent-soft); border-color:var(--accent)}
+.cons .chip input{margin-top:.2rem; accent-color:var(--accent)}
+.cons .chip small{display:block; color:var(--ink-3); font-size:.76rem; margin-top:.1rem}
+.space{display:flex; flex-direction:column; gap:.55rem}
+.dec{display:grid; grid-template-columns:9.5em 1fr; gap:.6rem; align-items:stretch}
+.dec .q{font-size:.8rem; color:var(--ink-3); text-transform:uppercase; letter-spacing:.05em; padding-top:.5rem; line-height:1.3}
+.dec .opts{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.5rem}
+.opt{border:1px solid var(--line); border-radius:9px; padding:.5rem .7rem; font-size:.88rem; background:var(--surface); transition:all .2s; display:flex; flex-direction:column; gap:.2rem; min-height:2.6rem; justify-content:center}
+.opt .why{font-size:.74rem; color:var(--bad); line-height:1.3}
+.opt.cut{background:var(--surface-2); border-color:transparent; color:var(--ink-3)}
+.opt.cut > span:first-child{text-decoration:line-through; text-decoration-color:var(--bad); text-decoration-thickness:1.5px}
+.opt.only{border-color:var(--ok); background:var(--ok-soft); font-weight:600}
+@media (max-width:560px){.dec{grid-template-columns:1fr} .dec .q{padding-top:0}}
 .figure{margin:1rem 0}
 .figure svg{width:100%; height:auto; display:block}
 .figure figcaption{font-size:.82rem; color:var(--ink-2); margin-top:.4rem}
@@ -234,8 +301,28 @@ main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
 .kv{display:grid; grid-template-columns:auto 1fr; gap:.3rem 1rem; font-size:.9rem}
 .kv dt{color:var(--ink-2)} .kv dd{margin:0; font-family:var(--font-mono); font-size:.88rem}
 #selfhost dd{font-family:var(--font-body); font-size:.92rem}
-.hw{background:var(--accent-soft); border-radius:12px; padding:1rem 1.2rem; max-width:72ch}
+.hw{background:var(--accent-soft); border-radius:12px; padding:1rem 1.2rem; max-width:var(--measure)}
 .hw h3{margin-top:0}
+.hero .copy{font-family:var(--font-mono); font-size:.78rem; color:var(--ink-3); margin-top:2.2rem}
+ol.compact{margin:.3rem 0; padding-left:1.3rem} ol.compact li{margin:.15rem 0}
+.docex{display:grid; grid-template-columns:minmax(0,1.7fr) minmax(240px,1fr); gap:1rem 1.4rem; margin-top:.8rem; align-items:start}
+@media (max-width:860px){.docex{grid-template-columns:1fr}}
+.doc{background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:1rem 1.2rem; font-size:.9rem; line-height:1.5}
+.doc details.sub{border-top:1px solid var(--line)} .doc details.sub:first-child{border-top:0}
+.doc summary{cursor:pointer; list-style:none; font-family:var(--font-mono); font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); padding:.55rem 0; display:flex; gap:.5rem; align-items:center}
+.doc summary::-webkit-details-marker{display:none}
+.doc summary::before{content:"▸"; font-size:.8rem; color:var(--accent); width:.9em}
+.doc details[open] summary::before{content:"▾"}
+.doc summary:hover{color:var(--accent)}
+.doc details.sub .sub-body{padding:0 0 .7rem 1.4em}
+.doc p{margin:.3rem 0} .doc ul{margin:.3rem 0 .3rem 1.2rem; padding:0} .doc li{margin:.15rem 0}
+.doc table{font-size:.86rem; margin:.3rem 0} .doc th,.doc td{padding:.3rem .5rem; vertical-align:top}
+.doc .q{border-left:3px solid var(--accent); padding:.4rem .7rem; background:var(--accent-soft); border-radius:0 6px 6px 0; margin:.4rem 0}
+.doc .num{font-family:var(--font-mono); font-variant-numeric:tabular-nums}
+.doc mark{background:var(--warm-soft); color:inherit; padding:0 .15em; border-radius:3px}
+.margin{display:flex; flex-direction:column; gap:.55rem}
+.margin .mn{border-left:3px solid var(--warm); background:var(--surface-2); border-radius:0 8px 8px 0; padding:.5rem .7rem; font-size:.84rem; line-height:1.45}
+.margin .mn b{color:var(--warm); font-weight:600}
 .chatband{display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap; background:var(--accent-soft); border-radius:12px; padding:1rem 1.2rem; max-width:900px}
 .chatband a{font-family:var(--font-mono); font-size:1.05rem; color:var(--accent); font-weight:600; text-decoration:none}
 .chatband a:hover{text-decoration:underline}
@@ -328,6 +415,7 @@ body.teacher .teacher{display:block}
   <div class="prose">
     <p class="note">Стрелки ← → листают разделы в режиме презентации. Этот же файл — раздатка, интерактивы работают без сети.</p>
   </div>
+  <p class="copy">© Дарья Андреева, 2026</p>
 </section>
 
 <section id="team" class="sec" data-short="Преподаватели">
@@ -359,13 +447,21 @@ body.teacher .teacher{display:block}
     <p class="lede">Лекции с практикой, сквозной проект вместо экзамена и домашние задания, которые к нему подводят.</p>
   </div>
   <div class="sec-head">
+    <h3 style="margin:0">Оценка</h3>
+  </div>
+  <div class="formula">
+    <div class="f main"><span class="lhs">Итог</span> = 0,5 · О<sub>проект</sub> + 0,5 · О<sub>ДЗ</sub> + 0,1 · О<sub>бонус</sub></div>
+    <div class="f"><span class="lhs">О<sub>проект</sub></span> = 0,6 · О<sub>защита</sub> + 0,4 · О<sub>методика оценивания</sub></div>
+    <div class="f"><span class="lhs">О<sub>ДЗ</sub></span> = 0,6 · О<sub>соревнование</sub> + 0,4 · О<sub>КТ по проекту</sub></div>
+  </div>
+  <div class="sec-head" style="margin-top:1.6rem">
     <h3 style="margin:0">Проект</h3>
   </div>
   <div class="cardgrid">
     <div class="card"><div class="k">Продукт</div>Агентский продукт по вашей идее: от контракта и бюджетов до прототипа. <span class="slot">[подробнее — дальше]</span></div>
-    <div class="card"><div class="k">Артефакты</div><b>Design doc</b> и <b>ADR</b> (Architecture Decision Record) — страница на каждое архитектурное решение.</div>
+    <div class="card"><div class="k">Артефакты</div><b>Design doc</b> и <b><abbr title="Architecture Decision Record — запись архитектурного решения: контекст, варианты, решение, последствия">ADR</abbr></b> (Architecture Decision Record) — страница на каждое архитектурное решение.</div>
     <div class="card"><div class="k">Методика оценивания</div>Оффлайн-критерии: сложность и оригинальность темы, соответствие design doc'у, обоснование решений, идея, процесс разработки.</div>
-    <div class="card"><div class="k">Защита = экзамен</div>Показываете систему, design doc и ADR. Отвечаете на вопросы о решениях и ограничениях.</div>
+    <div class="card"><div class="k">Защита = экзамен</div>Показываете систему, design doc и <abbr title="Architecture Decision Record — запись архитектурного решения: контекст, варианты, решение, последствия">ADR</abbr>. Отвечаете на вопросы о решениях и ограничениях.</div>
   </div>
   <div class="sec-head" style="margin-top:1.6rem">
     <h3 style="margin:0">Домашние задания</h3>
@@ -374,14 +470,6 @@ body.teacher .teacher{display:block}
     <div class="card"><div class="k">Соревнование</div>BitGN by Rinat Abdullin.</div>
     <div class="card"><div class="k">Контрольные точки</div>Сдача разделов design doc по ходу курса. Первая: контракт, бюджеты и design doc с описанием спецификаций.</div>
     <div class="card"><div class="k">Бонус</div>Контрибьют в материалы курса: исправления, примеры, интерактивы, задачи.</div>
-  </div>
-  <div class="sec-head" style="margin-top:1.6rem">
-    <h3 style="margin:0">Оценка</h3>
-  </div>
-  <div class="formula">
-    <div class="f main"><span class="lhs">Итог</span> = 0,5 · О<sub>проект</sub> + 0,5 · О<sub>ДЗ</sub> + 0,1 · О<sub>бонус</sub></div>
-    <div class="f"><span class="lhs">О<sub>проект</sub></span> = 0,6 · О<sub>защита</sub> + 0,4 · О<sub>методика оценивания</sub></div>
-    <div class="f"><span class="lhs">О<sub>ДЗ</sub></span> = 0,6 · О<sub>соревнование</sub> + 0,4 · О<sub>КТ по проекту</sub></div>
   </div>
 </section>
 
@@ -421,7 +509,7 @@ body.teacher .teacher{display:block}
   <div class="prose">
     <h3 style="margin-top:0">Три типовых сценария</h3>
     <ol>
-      <li><b>Выдуманный API.</b> Метода или параметра нет — или он был две версии назад. Хуже падения — молчаливое игнорирование.</li>
+      <li><b>Выдуманный <abbr title="Application Programming Interface — программный интерфейс для обращения к сервису из кода">API</abbr>.</b> Метода или параметра нет — или он был две версии назад. Хуже падения — молчаливое игнорирование.</li>
       <li><b>Правдоподобно, но неверно.</b> «O(n)», а на деле O(n²). Метрика посчитана не по определению. Тест «починен» ослаблением assert.</li>
       <li><b>Велосипед вместо библиотеки.</b> 150 строк своего retry, когда в зависимостях уже есть готовый. Работает — но теперь это ваш код и ваши баги.</li>
     </ol>
@@ -473,45 +561,62 @@ body.teacher .teacher{display:block}
   </div>
 
   <div class="prose">
-    <h3>Как LLM генерирует — минимум</h3>
+    <h3>Как LLM генерирует</h3>
     <ul>
       <li>LLM — функция без состояния. На вход — токены, на выход — распределение следующего токена. Между вызовами ничего не помнит.</li>
       <li>Генерация авторегрессионна: выбрали токен → дописали к входу → вызвали снова. Ответ на 400 токенов — 400 вызовов.</li>
     </ul>
+  <figure class="arfig">
+    <svg viewBox="0 0 674 312" role="img" aria-label="Авторегрессия: новый токен каждого вызова дописывается в промпт следующего вызова"><defs><marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="context-stroke"/></marker></defs><text x="74" y="26" class="hd">промпт — весь текст целиком</text><text x="486.0" y="26" class="hd" text-anchor="middle">модель</text><text x="559.0" y="26" class="hd">новый токен</text><text x="8" y="60.0" class="lbl">вызов&#160;1</text><rect x="74" y="46" width="63.0" height="28" rx="7" fill="var(--surface-2)" stroke="var(--line-2)"/><text x="105.5" y="60.0" class="tok" fill="var(--ink-2)">Модель</text><rect x="143.0" y="46" width="78.0" height="28" rx="7" fill="var(--surface-2)" stroke="var(--line-2)"/><text x="182.0" y="60.0" class="tok" fill="var(--ink-2)">выбирает</text><rect x="227.0" y="46" width="85.5" height="28" rx="7" fill="var(--surface-2)" stroke="var(--line-2)"/><text x="269.8" y="60.0" class="tok" fill="var(--ink-2)">следующий</text><path d="M316.5,60.0 H439.0" class="arr"/><rect x="447.0" y="43" width="78" height="34" rx="8" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="486.0" y="60.0" class="llm" fill="var(--accent)">LLM</text><path d="M527.0,60.0 H551.0" class="arr warm"/><rect x="559.0" y="46" width="55.5" height="28" rx="7" fill="var(--warm-soft)" stroke="var(--warm)"/><text x="586.8" y="60.0" class="tok" fill="var(--warm)">токен</text><path d="M586.8,74 C586.8,108 346.2,91 346.2,125" class="fb"/><text x="8" y="148.0" class="lbl">вызов&#160;2</text><rect x="74" y="134" width="63.0" height="28" rx="7" fill="var(--surface-2)" stroke="var(--line-2)"/><text x="105.5" y="148.0" class="tok" fill="var(--ink-2)">Модель</text><rect x="143.0" y="134" width="78.0" height="28" rx="7" fill="var(--surface-2)" stroke="var(--line-2)"/><text x="182.0" y="148.0" class="tok" fill="var(--ink-2)">выбирает</text><rect x="227.0" y="134" width="85.5" height="28" rx="7" fill="var(--surface-2)" stroke="var(--line-2)"/><text x="269.8" y="148.0" class="tok" fill="var(--ink-2)">следующий</text><rect x="318.5" y="134" width="55.5" height="28" rx="7" fill="var(--warm-soft)" stroke="var(--warm)"/><text x="346.2" y="148.0" class="tok" fill="var(--warm)">токен</text><path d="M378.0,148.0 H439.0" class="arr"/><rect x="447.0" y="131" width="78" height="34" rx="8" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="486.0" y="148.0" class="llm" fill="var(--accent)">LLM</text><path d="M527.0,148.0 H551.0" class="arr warm"/><rect x="559.0" y="134" width="33.0" height="28" rx="7" fill="var(--warm-soft)" stroke="var(--warm)"/><text x="575.5" y="148.0" class="tok" fill="var(--warm)">по</text><path d="M575.5,162 C575.5,196 396.5,179 396.5,213" class="fb"/><text x="8" y="236.0" class="lbl">вызов&#160;3</text><rect x="74" y="222" width="63.0" height="28" rx="7" fill="var(--surface-2)" stroke="var(--line-2)"/><text x="105.5" y="236.0" class="tok" fill="var(--ink-2)">Модель</text><rect x="143.0" y="222" width="78.0" height="28" rx="7" fill="var(--surface-2)" stroke="var(--line-2)"/><text x="182.0" y="236.0" class="tok" fill="var(--ink-2)">выбирает</text><rect x="227.0" y="222" width="85.5" height="28" rx="7" fill="var(--surface-2)" stroke="var(--line-2)"/><text x="269.8" y="236.0" class="tok" fill="var(--ink-2)">следующий</text><rect x="318.5" y="222" width="55.5" height="28" rx="7" fill="var(--surface-2)" stroke="var(--line-2)"/><text x="346.2" y="236.0" class="tok" fill="var(--ink-2)">токен</text><rect x="380.0" y="222" width="33.0" height="28" rx="7" fill="var(--warm-soft)" stroke="var(--warm)"/><text x="396.5" y="236.0" class="tok" fill="var(--warm)">по</text><path d="M417.0,236.0 H439.0" class="arr"/><rect x="447.0" y="219" width="78" height="34" rx="8" fill="var(--accent-soft)" stroke="var(--accent)"/><text x="486.0" y="236.0" class="llm" fill="var(--accent)">LLM</text><path d="M527.0,236.0 H551.0" class="arr warm"/><rect x="559.0" y="222" width="100.5" height="28" rx="7" fill="var(--warm-soft)" stroke="var(--warm)"/><text x="609.2" y="236.0" class="tok" fill="var(--warm)">вероятности</text><text x="74" y="280" class="cap">⋯ ответ на 400 токенов — 400 таких вызовов: каждый раз модель читает промпт заново</text></svg>
+    <figcaption class="note">Оранжевое — то, что модель только что произвела: на следующем шаге это уже часть входа. Состояния между вызовами нет, «память» — целиком в тексте промпта.</figcaption>
+  </figure>
     <h4>Что из этого следует</h4>
     <ul>
       <li><b>Память.</b> Модель знает о диалоге ровно то, что ей передали в этом вызове. Историю, документы, результаты инструментов вклеивает в промпт оркестратор, хранит — хранилище.</li>
       <li><b>Уверенный бред.</b> Модель не «решает», а выбирает следующий токен по вероятности. Правдоподобное продолжение и правильный ответ — не одно и то же.</li>
-      <li><b>Цена и скорость.</b> Каждый выходной токен — отдельный проход, промпт обрабатывается за один. Отсюда TTFT, TPOT и разная цена входных и выходных токенов.</li>
+      <li><b>Цена и скорость.</b> Каждый выходной токен — отдельный проход, промпт обрабатывается за один. Отсюда <abbr title="Time To First Token — время от отправки запроса до первого токена ответа">TTFT</abbr>, <abbr title="Time Per Output Token — время генерации одного выходного токена">TPOT</abbr> и разная цена входных и выходных токенов.</li>
     </ul>
-  </div>
-
-  <div class="stage" id="argen">
-    <div class="stage-head"><span class="tag">интерактив</span><h3>Авторегрессия и «память» чат-бота</h3>
-      <p class="hint">Слева — игрушечная n-грамная модель, обученная в браузере на предложениях из этого занятия. Делает то же, что большая LLM: по контексту выдаёт распределение следующего токена. Справа — промпт, который оркестратор собрал для этого вызова.</p></div>
-    <div class="ar">
-      <div>
-        <div class="controls">
-          <div class="ctl"><label>Начало</label><select id="arStart"></select></div>
-          <div class="ctl"><label>Temperature: <span class="v" id="arTV">1.0</span></label><input type="range" id="arT" min="0.1" max="2.5" step="0.1" value="1"></div>
-          <div class="ctl"><div class="row"><button class="primary" id="arNext">Следующий токен</button><button id="arAuto">+10</button><button class="ghost" id="arReset">Сбросить</button></div></div>
-        </div>
-        <div class="seq" id="arSeq"></div>
-        <p class="kicker" style="margin-top:.8rem">Распределение следующего токена</p>
-        <div class="dist" id="arDist"></div>
-      </div>
-      <div>
-        <div class="row" style="margin-bottom:.5rem"><span class="kicker">Промпт, который видит модель</span>
-          <button class="ghost" id="arCall" aria-pressed="false">Показать второй вызов</button></div>
-        <div class="prompt-view" id="arPrompt"></div>
-        <p class="note">Во втором вызове «память» — это первый вопрос и ответ, вклеенные в промпт как текст. Сама модель ничего не сохранила.</p>
-      </div>
-    </div>
   </div>
 
   <div class="prose">
     <p><b>Вопрос:</b> где живёт память чат-бота?</p>
   </div>
+
+  <div class="stage" id="argen">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Где живёт «память» чат-бота</h3>
+      <p class="hint">Слева — диалог, как его видит пользователь. Справа — то, что на самом деле получает модель при каждом вызове: оркестратор каждый раз собирает промпт заново из инструкций, документов и истории. Отключите историю или документы и посмотрите, что бот «забудет».</p></div>
+    <div class="ar">
+      <div>
+        <div class="chat" id="arChat"></div>
+        <div class="compose">
+          <div class="draft" id="arDraft"></div>
+          <button class="primary" id="arSend">Отправить</button>
+          <button class="ghost" id="arReset">Сбросить</button>
+        </div>
+        <div class="controls" style="margin-bottom:.2rem">
+          <div class="ctl"><label><input type="checkbox" id="arHist" checked> Оркестратор вклеивает историю диалога <span class="src hist">хранилище</span></label></div>
+          <div class="ctl"><label><input type="checkbox" id="arRag" checked> Оркестратор вклеивает найденные документы <span class="src doc">хранилище</span></label></div>
+        </div>
+        <p class="note">Переключатели действуют на следующий вызов. Слева история видна всегда — её показывает клиент. Модель видит только то, что справа.</p>
+      </div>
+      <div>
+        <div class="row" style="margin-bottom:.5rem; justify-content:space-between">
+          <span class="kicker" id="arCallLabel">Промпт для вызова модели</span>
+          <span class="pill" id="arTok">≈ 0 токенов</span>
+        </div>
+        <div class="prompt-view" id="arPrompt"></div>
+        <div class="legend" style="margin-top:.6rem">
+          <span><i style="background:var(--ink-3)"></i>инструкции — конфиг оркестратора</span>
+          <span><i style="background:var(--s4)"></i>документы — хранилище (индекс)</span>
+          <span><i style="background:var(--s3)"></i>история — хранилище (диалог)</span>
+          <span><i style="background:var(--accent)"></i>текущее сообщение</span>
+          <span><i style="background:var(--warm)"></i>сгенерировано в этом ответе</span>
+        </div>
+        <p class="note" id="arNote">Нажмите «Отправить»: модель будет вызвана столько раз, сколько токенов в ответе, и каждый раз получит весь текст справа плюс уже сгенерированное.</p>
+      </div>
+    </div>
+  </div>
+
 </section>
 
 <section id="s3" class="sec" data-short="Контракт">
@@ -531,7 +636,7 @@ body.teacher .teacher{display:block}
       <tr><td><b>Выход</b></td><td>формат (текст / JSON по схеме / ссылки), гарантии (только из документов? может отказаться?)</td><td>валидация схемы, проверка groundedness</td></tr>
       <tr><td><b>Поведение при неуверенности</b></td><td>«не знаю» / уточнить / передать оператору</td><td>доля корректных отказов на eval-сете</td></tr>
       <tr><td><b>Чего не обещаем</b></td><td>точность вычислений, юридическую силу, отсутствие ошибок</td><td>дисклеймер в UI, границы в design doc</td></tr>
-      <tr><td><b>Нефункциональные</b></td><td>задержка, доступность, приватность данных</td><td>SLO, аудит хранения</td></tr>
+      <tr><td><b>Нефункциональные</b></td><td>задержка, доступность, приватность данных</td><td><abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr>, аудит хранения</td></tr>
     </tbody>
   </table></div>
   <div class="prose">
@@ -554,7 +659,7 @@ body.teacher .teacher{display:block}
       </ul>
       <h3>Задержка</h3>
       <ul>
-        <li>TTFT, TPOT, end-to-end. Всегда P50 и P95, не среднее.</li>
+        <li><abbr title="Time To First Token — время от отправки запроса до первого токена ответа">TTFT</abbr>, <abbr title="Time Per Output Token — время генерации одного выходного токена">TPOT</abbr>, end-to-end. Всегда <abbr title="50-й перцентиль (медиана): значение, которое не превышает половина запросов">P50</abbr> и <abbr title="95-й перцентиль: значение, которое не превышают 95 % запросов; хвост, который видят самые невезучие пользователи">P95</abbr>, не среднее.</li>
         <li>Агентный цикл умножает всё на число шагов.</li>
         <li>Стриминг не уменьшает задержку, но меняет её восприятие.</li>
       </ul>
@@ -565,7 +670,7 @@ body.teacher .teacher{display:block}
            + out_tokens × price_out
            + retrieval + инструменты
 cost_month = cost_req × requests_month</code></pre>
-      <p>Скрытая стоимость: разметка eval, время инженеров на обвязку, GPU-часы при self-host.</p>
+      <p>Скрытая стоимость: разметка eval, время инженеров на обвязку, <abbr title="Graphics Processing Unit — графический процессор, на котором считается модель">GPU</abbr>-часы при self-host.</p>
       <h3>Как они связаны</h3>
       <ul>
         <li>Большая модель: качество ↑, цена ↑, задержка ↑.</li>
@@ -594,13 +699,13 @@ cost_month = cost_req × requests_month</code></pre>
       <div>
         <div class="gauges">
           <div class="gauge"><div class="l"><span>Стоимость в месяц</span><b id="gCost"></b></div><div class="bar"><span id="gCostBar" style="background:var(--s2)"></span></div></div>
-          <div class="gauge"><div class="l"><span>Задержка e2e (оценка P50)</span><b id="gLat"></b></div><div class="bar"><span id="gLatBar" style="background:var(--s1)"></span></div></div>
+          <div class="gauge"><div class="l"><span>Задержка <abbr title="end-to-end — сквозная задержка от отправки запроса до последнего токена ответа">e2e</abbr> (оценка <abbr title="50-й перцентиль (медиана): значение, которое не превышает половина запросов">P50</abbr>)</span><b id="gLat"></b></div><div class="bar"><span id="gLatBar" style="background:var(--s1)"></span></div></div>
           <div class="gauge"><div class="l"><span>Качество (условно)</span><b id="gQ"></b></div><div class="bar"><span id="gQBar" style="background:var(--s3)"></span></div></div>
         </div>
         <div class="stats">
           <div class="stat"><span class="l">за запрос</span><span class="n" id="bPerReq"></span><span class="s">долларов</span></div>
           <div class="stat"><span class="l">вход / выход</span><span class="n" id="bShare"></span><span class="s">доля стоимости</span></div>
-          <div class="stat"><span class="l">TTFT</span><span class="n" id="bTtft"></span><span class="s">первый токен</span></div>
+          <div class="stat"><span class="l"><abbr title="Time To First Token — время от отправки запроса до первого токена ответа">TTFT</abbr></span><span class="n" id="bTtft"></span><span class="s">первый токен</span></div>
         </div>
         <div class="breakdown" id="bNote"></div>
       </div>
@@ -608,15 +713,45 @@ cost_month = cost_req × requests_month</code></pre>
   </div>
 </section>
 
+<section id="s5a" class="sec" data-short="Зачем SLI / SLO">
+  <div class="sec-head">
+    <h2><abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> и <abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr>: зачем переводить обещания в числа</h2>
+    <p class="lede">Контракт написан словами, а следить за ним нужно каждый день. <abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> и <abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr> — это перевод контракта в величины, которые считает машина.</p>
+  </div>
+  <div class="thesis"><abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> — чем меряем. <abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr> — какой порог обещаем держать. Error budget — сколько нарушений ещё можно себе позволить.</div>
+  <div class="cardgrid">
+    <div class="card"><div class="k"><abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> — что измеряем</div>Service Level Indicator: одно число с явной формулой, считаемое по продовому трафику. Не «качество вообще», а величина, которую двое посчитают одинаково: доля ответов, опирающихся хотя бы на один найденный документ, за скользящие 28 дней.</div>
+    <div class="card"><div class="k"><abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr> — что обещаем</div>Service Level Objective: порог на этот <abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> — «≥&#160;95&#160;%». Выше порога сервис работает как обещано; ниже — это инцидент с понятным триггером, а не «пользователям что-то не нравится».</div>
+    <div class="card"><div class="k">Error budget — чем платим</div>100 % − <abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr>. При пороге 95 % бюджет — 5&#160;% запросов за период. Пока он не выбран, можно катить рискованные изменения; кончился — сначала чиним, потом экспериментируем.</div>
+  </div>
+  <div class="cols" style="margin-top:1.4rem">
+    <div class="prose">
+      <h3 style="margin-top:0">Из контракта — в пару чисел</h3>
+      <p class="chain"><span class="step">пункт контракта</span> «ответ опирается на документацию» <span class="arw">→</span> <span class="step"><abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr></span> доля ответов с ≥&#160;1 релевантной ссылкой, judge-модель на выборке 200 запросов в сутки <span class="arw">→</span> <span class="step"><abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr></span> ≥&#160;95&#160;% за 28 дней</p>
+      <p class="note">Часть <abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> генеративного сервиса нельзя посчитать точно: groundedness и корректность отказа оценивает judge-модель на выборке. Это нормально — показатель с известной погрешностью лучше, чем его отсутствие.</p>
+    </div>
+    <div class="prose">
+      <h3 style="margin-top:0">Что это даёт</h3>
+      <ul>
+        <li><b>Регрессию видно числом</b> и в тот же день, а не через неделю по жалобам в поддержку.</li>
+        <li><b>Споры решаются измерением.</b> «После правки промпта стало лучше или хуже» — вопрос к графику, а не к старшему в комнате.</li>
+        <li><b>Выкат автоматизируется.</b> <abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr> на canary-сете — условие релиза, а не пункт для обсуждения.</li>
+        <li><b>Есть чем ответить</b> на «насколько ваш бот надёжен»: числом за период вместо «ну, обычно нормально».</li>
+      </ul>
+      <p class="note">Не путать с <abbr title="Service Level Agreement — внешний договор об уровне сервиса с санкциями за нарушение">SLA</abbr>: <abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr> — внутренняя цель, <abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> — её измерение. <abbr title="Service Level Agreement — внешний договор об уровне сервиса с санкциями за нарушение">SLA</abbr> — договор с клиентом и санкциями, его всегда пишут слабее <abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr>, чтобы оставался запас.</p>
+    </div>
+  </div>
+</section>
+
 <section id="s5" class="sec" data-short="SLI / SLO">
   <div class="sec-head">
-    <h2>SLI и SLO для генеративных сервисов</h2>
-    <p class="lede">Система деградирует незаметно: провайдер обновил модель, кто-то поправил промпт, изменились запросы. Без SLI об этом расскажут пользователи.</p>
+    <h2><abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> и <abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr> для генеративных сервисов</h2>
+    <p class="lede">Система деградирует незаметно: провайдер обновил модель, кто-то поправил промпт, изменились запросы. Без <abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> об этом расскажут пользователи.</p>
   </div>
   <div class="cols">
     <div class="tablewrap">
       <table>
-        <thead><tr><th>SLI</th><th>Как считать</th><th class="num">Пример SLO</th></tr></thead>
+        <thead><tr><th><abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr></th><th>Как считать</th><th class="num">Пример <abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr></th></tr></thead>
         <tbody>
           <tr><td>Доля валидных по формату ответов</td><td>парсинг JSON / схемы</td><td class="num">≥ 99.5 %</td></tr>
           <tr><td>Groundedness (ответ со ссылкой на источник)</td><td>judge-модель на выборке</td><td class="num">≥ 95 %</td></tr>
@@ -624,10 +759,10 @@ cost_month = cost_req × requests_month</code></pre>
           <tr><td>Успешность вызова инструментов</td><td>валидные аргументы, успешный ответ</td><td class="num">≥ 98 %</td></tr>
           <tr><td>Оценка на canary eval-сете</td><td>100 примеров на каждый релиз</td><td class="num">≥ baseline − 2 п.п.</td></tr>
           <tr><td>Пользовательский фидбек</td><td>доля 👎, эскалаций к оператору</td><td class="num">≤ X %</td></tr>
-          <tr><td>TTFT P95 / e2e P95</td><td>трейсы</td><td class="num">≤ 1.5 с / ≤ 10 с</td></tr>
+          <tr><td><abbr title="Time To First Token — время от отправки запроса до первого токена ответа">TTFT</abbr> <abbr title="95-й перцентиль: значение, которое не превышают 95 % запросов; хвост, который видят самые невезучие пользователи">P95</abbr> / <abbr title="end-to-end — сквозная задержка от отправки запроса до последнего токена ответа">e2e</abbr> <abbr title="95-й перцентиль: значение, которое не превышают 95 % запросов; хвост, который видят самые невезучие пользователи">P95</abbr></td><td>трейсы</td><td class="num">≤ 1.5 с / ≤ 10 с</td></tr>
         </tbody>
       </table>
-      <p class="note">Классические SLI никуда не делись: доступность, P95 задержки, доля ошибок и таймаутов.</p>
+      <p class="note">Классические <abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> никуда не делись: доступность, <abbr title="95-й перцентиль: значение, которое не превышают 95 % запросов; хвост, который видят самые невезучие пользователи">P95</abbr> задержки, доля ошибок и таймаутов.</p>
     </div>
     <figure class="figure">
       <svg viewBox="0 0 520 250" role="img" aria-label="SLI groundedness по релизам с линией SLO">
@@ -648,7 +783,7 @@ cost_month = cost_req × requests_month</code></pre>
         <rect x="50" y="232" width="450" height="6" rx="3" fill="var(--surface-2)"/>
         <rect x="50" y="232" width="300" height="6" rx="3" fill="var(--bad)"/>
       </svg>
-      <figcaption>Регрессия, которую без SLI никто бы не заметил: ответы остались складными, но перестали опираться на документы. Error budget — разрешение на эксперименты: пока он не выбран, можно катить изменения.</figcaption>
+      <figcaption>Регрессия, которую без <abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> никто бы не заметил: ответы остались складными, но перестали опираться на документы. Error budget — разрешение на эксперименты: пока он не выбран, можно катить изменения.</figcaption>
     </figure>
   </div>
 </section>
@@ -656,27 +791,29 @@ cost_month = cost_req × requests_month</code></pre>
 <section id="s6" class="sec" data-short="Порядок работы">
   <div class="sec-head">
     <h2>Budget-first, evaluation-first, baseline-first</h2>
-    <p class="lede">Порядок работы, который нужен в design doc. Антипаттерн: «выбрали фреймворк и модель, теперь думаем, что строить».</p>
+    <p class="lede">Порядок, который курс требует в design doc: сначала ограничения, потом способ измерять, потом самое простое решение. Усложнения — только за число.</p>
   </div>
-  <div class="cols">
-    <div class="prose">
-      <ol class="steps">
-        <li><div><b>Budget-first.</b> Контракт и три бюджета — до первой строчки кода.</div></li>
-        <li><div><b>Evaluation-first.</b> 50–100 реальных или правдоподобных запросов с ожидаемыми ответами. Собирается за день.</div></li>
-        <li><div><b>Baseline-first.</b> Один промпт, самая сильная модель, без RAG и агентов. Измерить. Часто этого уже достаточно.</div></li>
-        <li><div><b>Усложнять по числу.</b> RAG, инструменты, агентный цикл, fine-tune — только если eval-сет показал прирост, а бюджет позволяет.</div></li>
-      </ol>
+
+  <ol class="flow">
+    <li><span class="n">1</span><b>Budget-first</b><p>Контракт и три бюджета записаны до первой строчки кода.</p><span class="art">страница контракта и бюджетов</span></li>
+    <li><span class="n">2</span><b>Evaluation-first</b><p>50–100 реальных или правдоподобных запросов с ожидаемыми ответами. Собирается за день.</p><span class="art">eval-сет</span><span class="when">подробно — примерно на 6-й неделе курса</span></li>
+    <li><span class="n">3</span><b>Baseline-first</b><p>Один промпт, самая сильная модель, без <abbr title="Retrieval-Augmented Generation — генерация с подмешиванием в промпт найденных документов">RAG</abbr> и агентов. Измерить — часто этого уже достаточно.</p><span class="art">число на eval-сете</span><span class="when">возвращаемся к этому весь курс</span></li>
+    <li class="loop"><span class="n">4</span><b>Усложнять по числу</b><p><abbr title="Retrieval-Augmented Generation — генерация с подмешиванием в промпт найденных документов">RAG</abbr>, инструменты, агентный цикл, fine-tune — если eval-сет показал прирост и бюджет позволяет.</p><span class="art"><abbr title="Architecture Decision Record — запись архитектурного решения: контекст, варианты, решение, последствия">ADR</abbr> на каждое решение</span><span class="back">↺ и снова измерить на eval-сете</span><span class="when">разбираем на протяжении всего курса</span></li>
+  </ol>
+
+  <div class="stage" id="cuts">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Ограничения вырезают варианты</h3>
+      <p class="hint">Включайте ограничения из контракта и смотрите, что остаётся от пространства решений. Архитектура складывается из ограничений ещё до того, как выбрана модель.</p></div>
+    <div class="cutwrap">
+      <div class="cons" id="cutCons"></div>
+      <div class="space" id="cutSpace"></div>
     </div>
-    <div class="prose">
-      <h3 style="margin-top:0">Почему от ограничений, а не от модели</h3>
-      <p>Ограничения вырезают большую часть вариантов:</p>
-      <ul>
-        <li>данные не покидают контур → self-host → GPU-бюджет и инженер под vLLM;</li>
-        <li>TTFT ≤ 500 мс → никаких многошаговых агентов в синхронном пути;</li>
-        <li>10 млн запросов в месяц → маленькая модель + кэш + роутинг сложных запросов на большую;</li>
-        <li>ответы должны быть проверяемы → только со ссылками → RAG обязателен.</li>
-      </ul>
-    </div>
+    <p class="note" id="cutNote"></p>
+  </div>
+
+  <div class="two">
+    <div class="card bad"><div class="k">Антипаттерн</div>«Мы выбрали LangChain и GPT-x. Теперь думаем, что строить».</div>
+    <div class="card good"><div class="k">Как надо</div>«Данные не покидают контур, первый токен за полсекунды, десять миллионов запросов в месяц. Отсюда self-host, один вызов, маленькая модель с роутингом. Модель выберем последней».</div>
   </div>
 </section>
 
@@ -687,7 +824,7 @@ cost_month = cost_req × requests_month</code></pre>
   </div>
   <div class="stage" id="cases">
     <div class="stage-head"><span class="tag">интерактив</span><h3>Карточки кейсов</h3>
-      <p class="hint">Клик по карточке — следующая стадия. <span class="slot">[детали из рабочего проекта]</span></p>
+      <p class="hint">Клик по строке — следующая стадия. <span class="slot">[детали из рабочего проекта]</span></p>
       <div class="row"><button class="ghost" id="casesReset">Свернуть все</button></div></div>
     <div class="cases" id="caseGrid"></div>
   </div>
@@ -696,8 +833,8 @@ cost_month = cost_req × requests_month</code></pre>
     <h3>Возможности и ограничения</h3>
   </div>
   <div class="stage" id="sorter">
-    <div class="stage-head"><span class="tag">интерактив</span><h3>Умеет / структурно не умеет / стало можно</h3>
-      <p class="hint">Разложите задачи по трём корзинам и проверьте. Спорные карточки — повод для разговора.</p></div>
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Умеет сама / нужна обвязка</h3>
+      <p class="hint">Один вопрос к каждой задаче: можно ли доверить её модели как есть, или слабость не лечится промптом и нужен блок системы вокруг. После проверки у части карточек появится год — это к разговору о том, как список менялся.</p></div>
     <div class="sorter">
       <div class="deck" id="deck"></div>
       <div class="bins" id="bins"></div>
@@ -706,13 +843,19 @@ cost_month = cost_req × requests_month</code></pre>
   </div>
   <div class="cols">
     <div class="prose">
-      <h4>Умеет хорошо</h4>
+      <h4>Умеет сама</h4>
       <p>Перевод, переписывание, суммаризация. Извлечение структуры из текста, классификация, генерация кода. Следование формату, рассуждение над данным контекстом.</p>
-      <h4>Было нельзя — стало можно</h4>
-      <p>Надёжные структурированные выходы, длинный контекст, дешёвые маленькие модели, function calling, мультимодальность. Этот список пересматривается раз в полгода.</p>
+      <h4>Как этот список менялся</h4>
+      <ul class="tl">
+        <li><span class="y">2023</span>надёжный вывод по схеме и вызов инструментов — раньше парсили свободный текст регулярками;</li>
+        <li><span class="y">2023–24</span>картинки и скриншоты на входе — раньше отдельный OCR-пайплайн;</li>
+        <li><span class="y">2024</span>контекст в сотни тысяч токенов — раньше документ в промпт не влезал;</li>
+        <li><span class="y">2024–25</span>дешёвые маленькие модели для простых задач — раньше одна большая на всё.</li>
+      </ul>
+      <p>Список «сама не умеет» за это время не сдвинулся. Пересматривайте первый список раз в полгода, второй — нет.</p>
     </div>
     <div class="prose">
-      <h4>Структурно плохо — лечится не промптом, а обвязкой</h4>
+      <h4>Сама не умеет — лечится не промптом, а обвязкой</h4>
       <ul>
         <li>арифметика и подсчёты → калькулятор / код;</li>
         <li>факты вне контекста → retrieval;</li>
@@ -728,40 +871,58 @@ cost_month = cost_req × requests_month</code></pre>
 
 <section id="s8" class="sec" data-short="Итог и ДЗ">
   <div class="sec-head">
-    <h2>Design doc, ADR и домашнее задание</h2>
+    <h2>Design doc, <abbr title="Architecture Decision Record — запись архитектурного решения: контекст, варианты, решение, последствия">ADR</abbr> и домашнее задание</h2>
+    <p class="lede">Design doc — не отчёт после проекта, а инструмент до него: он заставляет записать ограничения раньше, чем выбрать модель. Ниже — структура и разобранный пример того, что именно писать.</p>
   </div>
   <div class="cols">
     <div class="prose">
-      <h3 style="margin-top:0">Design doc — структура</h3>
-      <ol>
-        <li>Контекст и пользователь</li>
-        <li>Контракт</li>
-        <li>Три бюджета и SLO</li>
-        <li>Схема системы по семи блокам</li>
+      <h3 style="margin-top:0">Структура</h3>
+      <ol class="compact">
+        <li>Контекст: бизнес-задача, пользователи и нагрузка, границы</li>
+        <li>Контракт, сценарии и диалоговая логика</li>
+        <li>Три бюджета и <abbr title="Service Level Objective — целевое значение показателя, которое мы обещаем держать">SLO</abbr></li>
+        <li>Архитектура: семь блоков, путь запроса, данные, промпты, инфраструктура</li>
         <li>Eval-план</li>
         <li>Baseline и план усложнений</li>
-        <li>Риски и структурные ограничения</li>
-        <li>Открытые вопросы</li>
+        <li>Риски, структурные ограничения, безопасность</li>
+        <li>План работ и эксплуатация</li>
+        <li>Ресурсы</li>
+        <li>Открытые вопросы, приложения</li>
       </ol>
-      <h3>ADR — одна страница на решение</h3>
-      <p>Контекст → варианты → решение → последствия.</p>
-      <p>Точно потребуют ADR: API vs self-host, RAG vs длинный контекст, агентный цикл vs фиксированный пайплайн, выбор фреймворка оркестрации.</p>
+      <p class="note">Первые три раздела — к первой контрольной точке, остальные заполняются по ходу курса. Шаблоны: <a href="../templates/design_doc_template.md" target="_blank" rel="noopener">design doc</a>, <a href="../templates/adr_template.md" target="_blank" rel="noopener"><abbr title="Architecture Decision Record — запись архитектурного решения: контекст, варианты, решение, последствия">ADR</abbr></a>.</p>
     </div>
-    <div class="hw">
-      <h3>Домашнее задание</h3>
-      <p>Выбрать идею агентского продукта (можно временную) и написать на одну страницу:</p>
-      <ul>
-        <li>контракт — пять полей из таблицы;</li>
-        <li>три бюджета с числами, пусть и грубыми;</li>
-        <li>eval-сет из 20 запросов с ожидаемыми ответами.</li>
-      </ul>
-      <p>Это первая секция design doc. Следующая пара — откуда берутся числа в бюджетах задержки и стоимости.</p>
+    <div class="prose">
+      <h3 style="margin-top:0"><abbr title="Architecture Decision Record — запись архитектурного решения: контекст, варианты, решение, последствия">ADR</abbr> — одна страница на решение</h3>
+      <p>Контекст → варианты → решение → последствия. Пишется, когда у решения были реальные альтернативы, и хранится рядом с design doc.</p>
+      <p>Точно потребуют <abbr title="Architecture Decision Record — запись архитектурного решения: контекст, варианты, решение, последствия">ADR</abbr>: <abbr title="Application Programming Interface — программный интерфейс для обращения к сервису из кода">API</abbr> vs self-host, <abbr title="Retrieval-Augmented Generation — генерация с подмешиванием в промпт найденных документов">RAG</abbr> vs длинный контекст, агентный цикл vs фиксированный пайплайн, выбор фреймворка оркестрации.</p>
+      <p><b>Три признака хорошего design doc:</b> в каждом разделе есть число; каждое обещание в контракте можно проверить; по документу видно, что решили <i>не</i> делать.</p>
     </div>
+  </div>
+
+  <div class="stage" id="docex">
+    <div class="stage-head"><span class="tag">пример</span><h3>Фрагмент design doc: сервис бенчмаркинга агентов</h3>
+      <p class="hint">Задача из кейса E: в компании три десятка агентов, надо понять, какие полезны и какого убить. Слева — как это записано в design doc, справа — почему именно так и где всплывают ограничения. Сам сервис — тоже LLM-система: судья здесь модель, и все структурные ограничения относятся к нему.</p></div>
+    <div class="row" style="justify-content:space-between"><div class="row" id="docTabs"></div><button class="ghost" id="docAll">Раскрыть все</button></div>
+    <div class="docex">
+      <div class="doc" id="docBody"></div>
+      <div class="margin" id="docNotes"></div>
+    </div>
+  </div>
+
+  <div class="hw">
+    <h3>Домашнее задание</h3>
+    <p>Выбрать идею агентского продукта (можно временную) и написать на одну страницу:</p>
+    <ul>
+      <li>контракт — пять полей из таблицы, плюс что происходит, когда ответа нет;</li>
+      <li>три бюджета с числами, пусть и грубыми, и откуда они;</li>
+      <li>eval-сет из 20 запросов с ожидаемыми ответами.</li>
+    </ul>
+    <p>Это первые разделы design doc. Скопируйте шаблон в репозиторий проекта и заполняйте по таблице «когда что заполнять» в его начале. Следующая пара — откуда берутся числа в бюджетах задержки и стоимости.</p>
   </div>
 </section>
 
 </main>
-<footer>LLM-системы и агенты · занятие 1 · интерактивные элементы работают без сети; цены и времена в калькуляторах — иллюстративные.</footer>
+<footer>LLM-системы и агенты · занятие 1 · интерактивные элементы работают без сети; цены и времена в калькуляторах — иллюстративные.<br>© Дарья Андреева, 2026</footer>
 
 <script>
 /* ---------- shared: theme, presentation mode, section chips ---------- */
@@ -967,13 +1128,13 @@ const QUIZ = [
 
 /* ================= 2. Анатомия и путешествие запроса ================= */
 const BLOCKS = [
-  {k:'01', n:'Клиент', does:'UI, стриминг ответа, история диалога на стороне пользователя.', ready:'фронтовые SDK, стриминг через SSE', breaks:'ждёт весь ответ целиком вместо стриминга — ощущение «зависло»', color:'var(--ink-3)'},
-  {k:'02', n:'Шлюз', does:'аутентификация, rate limit, роутинг между моделями и провайдерами, ретраи, fallback, учёт токенов.', ready:'LiteLLM, OpenRouter, API-gateway провайдера', breaks:'нет лимитов — один пользователь съедает месячный бюджет за ночь', color:'var(--ink-3)'},
-  {k:'03', n:'Оркестратор', does:'сборка промпта, вызов инструментов, агентный цикл, ветвления, guardrails. Это ваш код.', ready:'LangGraph, PydanticAI, OpenAI Agents SDK, Semantic Kernel', breaks:'свободный цикл без графа состояний — агент зацикливается', color:'var(--s3)'},
-  {k:'04', n:'Движок инференса', does:'собственно forward pass: prefill, decode, батчинг. Арендуемый ресурс.', ready:'API провайдера; vLLM / SGLang / TensorRT-LLM при self-host; llama.cpp, Ollama, MLX локально', breaks:'самописный цикл генерации без батчинга — в десятки раз дороже', color:'var(--s1)'},
+  {k:'01', n:'Клиент', does:'UI, стриминг ответа, история диалога на стороне пользователя.', ready:'фронтовые <abbr title="Software Development Kit — готовый набор библиотек для разработки">SDK</abbr>, стриминг через <abbr title="Server-Sent Events — поток событий от сервера в браузер, так стримят ответ по токенам">SSE</abbr>', breaks:'ждёт весь ответ целиком вместо стриминга — ощущение «зависло»', color:'var(--ink-3)'},
+  {k:'02', n:'Шлюз', does:'аутентификация, rate limit, роутинг между моделями и провайдерами, ретраи, fallback, учёт токенов.', ready:'LiteLLM, OpenRouter, <abbr title="Application Programming Interface — программный интерфейс для обращения к сервису из кода">API</abbr>-gateway провайдера', breaks:'нет лимитов — один пользователь съедает месячный бюджет за ночь', color:'var(--ink-3)'},
+  {k:'03', n:'Оркестратор', does:'сборка промпта, вызов инструментов, агентный цикл, ветвления, guardrails. Это ваш код.', ready:'LangGraph, PydanticAI, OpenAI Agents <abbr title="Software Development Kit — готовый набор библиотек для разработки">SDK</abbr>, Semantic Kernel', breaks:'свободный цикл без графа состояний — агент зацикливается', color:'var(--s3)'},
+  {k:'04', n:'Движок инференса', does:'собственно forward pass: prefill, decode, батчинг. Арендуемый ресурс.', ready:'<abbr title="Application Programming Interface — программный интерфейс для обращения к сервису из кода">API</abbr> провайдера; vLLM / SGLang / TensorRT-LLM при self-host; llama.cpp, Ollama, MLX локально', breaks:'самописный цикл генерации без батчинга — в десятки раз дороже', color:'var(--s1)'},
   {k:'05', n:'Хранилища', does:'документы, векторный индекс, память диалога, кэш ответов, состояние агента.', ready:'Postgres + pgvector, Qdrant, Redis, объектное хранилище', breaks:'память диалога «в модели» — то есть нигде', color:'var(--s4)'},
-  {k:'06', n:'Инструменты', does:'поиск, выполнение кода, внешние API, БД компании.', ready:'MCP-серверы, готовые коннекторы', breaks:'инструмент без таймаута — задержка агента не ограничена ничем', color:'var(--s4)'},
-  {k:'07', n:'Наблюдаемость', does:'логи, трейсы, метрики, eval в проде, фидбек пользователя. Из этого считаются SLI.', ready:'Langfuse, Phoenix, LangSmith; Prometheus, Loki, Sentry', breaks:'только логи, без трейса по шагам — «ответ плохой, а почему — неизвестно»', color:'var(--ink-3)'},
+  {k:'06', n:'Инструменты', does:'поиск, выполнение кода, внешние <abbr title="Application Programming Interface — программный интерфейс для обращения к сервису из кода">API</abbr>, БД компании.', ready:'<abbr title="Model Context Protocol — открытый протокол подключения инструментов и данных к модели">MCP</abbr>-серверы, готовые коннекторы', breaks:'инструмент без таймаута — задержка агента не ограничена ничем', color:'var(--s4)'},
+  {k:'07', n:'Наблюдаемость', does:'логи, трейсы, метрики, eval в проде, фидбек пользователя. Из этого считаются <abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr>.', ready:'Langfuse, Phoenix, LangSmith; Prometheus, Loki, Sentry', breaks:'только логи, без трейса по шагам — «ответ плохой, а почему — неизвестно»', color:'var(--ink-3)'},
 ];
 (function(){
   const wrap = document.getElementById('blocks'), det = document.getElementById('blockDetail');
@@ -981,7 +1142,7 @@ const BLOCKS = [
   function render(){
     wrap.innerHTML = '';
     BLOCKS.forEach((b,i) => {
-      const d = el('button', 'blk' + (i===6 ? ' obs' : ''), `<span class="k">${b.k}</span><span class="n">${b.n}</span>`);
+      const d = el('button', 'blk', `<span class="k">${b.k}</span><span class="n">${b.n}</span>`);
       d.setAttribute('aria-pressed', i===sel); d.onclick = () => { sel = i; render(); };
       wrap.appendChild(d);
     });
@@ -1038,124 +1199,120 @@ const BLOCKS = [
   const r0 = draw(false); clock.textContent = fmtMs(r0.total);
 })();
 
-/* ================= 3. Игрушечная авторегрессия ================= */
-const CORPUS = `память чат-бота хранится не в модели , а в хранилище .
-оркестратор собирает промпт из истории диалога и документов .
-модель получает на вход последовательность токенов и возвращает распределение следующего токена .
-модель не хранит состояние между вызовами .
-каждый выходной токен — это отдельный вызов модели .
-история диалога хранится в базе данных , а не в модели .
-оркестратор вклеивает историю диалога в промпт перед каждым вызовом .
-веса модели не меняются после обучения .
-память чат-бота — это текст , который передали модели в этом вызове .
-хранилище хранит документы , историю диалога и результаты инструментов .
-модель выбирает следующий токен по вероятности .
-температура меняет распределение следующего токена .
-длинный ответ — это много вызовов модели .
-промпт обрабатывается за один проход , а ответ — по одному токену .
-оркестратор вызывает инструменты и передаёт результаты в промпт .
-модель не знает , что было в прошлом вызове .
-память чат-бота собирает оркестратор .
-документы попадают в промпт через retrieval .
-retrieval ищет документы в хранилище по запросу пользователя .
-пользователь видит ответ системы , а не модели .
-система — это модель плюс оркестратор плюс хранилище плюс инструменты .
-шлюз считает токены и ограничивает нагрузку .
-модель генерирует текст по одному токену .
-следующий токен выбирается из распределения .
-распределение следующего токена зависит от всего промпта .
-промпт — это история диалога , документы и инструкции .
-инструкции описывают , как модель должна отвечать .
-модель отвечает на основе промпта , а не памяти .
-память — это промпт .
-хранилище — это база данных или векторный индекс .
-векторный индекс хранит документы для retrieval .
-оркестратор решает , какие документы положить в промпт .
-каждый вызов модели начинается с пустого состояния .
-модель видит только токены этого вызова .
-если история диалога не попала в промпт , модель её не помнит .
-модель не помнит прошлый диалог сама по себе .
-результаты инструментов тоже попадают в промпт .
-вызов модели стоит токенов и времени .
-ответ модели — это последовательность токенов .
-токен — это кусок слова или слово .
-модель предсказывает следующий токен , а не ответ целиком .
-оркестратор дописывает выбранный токен к промпту и вызывает модель снова .
-так работает авторегрессия .
-авторегрессия — это генерация по одному токену .
-память чат-бота живёт в хранилище и собирается оркестратором .
-состояние диалога хранится вне модели .
-модель — это функция без состояния .
-функция без состояния не помнит прошлые вызовы .
-пользователь пишет сообщение , оркестратор собирает промпт , модель генерирует токены .
-хранилище отвечает за память , модель — за генерацию .`;
+/* ================= 3. Где живёт память чат-бота ================= */
 (function(){
-  const uni = {}, bi = {}, tri = {};
-  const add = (m,k,w) => { (m[k] = m[k] || {}); m[k][w] = (m[k][w]||0)+1; };
-  CORPUS.split('\n').forEach(line => {
-    const t = ['<s>','<s>', ...line.trim().split(/\s+/), '</s>'];
-    for(let i=2;i<t.length;i++){ uni[t[i]] = (uni[t[i]]||0)+1; add(bi, t[i-1], t[i]); add(tri, t[i-2]+' '+t[i-1], t[i]); }
-  });
-  const norm = o => { const s = Object.values(o).reduce((a,b)=>a+b,0); const r = {}; for(const k in o) r[k] = o[k]/s; return r; };
-  const U = norm(uni);
-  function dist(ctx){
-    const w1 = ctx[ctx.length-2] ?? '<s>', w2 = ctx[ctx.length-1] ?? '<s>';
-    const t = tri[w1+' '+w2] ? norm(tri[w1+' '+w2]) : null, b = bi[w2] ? norm(bi[w2]) : null;
-    const p = {};
-    const mix = (m, wgt) => { if(!m) return; for(const k in m) p[k] = (p[k]||0) + wgt*m[k]; };
-    if(t && b){ mix(t,.7); mix(b,.25); mix(U,.05); } else if(b){ mix(b,.85); mix(U,.15); } else mix(U,1);
-    return p;
-  }
-  function temper(p, T){
-    const r = {}; let s = 0; for(const k in p){ r[k] = Math.pow(p[k], 1/T); s += r[k]; } for(const k in r) r[k] /= s; return r;
-  }
-  const starts = ['память чат-бота', 'модель не', 'оркестратор собирает', 'следующий токен', 'хранилище —', 'пользователь'];
-  const sel = document.getElementById('arStart'); starts.forEach(s => sel.appendChild(el('option', null, s)));
-  const seqEl = document.getElementById('arSeq'), distEl = document.getElementById('arDist'), tEl = document.getElementById('arT'), tV = document.getElementById('arTV');
-  let seq = [], nGen = 0, lastPick = null, done = false;
-  function reset(){ seq = sel.value.split(' '); nGen = 0; lastPick = null; done = false; render(); }
-  function render(){
-    seqEl.innerHTML = seq.map((w,i) => `<span class="tok${i >= seq.length-nGen ? ' gen' : ''}${i===seq.length-1 && nGen>0 ? ' last' : ''}">${w}</span>`).join(' ') + (done ? ' <span class="pill">&lt;/s&gt; — конец</span>' : '');
-    const T = +tEl.value; tV.textContent = T.toFixed(1);
-    if(done){ distEl.innerHTML = '<div class="note">Модель выбрала токен конца последовательности. Сбросьте или выберите другое начало.</div>'; return; }
-    const p = temper(dist(seq), T);
-    const top = Object.entries(p).sort((a,b)=>b[1]-a[1]).slice(0,6);
-    distEl.innerHTML = top.map(([w,pr]) => `<div class="d${w===lastPick?' pick':''}"><span class="w">${w==='</s>'?'&lt;/s&gt;':w}</span><span class="b"><i style="width:${(pr*100).toFixed(1)}%"></i></span><span class="p">${(pr*100).toFixed(1)} %</span></div>`).join('');
-  }
-  function step(){
-    if(done) return;
-    const p = temper(dist(seq), +tEl.value);
-    let r = Math.random(), pick = null; for(const [w,pr] of Object.entries(p)){ r -= pr; if(r <= 0){ pick = w; break; } }
-    if(pick == null) pick = Object.keys(p)[0];
-    lastPick = pick;
-    if(pick === '</s>'){ done = true; render(); return; }
-    seq.push(pick); nGen++; render();
-  }
-  document.getElementById('arNext').onclick = step;
-  document.getElementById('arAuto').onclick = () => { for(let i=0;i<10;i++) step(); };
-  document.getElementById('arReset').onclick = reset;
-  sel.onchange = reset; tEl.oninput = render;
-  reset();
+  const g = id => document.getElementById(id);
+  const chatEl = g('arChat'), draftEl = g('arDraft'), sendBtn = g('arSend'), resetBtn = g('arReset');
+  const histCb = g('arHist'), ragCb = g('arRag'), pv = g('arPrompt'), tokEl = g('arTok'), noteEl = g('arNote'), callLbl = g('arCallLabel');
 
-  // prompt view
-  const pv = document.getElementById('arPrompt'), btn = document.getElementById('arCall');
-  let second = false;
-  const SYS = '[system] Ты — ассистент по внутренней документации. Отвечай только по фрагментам ниже, иначе скажи, что не знаешь.\n[документы из retrieval]\n  (1) «Отпуск согласуется в HR-портале за 14 дней…»\n  (2) «Заявление подписывает руководитель…»\n';
-  function renderPV(){
-    let s = `<span class="sys">${SYS}</span>`;
-    s += `<span class="u">[user] Как оформить отпуск?</span>\n`;
-    if(second){
-      s += `<span class="a">[assistant] Через HR-портал, за 14 дней; заявление подписывает руководитель (фрагменты 1, 2).</span>\n`;
-      s += `<span class="u new">[user] А если руководитель в отпуске?</span>\n`;
-      s += `<span class="sys">← модель видит весь этот текст целиком; «помнит» первый вопрос только потому, что оркестратор его вклеил</span>`;
-    } else {
-      s += `<span class="sys">← первый вызов: модель видит системный промпт, документы и один вопрос</span>`;
+  const SYS = 'Ты — ассистент по внутренней документации компании. Отвечай только на основании фрагментов ниже. Если ответа в них нет — скажи об этом явно.';
+  const DOCS = {
+    1: '«Отпуск оформляется через HR-портал не позднее чем за 14 календарных дней до начала.»',
+    2: '«Заявление на отпуск подписывает непосредственный руководитель сотрудника.»',
+    3: '«Если руководитель отсутствует, заявление подписывает его заместитель или вышестоящий руководитель.»',
+  };
+  // Сценарий: вопрос, что находит retrieval, и ответ в зависимости от того, что попало в промпт.
+  const TURNS = [
+    { q: 'Как оформить отпуск?', docs: [1, 2],
+      answer: (hist, rag) => rag
+        ? 'Через HR-портал, не позднее чем за 14 дней; заявление подписывает ваш руководитель (фрагменты 1, 2).'
+        : 'В переданных мне фрагментах нет информации об оформлении отпуска — не могу ответить.' },
+    { q: 'А если он сам в отпуске?', docs: [3],
+      answer: (hist, rag) => !hist
+        ? 'Уточните, о ком речь: в вашем сообщении нет контекста, кто «он».'
+        : rag
+          ? 'Тогда заявление подписывает заместитель руководителя или вышестоящий руководитель (фрагмент 3).'
+          : 'О замещении руководителя в переданных фрагментах ничего нет.' },
+    { q: 'Напомни, за сколько дней подавать?', docs: [1],
+      answer: (hist, rag) => rag
+        ? 'Не позднее чем за 14 дней до начала отпуска (фрагмент 1).'
+        : hist
+          ? 'Как я писал выше — не позднее чем за 14 дней.'
+          : 'В переданных фрагментах нет данных о сроках подачи.' },
+  ];
+
+  let history = [];   // {role, text} — то, что лежит в хранилище диалога
+  let turn = 0, busy = false, timer = null;
+  const esc = t => t.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  const approxTok = t => Math.max(1, Math.round(t.replace(/\s+/g,' ').length / 3.2));
+
+  function renderChat(streaming){
+    chatEl.innerHTML = '';
+    if(!history.length && !streaming){ chatEl.appendChild(el('div','empty','Диалог пуст. Отправьте первое сообщение.')); return; }
+    history.forEach(m => chatEl.appendChild(el('div', 'msg ' + (m.role==='user'?'user':'bot'), esc(m.text))));
+    if(streaming){
+      chatEl.appendChild(el('div','msg user', esc(streaming.q)));
+      chatEl.appendChild(el('div','msg bot', esc(streaming.text) + (streaming.done ? '' : '<span class="cur"></span>')));
     }
-    pv.innerHTML = s;
-    btn.setAttribute('aria-pressed', second); btn.textContent = second ? 'Показать первый вызов' : 'Показать второй вызов';
+    chatEl.scrollTop = chatEl.scrollHeight;
   }
-  btn.onclick = () => { second = !second; renderPV(); };
-  renderPV();
+  function renderDraft(){
+    if(turn >= TURNS.length){ draftEl.textContent = 'Сценарий закончен — сбросьте диалог'; draftEl.classList.add('done'); sendBtn.disabled = true; }
+    else { draftEl.textContent = TURNS[turn].q; draftEl.classList.remove('done'); sendBtn.disabled = busy; }
+  }
+  // Промпт, который оркестратор собрал для текущего вызова
+  function buildPrompt(t, hist, rag, genTokens, lastIdx){
+    let s = `<span class="lbl">system — инструкции</span>\n<span class="sys">${esc(SYS)}</span>\n`;
+    s += `<span class="lbl">документы из retrieval</span>\n`;
+    s += rag ? t.docs.map(i => `<span class="doc">(${i}) ${esc(DOCS[i])}</span>`).join('\n') + '\n'
+             : `<span class="off">— выключено: оркестратор не ходил в индекс, документов в промпте нет</span>\n`;
+    s += `<span class="lbl">история диалога</span>\n`;
+    if(hist && history.length) s += history.map(m => `<span class="h">[${m.role}] ${esc(m.text)}</span>`).join('\n') + '\n';
+    else if(hist) s += `<span class="off">— пусто: это первое сообщение</span>\n`;
+    else s += `<span class="off">— выключено: оркестратор не достал историю из хранилища</span>\n`;
+    s += `<span class="lbl">текущее сообщение</span>\n<span class="u">[user] ${esc(t.q)}</span>\n`;
+    s += `<span class="lbl">ответ модели (дописывается по одному токену)</span>\n<span class="gen">[assistant] `;
+    s += genTokens.map((w,i) => i===lastIdx ? `<span class="last">${esc(w)}</span>` : esc(w)).join(' ');
+    s += '</span>';
+    pv.innerHTML = s;
+    const plain = SYS + (rag ? t.docs.map(i=>DOCS[i]).join(' ') : '') + (hist ? history.map(m=>m.text).join(' ') : '') + t.q + genTokens.join(' ');
+    tokEl.textContent = '≈ ' + fmt(approxTok(plain)) + ' токенов на входе';
+  }
+
+  function send(){
+    if(busy || turn >= TURNS.length) return;
+    busy = true; renderDraft();
+    const t = TURNS[turn], hist = histCb.checked, rag = ragCb.checked;
+    const words = t.answer(hist, rag).split(' ');
+    const gen = [];
+    const stream = { q: t.q, text: '', done: false };
+    let call = 0;
+    const tick = () => {
+      call++;
+      if(gen.length < words.length){
+        gen.push(words[gen.length]);
+        stream.text = gen.join(' ');
+        callLbl.textContent = `Вызов модели № ${call} — один выходной токен`;
+        buildPrompt(t, hist, rag, gen, gen.length-1);
+        renderChat(stream);
+        timer = setTimeout(tick, 140);
+      } else {
+        stream.done = true;
+        callLbl.textContent = `Вызов модели № ${call} — модель вернула <конец ответа>`;
+        buildPrompt(t, hist, rag, gen, -1);
+        history.push({ role:'user', text:t.q }, { role:'assistant', text:stream.text });
+        renderChat(null);
+        const n = words.length;
+        let why = '';
+        if(turn === 1 && !hist) why = ' Без истории модель не знает, кто «он»: «память» была текстом в промпте, а не в модели.';
+        else if(turn === 1 && hist) why = ' «Он» понят только потому, что оркестратор вклеил предыдущий вопрос и ответ.';
+        else if(turn === 2 && !rag && hist) why = ' Документов нет, но факт есть в истории — модель прочитала его из своего же прошлого ответа.';
+        else if(turn === 0 && !rag) why = ' Без retrieval у модели нет фактов о компании — контракт требует отказаться, а не выдумывать.';
+        noteEl.textContent = `Ответ из ${n} токенов = ${n} вызовов, каждый на всём промпте плюс уже сгенерированное. После ответа оркестратор записывает пару «вопрос — ответ» в хранилище.` + why;
+        turn++; busy = false; renderDraft();
+      }
+    };
+    tick();
+  }
+  function reset(){
+    clearTimeout(timer); history = []; turn = 0; busy = false;
+    renderChat(null); renderDraft();
+    pv.innerHTML = '<span class="off">Промпт появится при отправке сообщения.</span>';
+    tokEl.textContent = '≈ 0 токенов'; callLbl.textContent = 'Промпт для вызова модели';
+    noteEl.textContent = 'Нажмите «Отправить»: модель будет вызвана столько раз, сколько токенов в ответе, и каждый раз получит весь текст справа плюс уже сгенерированное.';
+  }
+  sendBtn.onclick = send; resetBtn.onclick = reset;
+  reset();
 })();
 
 /* ================= 5. Калькулятор трёх бюджетов ================= */
@@ -1188,12 +1345,168 @@ retrieval ищет документы в хранилище по запросу 
     if(inCost > outCost*1.5) notes.push('Стоимость сидит во входных токенах: системный промпт и контекст. Первые рычаги — сократить промпт и включить prompt caching.');
     if(outCost > inCost*1.5) notes.push('Стоимость сидит в выходе: короче ответы, структурированный формат вместо прозы, маленькая модель для простых случаев.');
     if(steps > 1) notes.push(`Агент из ${steps} шагов: промпт отправляется ${steps} раз, плюс ${steps-1} вызовов инструментов — задержка растёт линейно, стоимость почти линейно.`);
-    if(lat > 10000) notes.push('e2e больше 10 секунд — синхронный UI уже не подходит, нужен стриминг промежуточных шагов или асинхронный сценарий.');
+    if(lat > 10000) notes.push('<abbr title="end-to-end — сквозная задержка от отправки запроса до последнего токена ответа">e2e</abbr> больше 10 секунд — синхронный UI уже не подходит, нужен стриминг промежуточных шагов или асинхронный сценарий.');
     if(cache >= .5) notes.push('Кэш работает только на общем префиксе (системный промпт, инструкции, общие документы) — не на уникальной части запроса.');
     g('bNote').innerHTML = notes.map(n => '• ' + n).join('<br>');
   }
   ['bIn','bOut','bReq','bSteps','bCache','bTier','bPin','bPout'].forEach(id => g(id).addEventListener('input', calc));
   calc();
+})();
+
+/* ================= 6. Ограничения вырезают варианты ================= */
+(function(){
+  const DECISIONS = [
+    { q:'Где инференс', opts:[ ['api','API провайдера'], ['self','self-host на своих GPU'] ] },
+    { q:'Откуда факты', opts:[ ['head','из весов модели, «из головы»'], ['rag','RAG по документам'], ['long','весь корпус в длинный контекст'] ] },
+    { q:'Вызовов на запрос', opts:[ ['one','один вызов модели'], ['agent','агентный цикл на несколько шагов'] ] },
+    { q:'Размер модели', opts:[ ['big','большая для всех запросов'], ['route','маленькая + роутинг сложных на большую'] ] },
+  ];
+  const CONS = [
+    { l:'Данные не покидают контур', s:'персональные данные, коммерческая тайна', cuts:{ api:'запрос уйдёт к провайдеру' } },
+    { l:'Первый токен ≤ 500 мс', s:'синхронный ответ в интерфейсе', cuts:{ agent:'каждый шаг — секунды', long:'prefill сотен тысяч токенов не влезет' } },
+    { l:'10 млн запросов в месяц', s:'стоимость доминирует', cuts:{ big:'дорого на каждом запросе', long:'платим за весь корпус каждый раз' } },
+    { l:'Ответы проверяемы', s:'обязательна ссылка на источник', cuts:{ head:'нет источника — контракт запрещает' } },
+  ];
+  const consEl = document.getElementById('cutCons'), spaceEl = document.getElementById('cutSpace'), noteEl = document.getElementById('cutNote');
+  const on = CONS.map(() => false);
+  CONS.forEach((c,i) => {
+    const lab = el('label','chip', `<input type="checkbox"><span>${c.l}<small>${c.s}</small></span>`);
+    lab.querySelector('input').onchange = e => { on[i] = e.target.checked; lab.classList.toggle('on', on[i]); render(); };
+    consEl.appendChild(lab);
+  });
+  function render(){
+    const cut = {};
+    CONS.forEach((c,i) => { if(on[i]) for(const k in c.cuts) cut[k] = cut[k] || c.cuts[k]; });
+    spaceEl.innerHTML = '';
+    let total = 0, left = 0, singles = 0;
+    DECISIONS.forEach(d => {
+      const alive = d.opts.filter(([k]) => !cut[k]);
+      total += d.opts.length; left += alive.length; if(alive.length === 1) singles++;
+      const row = el('div','dec', `<div class="q">${d.q}</div>`);
+      const opts = el('div','opts');
+      d.opts.forEach(([k,l]) => {
+        const o = el('div', 'opt' + (cut[k] ? ' cut' : alive.length === 1 ? ' only' : ''), `<span>${l}</span>` + (cut[k] ? `<span class="why">${cut[k]}</span>` : ''));
+        opts.appendChild(o);
+      });
+      row.appendChild(opts); spaceEl.appendChild(row);
+    });
+    const nOn = on.filter(Boolean).length;
+    if(!nOn) noteEl.textContent = `Ограничений нет — открыты все ${total} вариантов, и выбирать придётся на вкус. Если вам кажется, что ограничений у проекта нет, поищите получше: скорее всего, вы о них ещё не всё знаете. Включите ограничения слева.`;
+    else if(singles === DECISIONS.length) noteEl.textContent = `Осталось ${left} из ${total}: по одному варианту в каждой строке. Архитектура определена ограничениями — модель выбирается последней, под то, что осталось.`;
+    else noteEl.textContent = `Осталось ${left} из ${total} вариантов. ${singles ? singles + ' решени' + (singles === 1 ? 'е' : 'я') + ' уже сделан' + (singles === 1 ? 'о' : 'ы') + ' за вас.' : ''}`;
+  }
+  render();
+})();
+
+/* ================= 7. Пример design doc: бенчмаркинг агентов ================= */
+const DOCEX = [
+  { t:'1. Контекст', h:`
+<h4>1.1 Бизнес-задача</h4>
+<p>За полтора года в компании появилось <span class="num">34</span> агента: поддержка, HR, SQL-помощник, разбор договоров, ещё десяток внутренних. У каждого свой владелец, промпт и модель. Никто не может сказать, какие из них приносят пользу; решение «оставить или закрыть» принимается на совещании по ощущениям. Поддержка всех обходится в <span class="num">≈ 2</span> инженера-месяца в квартал.</p>
+<p><b>Почему без LLM-системы не справиться.</b> Ручная проверка одного агента на 100 примерах — день работы аналитика; 34 агента раз в квартал — не масштабируется. Продуктовые метрики (👎, эскалации) есть только у половины агентов.</p>
+<p><b>Критерий успеха для бизнеса.</b> К концу квартала у каждого агента есть scorecard; по итогам ревью закрыто или объединено не меньше <span class="num">5</span> агентов; новый агент не выкатывается без eval-сета.</p>
+<h4>1.2 Пользователи</h4>
+<ul>
+<li><b>Кто:</b> платформенная команда (<span class="num">5</span> человек) — принимает решения; владельцы агентов (<span class="num">≈ 20</span>) — смотрят на свой scorecard и чинят.</li>
+<li><b>Через что:</b> дашборд и проверка в CI при изменении промпта или модели агента.</li>
+<li><b>Нагрузка:</b> полный прогон всех агентов раз в неделю; canary-прогон каждую ночь; <span class="num">≈ 15</span> запусков в день из CI.</li>
+<li><b>Цена ошибки:</b> закрыть полезного агента — дорого, но обратимо (архивируем, не удаляем); держать бесполезного — <span class="num">≈ 0,3</span> инженер-месяца в квартал.</li>
+</ul>
+<h4>1.3 Границы и что не делаем</h4>
+<p>Внутри: реестр агентов, раннер, судья, хранилище результатов, scorecard. Снаружи: сами агенты, их модели и провайдеры, продуктовые метрики.</p>
+<p>Не делаем: не чиним агентов, не оцениваем интерфейс, не заменяем продуктовые метрики, <mark>не принимаем решение «убить» автоматически</mark>.</p>`,
+    n:[
+      ['Числа с первого абзаца.','34 агента, 2 инженер-месяца, 5 закрытых к концу квартала. Без них раздел — эссе, а не контекст. Числа могут быть грубыми, но должны быть.'],
+      ['Критерий успеха — не метрика модели.','«Согласие судьи с человеком» — это качество системы. «Закрыли пятерых» — это то, ради чего её строят. Не путайте.'],
+      ['Цена ошибки задаёт контракт.','Раз «закрыть полезного» дорого, в контракте появится «только рекомендация, подтверждает человек». Ограничение найдено ещё до архитектуры.'],
+    ]},
+  { t:'2. Контракт', h:`
+<h4>2.1 Контракт</h4>
+<table><tbody>
+<tr><td><b>Вход</b></td><td>Агент, зарегистрированный в реестре: владелец, endpoint по единому интерфейсу, eval-сет не меньше <span class="num">50</span> примеров в общем формате (запрос, эталон или критерий, тип). Агент без eval-сета <mark>не допускается к прогону</mark> — и это уже результат.</td></tr>
+<tr><td><b>Выход</b></td><td>Scorecard в JSON по схеме: качество по каждой метрике с доверительным интервалом, задержка P50/P95, стоимость запроса, доля трафика, вердикт «оставить / доработать / кандидат на закрытие / нужна ручная проверка», ссылки на трейсы проваленных примеров.</td></tr>
+<tr><td><b>При неуверенности</b></td><td>Если три вызова судьи разошлись или интервал шире <span class="num">10</span> п.п. — вердикт «нужна ручная проверка», а не худший из вариантов.</td></tr>
+<tr><td><b>Не обещаем</b></td><td>Что оценка равна пользе для бизнеса; что агенты разных доменов сравнимы между собой по абсолютному числу; что судья — истина в последней инстанции.</td></tr>
+<tr><td><b>Нефункциональные</b></td><td>Ночной прогон заканчивается к <span class="num">8:00</span>; результаты хранятся <span class="num">12</span> месяцев; в сохранённых трейсах нет персональных данных — маскируем до записи.</td></tr>
+</tbody></table>
+<div class="q">Одной фразой: «Для каждого зарегистрированного агента раз в неделю выдаёт scorecard по его eval-сету и общему canary-набору с интервалами и ссылками на провалы; вердикт «закрыть» — только как рекомендация с подтверждением владельца платформы».</div>
+<h4>2.2 Исключительные сценарии</h4>
+<ul>
+<li>Агент не ответил или упал на примере — считается провалом примера, прогон продолжается; больше <span class="num">20 %</span> ошибок — прогон помечается невалидным.</li>
+<li>Судья вернул невалидный JSON — повтор до <span class="num">2</span> раз, потом «нужна ручная проверка».</li>
+<li>Провайдер судьи обновил модель — прогон останавливается до перекалибровки (см. бюджет качества).</li>
+</ul>`,
+    n:[
+      ['Каждая строка контракта проверяема.','«Eval-сет ≥ 50» проверяется при регистрации; «к 8:00» — таймером; «нет персональных данных» — тестом на маскирование. Пункт, который нельзя проверить, сюда не попал.'],
+      ['«Не обещаем» — самая честная часть.','Судья-модель не знает, чего не знает. Контракт прямо говорит: scorecard — не истина. Иначе через полгода им начнут пользоваться как истиной.'],
+      ['Вход тоже контракт.','Требование eval-сета на входе решает половину задачи: агентов без него в компании больше половины, и это уже список кандидатов.'],
+    ]},
+  { t:'3. Бюджеты', h:`
+<h4>3.1 Качество</h4>
+<table><thead><tr><th>Метрика</th><th>Как считаем</th><th>Цель</th></tr></thead><tbody>
+<tr><td>согласие судьи с людьми</td><td>калибровочный набор <span class="num">200</span> примеров, размечен двумя людьми; каппа Коэна</td><td class="num">≥ 0,75</td></tr>
+<tr><td>воспроизводимость</td><td>один агент, один набор, <span class="num">3</span> прогона; разброс оценки</td><td class="num">≤ 2 п.п.</td></tr>
+<tr><td>устойчивость ранжирования</td><td>топ-5 и низ-5 агентов не меняются между прогонами без изменений</td><td class="num">≥ 90 %</td></tr>
+</tbody></table>
+<h4>3.2 Задержка</h4>
+<p>Пользовательской задержки нет — есть окно. Полный прогон: <span class="num">34</span> агента × <span class="num">100</span> примеров × (вызов агента ≈ <span class="num">5</span> с + <span class="num">3</span> вызова судьи ≈ <span class="num">6</span> с) ≈ <span class="num">37 000</span> с — последовательно это <span class="num">10,5</span> часов. <mark>В ночное окно 6 часов не укладывается</mark> → параллелизм не меньше <span class="num">4</span>, берём <span class="num">8</span>, с запасом на ретраи. Дашборд без вызовов модели: ≤ <span class="num">2</span> с.</p>
+<h4>3.3 Стоимость</h4>
+<p>Судья: <span class="num">3 400</span> примеров × <span class="num">3</span> вызова × <span class="num">≈ 3 000</span> входных токенов ≈ <span class="num">31</span> млн токенов на полный прогон плюс выход ≈ <span class="num">1</span> млн. При цене сильной модели <span class="num">[X]</span> за миллион — <span class="num">[Y]</span> за прогон, <span class="num">[4Y]</span> в месяц; вызовы самих агентов — за счёт их владельцев и видны в их scorecard. Ежедневный canary на <span class="num">20</span> примерах — в <span class="num">5</span> раз дешевле.</p>
+<h4>3.4 Компромисс</h4>
+<p>Главный бюджет — качество судьи: дешёвый судья, который ошибается, дороже любого прогона, потому что решает судьбу агентов. Поэтому сильная модель в роли судьи, а экономим на частоте: полный прогон раз в неделю, ночью — canary. Prompt caching на общей инструкции судьи режет входные токены примерно вдвое.</p>`,
+    n:[
+      ['Задержка бывает не пользовательской.','Здесь нет TTFT, но есть окно «к 8:00». Расчёт на салфетке сразу дал архитектурное решение: нужен параллельный раннер. Это и есть «бюджет до архитектуры».'],
+      ['Цены не фиксируем.','[X] и [Y] — специально: цены живут месяцы. Фиксируем токены и формулу, число подставляется в день расчёта.'],
+      ['Компромисс записан словами.','Не «выбери два из трёх», а конкретно: жертвуем частотой ради качества судьи. Через полгода будет понятно, почему прогон еженедельный, а не ночной.'],
+    ]},
+  { t:'7. Ограничения', h:`
+<h4>7.1 Структурные ограничения — применительно к судье</h4>
+<table><thead><tr><th>Ограничение</th><th>Как проявляется здесь</th><th>Чем закрыто</th></tr></thead><tbody>
+<tr><td>не знает, чего не знает</td><td>судья уверенно ставит оценку, не имея эталона</td><td>судья всегда получает эталон или критерий; калибровка на людях; каппа в scorecard</td></tr>
+<tr><td>недетерминизм</td><td>одна оценка — случайная величина</td><td><span class="num">3</span> вызова, интервал, «ручная проверка» при расхождении</td></tr>
+<tr><td>консистентность между запросами</td><td>обновление модели судьи сдвигает все оценки</td><td>версия модели и промпта судьи закреплены; при смене — перекалибровка и пересчёт baseline</td></tr>
+<tr><td>арифметика</td><td>агрегаты, интервалы, ранжирование</td><td>считает код, не модель; модель выдаёт только оценку примера</td></tr>
+<tr><td>смещения судьи</td><td>любит длинные ответы и «свою» модель</td><td>нормировка по длине; судья от другого провайдера, чем у агента; перестановка кандидатов в парных сравнениях</td></tr>
+<tr><td>факты вне контекста</td><td>судья не знает домен агента</td><td>эталон и документы приходят из eval-сета, судью не просят «знать»</td></tr>
+</tbody></table>
+<h4>7.2 Риски</h4>
+<ul>
+<li><b>Владельцы подгоняют eval-сет под агента.</b> Общий canary-набор, который владельцам не показывают; доля canary в вердикте не меньше <span class="num">30 %</span>.</li>
+<li><b>Scorecard начинают считать истиной.</b> Интервалы и каппа на первом экране, а не в приложении; вердикт «закрыть» требует подписи человека.</li>
+<li><b>Судья дороже агентов.</b> Canary вместо полного прогона, кэш общей инструкции, пересмотр раз в квартал.</li>
+</ul>
+<div class="q">Решения с альтернативами → ADR: своя eval-инфраструктура vs готовый трейсер с оценками; один общий судья vs судья на домен; полный ночной прогон vs canary + еженедельный.</div>`,
+    n:[
+      ['Судья — тоже модель.','Все ограничения из раздела «умеет / нужна обвязка» применяются к нему целиком. Самая частая ошибка в таких системах — забыть об этом и поверить одной оценке.'],
+      ['Каждая строка — блок системы.','«Чем закрыто» — это не промпт судье, а код, хранилище, процесс. Так и должен выглядеть заполненный раздел 7.1.'],
+      ['Риски про людей, а не только про модель.','Подгонка eval-сета и вера в scorecard — организационные риски, и в design doc им место. Продуктовые последствия важнее технических.'],
+    ]},
+];
+(function(){
+  const tabs = document.getElementById('docTabs'), body = document.getElementById('docBody'), notes = document.getElementById('docNotes'), allBtn = document.getElementById('docAll');
+  let cur = 0;
+  const opened = DOCEX.map(() => new Set());
+  function render(){
+    tabs.innerHTML = '';
+    DOCEX.forEach((d,i) => { const b = el('button', i===cur ? '' : 'ghost', d.t); b.setAttribute('aria-pressed', i===cur); b.onclick = () => { cur = i; render(); }; tabs.appendChild(b); });
+    const parts = DOCEX[cur].h.split(/<h4>(.*?)<\/h4>/).slice(1);
+    let html = '';
+    for(let i = 0; i < parts.length; i += 2) html += `<details class="sub"${opened[cur].has(i/2) ? ' open' : ''}><summary>${parts[i]}</summary><div class="sub-body">${parts[i+1]}</div></details>`;
+    body.innerHTML = html;
+    body.querySelectorAll('details.sub').forEach((d,i) => d.addEventListener('toggle', () => { d.open ? opened[cur].add(i) : opened[cur].delete(i); updateAll(); }));
+    notes.innerHTML = DOCEX[cur].n.map(([k,v]) => `<div class="mn"><b>${k}</b> ${v}</div>`).join('');
+    updateAll();
+  }
+  function updateAll(){
+    const n = body.querySelectorAll('details.sub').length;
+    allBtn.textContent = opened[cur].size === n ? 'Свернуть все' : 'Раскрыть все';
+  }
+  allBtn.onclick = () => {
+    const n = body.querySelectorAll('details.sub').length;
+    if(opened[cur].size === n) opened[cur].clear(); else for(let i = 0; i < n; i++) opened[cur].add(i);
+    render();
+  };
+  render();
 })();
 
 /* ================= 8. Карточки кейсов ================= */
@@ -1203,26 +1516,26 @@ const CASES = [
     ['оказалось','Модель — не проблема. Проблема — данные: PDF с таблицами, дубли, устаревшие версии, чанкинг. И без eval-сета не понять, стало ли лучше после правки. <span class="slot">[детали проекта]</span>'],
     ['эволюция','Длинный контекст снял часть retrieval; появились готовые парсеры и реранкеры. <span class="slot">[что именно поменяли]</span>'],
     ['вывод','Бюджет качества упирается в данные и eval, а не в модель. Retrieval и предобработка — то, что делаешь сам.']]},
-  {t:'B. Агент с инструментами', s:[
+  {t:'B. Наблюдаемость', s:[
+    ['казалось','«Логов достаточно».'],
+    ['оказалось','Ответ плохой — а почему? Retrieval не нашёл, промпт собрался неправильно, модель проигнорировала контекст? Без трейса по шагам не понять. Стек: Prometheus, Loki, Sentry + <span class="slot">[что добавили]</span>.'],
+    ['эволюция','Готовые LLM-трейсеры (Langfuse и аналоги) — то, что раньше писали сами.'],
+    ['вывод','Наблюдаемость — блок системы, а не «потом добавим». Из неё считаются <abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr>.']]},
+  {t:'C. Агент с инструментами', s:[
     ['казалось','«Модель сама разберётся, какой инструмент вызвать».'],
     ['оказалось','Выдуманные аргументы, не тот инструмент, зацикливание. Надёжность цепочки ≈ pⁿ: при p = 0.95 и пяти шагах — 77 %. <span class="slot">[пример из проекта]</span>'],
     ['эволюция','Structured outputs и function calling подняли p. Явный граф состояний вместо свободного цикла.'],
     ['вывод','Контракт агента описывает, что происходит при неудаче шага. Число шагов — статья бюджета задержки и стоимости.']]},
-  {t:'C. Задержка и её восприятие', s:[
+  {t:'D. Задержка и её восприятие', s:[
     ['казалось','«N секунд на ответ — неприемлемо». <span class="slot">[сколько было]</span>'],
-    ['оказалось','Со стримингом и TTFT меньше секунды пользователи ждали спокойно. Проблема была в другом: <span class="slot">[retrieval / последовательные вызовы / холодный старт]</span>.'],
+    ['оказалось','Со стримингом и <abbr title="Time To First Token — время от отправки запроса до первого токена ответа">TTFT</abbr> меньше секунды пользователи ждали спокойно. Проблема была в другом: <span class="slot">[retrieval / последовательные вызовы / холодный старт]</span>.'],
     ['эволюция','Prompt caching, меньшая модель для простых запросов, спекулятивное декодирование у провайдеров.'],
-    ['вывод','Бюджет задержки — TTFT и P95, а не среднее e2e. Стриминг — инженерное решение, а не косметика.']]},
-  {t:'D. Наблюдаемость', s:[
-    ['казалось','«Логов достаточно».'],
-    ['оказалось','Ответ плохой — а почему? Retrieval не нашёл, промпт собрался неправильно, модель проигнорировала контекст? Без трейса по шагам не понять. Стек: Prometheus, Loki, Sentry + <span class="slot">[что добавили]</span>.'],
-    ['эволюция','Готовые LLM-трейсеры (Langfuse и аналоги) — то, что раньше писали сами.'],
-    ['вывод','Наблюдаемость — блок системы, а не «потом добавим». Из неё считаются SLI.']]},
-  {t:'E. Стоимость на масштабе', s:[
-    ['казалось','«Токены — копейки».'],
-    ['оказалось','Системный промпт в несколько тысяч токенов × миллионы запросов. Агент с шестью вызовами на запрос. <span class="slot">[порядок счёта]</span>'],
-    ['эволюция','Prompt caching, дешёвые «мини»-модели, роутинг простых запросов.'],
-    ['вывод','Стоимость считается на салфетке до запуска. Первые рычаги — короче промпт и кэш.']]},
+    ['вывод','Бюджет задержки — <abbr title="Time To First Token — время от отправки запроса до первого токена ответа">TTFT</abbr> и <abbr title="95-й перцентиль: значение, которое не превышают 95 % запросов; хвост, который видят самые невезучие пользователи">P95</abbr>, а не среднее <abbr title="end-to-end — сквозная задержка от отправки запроса до последнего токена ответа">e2e</abbr>. Стриминг — инженерное решение, а не косметика.']]},
+  {t:'E. Слишком много агентов: какого убить?', s:[
+    ['казалось','«Каждой задаче — свой агент. Чем больше агентов, тем лучше покрытие».'],
+    ['оказалось','Через полгода — десятки агентов с пересекающимися задачами, у каждого свой промпт и свой автор. У части нет eval-сета, у части нет трафика, а поддерживать нужно все. Никто не может сказать, какой из них полезен. <span class="slot">[сколько было]</span>'],
+    ['эволюция','Реестр агентов: владелец, eval-сет, метрики использования и стоимость у каждого. Общие компоненты вместо копий, сравнение кандидатов на одном трафике.'],
+    ['вывод','Агента без eval-сета и <abbr title="Service Level Indicator — измеряемый показатель качества сервиса">SLI</abbr> нельзя ни улучшить, ни закрыть. «Какого убить» решает число: доля трафика, качество на eval-сете, стоимость запроса — те же три бюджета, но уже для портфеля.']]},
 ];
 (function(){
   const grid = document.getElementById('caseGrid');
@@ -1231,7 +1544,7 @@ const CASES = [
     grid.innerHTML = '';
     CASES.forEach((c,i) => {
       const d = el('div','case'); d.setAttribute('tabindex','0'); d.setAttribute('role','button');
-      d.innerHTML = `<h4>${c.t}</h4>` + c.s.map(([k,v],j) => `<div class="st${j < state[i] ? ' on' : ''}${j===3 && state[i]===4 ? ' last' : ''}"><span class="k">${k}</span>${v}</div>`).join('') + `<div class="more">${state[i] < 4 ? 'клик — следующая стадия (' + state[i] + '/4)' : 'раскрыто полностью'}</div>`;
+      d.innerHTML = `<div class="ttl"><h4>${c.t}</h4><div class="more">${state[i] < 4 ? 'клик — следующая стадия (' + state[i] + '/4)' : 'раскрыто полностью'}</div></div>` + c.s.map(([k,v],j) => `<div class="st${j < state[i] ? ' on' : ''}${j===3 && state[i]===4 ? ' last' : ''}${j === state[i] ? ' next' : ''}"><span class="k">${k}</span><div class="body">${v}</div></div>`).join('');
       const adv = () => { state[i] = Math.min(4, state[i]+1); render(); };
       d.onclick = adv; d.onkeydown = e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); adv(); } };
       grid.appendChild(d);
@@ -1243,29 +1556,34 @@ const CASES = [
 
 /* ================= 9. Сортировка возможностей ================= */
 const SORT_ITEMS = [
+  // [задача, корзина (0 — умеет сама, 1 — нужна обвязка), чем лечится / с какого года умеет]
   ['Перевести письмо на английский', 0],
-  ['Сложить суммы по таблице из 300 строк', 1],
-  ['Ответить про вчерашние новости', 1],
-  ['Вернуть строго валидный JSON по схеме', 2],
-  ['Сказать «не знаю», когда ответа нет в документах', 1],
-  ['Суммаризовать 200-страничный PDF', 2],
-  ['Дать одинаковый ответ на одинаковый запрос', 1],
+  ['Сложить суммы по таблице из 300 строк', 1, 'калькулятор / код'],
+  ['Ответить про вчерашние новости', 1, 'retrieval'],
+  ['Вернуть строго валидный JSON по схеме', 0, 'с 2023'],
+  ['Сказать «не знаю», когда ответа нет в документах', 1, 'отказы в контракте, проверка groundedness'],
+  ['Суммаризовать 200-страничный PDF', 0, 'с 2024'],
+  ['Дать одинаковый ответ на одинаковый запрос', 1, 'детерминированный код вокруг'],
   ['Извлечь даты и суммы из письма', 0],
-  ['Вызвать нужный инструмент с правильными аргументами', 2],
-  ['Выполнить 20-шаговый план без проверок', 1],
+  ['Вызвать нужный инструмент с правильными аргументами', 0, 'с 2023'],
+  ['Выполнить 20-шаговый план без проверок', 1, 'внешний контроль состояния'],
   ['Написать SQL по описанию на русском', 0],
-  ['Прочитать текст со скриншота', 2],
+  ['Прочитать текст со скриншота', 0, 'с 2023–24'],
+  ['Помнить, что обсуждали на прошлой неделе', 1, 'хранилище + оркестратор'],
 ];
-const BINS = ['Умеет хорошо', 'Структурно плохо → лечится обвязкой', 'Было нельзя → стало можно'];
+const BINS = ['Умеет сама', 'Сама не умеет → нужна обвязка'];
 (function(){
   const deck = document.getElementById('deck'), bins = document.getElementById('bins'), score = document.getElementById('sortScore');
   let place = SORT_ITEMS.map(() => -1), checked = false;
   function card(i){
-    const [t,ans] = SORT_ITEMS[i];
+    const [t,ans,extra] = SORT_ITEMS[i];
     const d = el('div','tcard'); d.innerHTML = `<span>${t}</span>`;
-    if(checked && place[i] >= 0) d.classList.add(place[i] === ans ? 'right' : 'wrong');
+    if(checked && place[i] >= 0){
+      d.classList.add(place[i] === ans ? 'right' : 'wrong');
+      if(extra) d.appendChild(el('span', ans === 0 ? 'since' : 'fix', ans === 0 ? extra : '→ ' + extra));
+    }
     const b = el('span','b');
-    BINS.forEach((_,k) => { if(k === place[i]) return; const btn = el('button', null, ['умеет','плохо','стало'][k]); btn.title = BINS[k]; btn.onclick = () => { place[i] = k; checked = false; render(); }; b.appendChild(btn); });
+    BINS.forEach((_,k) => { if(k === place[i]) return; const btn = el('button', null, ['сама','обвязка'][k]); btn.title = BINS[k]; btn.onclick = () => { place[i] = k; checked = false; render(); }; b.appendChild(btn); });
     d.appendChild(b); return d;
   }
   function render(){
