@@ -1,0 +1,1033 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transformer с точки зрения инференса</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E9EDF2;
+  --ink:#151A21; --ink-2:#4E5968; --ink-3:#8593A2; --line:#D6DCE4; --line-2:#C3CBD5;
+  --accent:#1D4E9E; --accent-ink:#FFFFFF; --accent-soft:#E2EAF8;
+  --warm:#BF5218; --warm-soft:#FBE8DC;
+  --ok:#1C7A4C; --ok-soft:#DDF3E6; --bad:#B8362A; --bad-soft:#FBE2DE;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --code-bg:#F6F8FA;
+  --shadow:0 1px 2px rgba(21,26,33,.06), 0 8px 24px -12px rgba(21,26,33,.18);
+  --radius:10px;
+  --font-body:"IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-head:"IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --font-mono:"IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#111418; --surface:#1A1F26; --surface-2:#232A33;
+    --ink:#ECEFF3; --ink-2:#AAB4C0; --ink-3:#77828F; --line:#2C343E; --line-2:#3A434F;
+    --accent:#86ACF2; --accent-ink:#0E1522; --accent-soft:#213456;
+    --warm:#F0905B; --warm-soft:#3B2417;
+    --ok:#52C58E; --ok-soft:#173526; --bad:#F07A70; --bad-soft:#3D1F1C;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --code-bg:#12161B;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111418; --surface:#1A1F26; --surface-2:#232A33;
+  --ink:#ECEFF3; --ink-2:#AAB4C0; --ink-3:#77828F; --line:#2C343E; --line-2:#3A434F;
+  --accent:#86ACF2; --accent-ink:#0E1522; --accent-soft:#213456;
+  --warm:#F0905B; --warm-soft:#3B2417;
+  --ok:#52C58E; --ok-soft:#173526; --bad:#F07A70; --bad-soft:#3D1F1C;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --code-bg:#12161B;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html{font-size:17px; scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important; animation:none!important} }
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; -webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+h1,h2,h3,h4{font-family:var(--font-head); font-weight:600; line-height:1.2; margin:0; text-wrap:balance; letter-spacing:-.01em}
+h1{font-size:2.4rem} h2{font-size:1.75rem} h3{font-size:1.2rem; margin-top:1.6rem} h4{font-size:1rem; font-family:var(--font-body); font-weight:600}
+p{margin:.6rem 0}
+code,pre,.mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums}
+code{font-size:.9em; background:var(--surface-2); padding:.05em .35em; border-radius:4px}
+pre{background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.9rem 1rem; overflow-x:auto; font-size:.85rem; line-height:1.5}
+pre code{background:none; padding:0; font-size:inherit}
+ul,ol{padding-left:1.3rem} li{margin:.25rem 0}
+table{border-collapse:collapse; width:100%; font-size:.93rem}
+th,td{text-align:left; padding:.5rem .65rem; border-bottom:1px solid var(--line); vertical-align:top}
+th{font-weight:600; color:var(--ink-2); font-size:.8rem; text-transform:uppercase; letter-spacing:.05em}
+td.num,th.num{text-align:right; font-family:var(--font-mono); font-variant-numeric:tabular-nums; white-space:nowrap}
+.tablewrap{overflow-x:auto}
+button,select,input{font:inherit; color:inherit}
+button{cursor:pointer; background:var(--surface); border:1px solid var(--line-2); border-radius:8px; padding:.4rem .85rem; font-size:.9rem; font-weight:500}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+button.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+button.ghost{background:transparent}
+button[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent)}
+select,input[type=number],input[type=text]{background:var(--surface); border:1px solid var(--line-2); border-radius:8px; padding:.35rem .5rem}
+input[type=range]{width:100%; accent-color:var(--accent)}
+label{font-size:.85rem; color:var(--ink-2)}
+
+/* top bar */
+.topbar{position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1180px; margin:0 auto; padding:.5rem 1.2rem; display:flex; align-items:center; gap:1rem}
+.brand{font-family:var(--font-head); font-size:.95rem; white-space:nowrap; color:var(--ink-2)}
+.brand b{color:var(--ink); font-weight:600}
+.chips{display:flex; gap:.35rem; overflow-x:auto; flex:1; scrollbar-width:none; padding:.15rem 0}
+.chips::-webkit-scrollbar{display:none}
+.chip{white-space:nowrap; font-size:.78rem; padding:.25rem .6rem; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); text-decoration:none}
+.chip .t{font-family:var(--font-mono); color:var(--ink-3); margin-right:.3rem}
+.chip.active{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+.tools{display:flex; gap:.35rem}
+.tools button{font-size:.78rem; padding:.3rem .6rem}
+
+/* sections */
+main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
+.sec{padding:3.2rem 0 2.2rem; border-bottom:1px solid var(--line)}
+.sec:last-child{border-bottom:0}
+.sec-head{max-width:72ch; margin-bottom:1.2rem}
+.time{display:inline-block; font-family:var(--font-mono); font-size:.75rem; color:var(--accent); background:var(--accent-soft); padding:.15rem .5rem; border-radius:4px; margin-bottom:.6rem; letter-spacing:.03em}
+.lede{font-size:1.08rem; color:var(--ink-2); margin-top:.5rem}
+.prose{max-width:72ch}
+.prose.wide{max-width:none}
+.cols{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.2rem 2rem}
+.hero{padding:4rem 0 3rem}
+.hero .eyebrow{font-family:var(--font-mono); font-size:.8rem; color:var(--ink-3); letter-spacing:.06em; text-transform:uppercase}
+.hero h1{margin:.5rem 0 .8rem; font-size:clamp(2rem,4.5vw,3.2rem)}
+.hero .lede{max-width:64ch}
+.thesis{border-left:3px solid var(--accent); padding:.4rem 1rem; margin:1.2rem 0; color:var(--ink); font-family:var(--font-head); font-size:1.1rem; max-width:72ch}
+.note{font-size:.85rem; color:var(--ink-2); border:1px dashed var(--line-2); border-radius:8px; padding:.5rem .8rem; margin:.8rem 0}
+.slot{color:var(--warm); font-style:italic}
+.kicker{font-size:.78rem; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3); font-weight:600}
+
+/* interactive stage */
+.stage{background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:1.2rem 1.4rem; margin:1.4rem 0}
+.stage-head{display:flex; align-items:baseline; gap:.8rem; flex-wrap:wrap; margin-bottom:.8rem}
+.stage-head .tag{font-family:var(--font-mono); font-size:.72rem; color:var(--warm); background:var(--warm-soft); padding:.15rem .5rem; border-radius:4px; letter-spacing:.05em}
+.stage-head h3{margin:0; font-size:1.15rem}
+.stage-head .hint{color:var(--ink-2); font-size:.88rem; flex-basis:100%}
+.controls{display:flex; gap:1rem 1.4rem; flex-wrap:wrap; align-items:end; margin:.6rem 0 1rem}
+.ctl{display:flex; flex-direction:column; gap:.2rem; min-width:150px}
+.ctl .v{font-family:var(--font-mono); font-size:.8rem; color:var(--ink)}
+.row{display:flex; gap:.6rem; flex-wrap:wrap; align-items:center}
+.stat{display:flex; flex-direction:column; gap:.1rem; padding:.6rem .9rem; background:var(--surface-2); border-radius:8px; min-width:140px}
+.stat .l{font-size:.75rem; color:var(--ink-2); text-transform:uppercase; letter-spacing:.05em}
+.stat .n{font-family:var(--font-mono); font-size:1.35rem; font-weight:500; font-variant-numeric:tabular-nums}
+.stat .s{font-size:.78rem; color:var(--ink-3)}
+.stats{display:flex; gap:.6rem; flex-wrap:wrap; margin:.8rem 0}
+.bar{height:14px; border-radius:4px; background:var(--surface-2); overflow:hidden; display:flex}
+.bar > span{display:block; height:100%; transition:width .4s ease}
+.legend{display:flex; gap:.9rem; flex-wrap:wrap; font-size:.8rem; color:var(--ink-2); margin-top:.4rem}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:.35rem; vertical-align:-1px}
+.good{color:var(--ok)} .badc{color:var(--bad)}
+.pill{display:inline-block; font-size:.75rem; padding:.1rem .5rem; border-radius:999px; border:1px solid var(--line-2); color:var(--ink-2)}
+.pill.ok{background:var(--ok-soft); color:var(--ok); border-color:transparent}
+.pill.bad{background:var(--bad-soft); color:var(--bad); border-color:transparent}
+.pill.acc{background:var(--accent-soft); color:var(--accent); border-color:transparent}
+
+/* code quiz */
+.codeq{display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:1rem}
+@media (max-width:820px){.codeq{grid-template-columns:1fr}}
+.codelines{background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); overflow-x:auto; font-family:var(--font-mono); font-size:.82rem; line-height:1.5; padding:.4rem 0}
+.codelines .ln{display:flex; padding:0 .8rem; cursor:pointer; white-space:pre}
+.codelines .ln:hover{background:var(--accent-soft)}
+.codelines .ln .no{width:2.2em; color:var(--ink-3); user-select:none; flex-shrink:0}
+.codelines .ln.hit{background:var(--ok-soft); box-shadow:inset 3px 0 0 var(--ok)}
+.codelines .ln.miss{animation:shake .25s}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.explain{background:var(--surface-2); border-radius:var(--radius); padding:.9rem 1rem; font-size:.92rem; min-height:100px}
+.explain.hidden-x{color:var(--ink-3)}
+
+/* anatomy */
+.blocks{display:grid; grid-template-columns:repeat(7,1fr); gap:.5rem; align-items:stretch}
+@media (max-width:900px){.blocks{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:560px){.blocks{grid-template-columns:repeat(2,1fr)}}
+.blk{border:1px solid var(--line-2); border-radius:10px; padding:.6rem .6rem; background:var(--surface); cursor:pointer; text-align:left; min-height:74px; display:flex; flex-direction:column; gap:.15rem}
+.blk .k{font-size:.7rem; color:var(--ink-3); font-family:var(--font-mono)}
+.blk .n{font-weight:600; font-size:.9rem}
+.blk[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+.blk.obs{grid-column:1 / -1; min-height:auto; flex-direction:row; align-items:center; gap:.8rem}
+.detail{margin-top:.8rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:.8rem}
+.detail .cell{background:var(--surface-2); border-radius:8px; padding:.6rem .8rem; font-size:.9rem}
+.detail .cell .k{font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); margin-bottom:.2rem}
+.journey{margin-top:.8rem}
+.jbar{display:flex; height:34px; border-radius:6px; overflow:hidden; background:var(--surface-2); gap:2px}
+.jbar > div{height:100%; width:0; transition:width .25s linear; position:relative}
+.jbar > div span{position:absolute; left:.35rem; top:50%; transform:translateY(-50%); font-size:.72rem; color:#fff; white-space:nowrap; overflow:hidden; max-width:calc(100% - .5rem); text-overflow:ellipsis; text-shadow:0 0 3px rgba(0,0,0,.5)}
+.jclock{font-family:var(--font-mono); font-size:1.4rem; margin-top:.4rem}
+.jclock small{font-size:.8rem; color:var(--ink-3); margin-left:.6rem}
+.jmarks{display:flex; gap:1.2rem; font-size:.8rem; color:var(--ink-2); margin-top:.3rem; flex-wrap:wrap}
+
+/* autoregression */
+.ar{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:1.2rem}
+@media (max-width:860px){.ar{grid-template-columns:1fr}}
+.seq{min-height:90px; background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.8rem 1rem; font-size:1.05rem; line-height:1.8}
+.seq .tok{padding:.05em .1em; border-radius:3px}
+.seq .tok.gen{background:var(--accent-soft); color:var(--accent)}
+.seq .tok.last{outline:2px solid var(--accent)}
+.dist{display:flex; flex-direction:column; gap:.35rem}
+.dist .d{display:grid; grid-template-columns:8em 1fr 3.5em; align-items:center; gap:.5rem; font-size:.88rem}
+.dist .d .w{font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.dist .d .b{height:12px; background:var(--surface-2); border-radius:3px; overflow:hidden}
+.dist .d .b i{display:block; height:100%; background:var(--s1); border-radius:3px; transition:width .3s}
+.dist .d .p{font-family:var(--font-mono); font-size:.8rem; text-align:right; color:var(--ink-2)}
+.dist .d.pick .b i{background:var(--s2)}
+.prompt-view{font-family:var(--font-mono); font-size:.78rem; background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.7rem .9rem; white-space:pre-wrap; line-height:1.5}
+.prompt-view .sys{color:var(--ink-3)} .prompt-view .u{color:var(--accent)} .prompt-view .a{color:var(--s3)} .prompt-view .new{background:var(--warm-soft)}
+
+/* budget */
+.budget{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1.4rem}
+@media (max-width:860px){.budget{grid-template-columns:1fr}}
+.gauges{display:flex; flex-direction:column; gap:.9rem}
+.gauge .l{display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:.25rem}
+.gauge .l b{font-family:var(--font-mono); font-weight:500}
+.gauge .bar{height:18px}
+.breakdown{font-size:.85rem; color:var(--ink-2); margin-top:.6rem}
+
+/* cases */
+.cases{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:.9rem}
+.case{border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem; background:var(--surface); cursor:pointer; display:flex; flex-direction:column; gap:.5rem}
+.case:hover{border-color:var(--accent)}
+.case h4{font-family:var(--font-head); font-size:1.05rem; font-weight:600}
+.case .st{display:none; font-size:.9rem; padding:.45rem .6rem; border-radius:6px; background:var(--surface-2)}
+.case .st .k{font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); display:block; margin-bottom:.15rem}
+.case .st.on{display:block}
+.case .st.on.last{background:var(--accent-soft)}
+.case .more{font-size:.78rem; color:var(--ink-3); margin-top:auto}
+
+/* sorter */
+.sorter{display:grid; grid-template-columns:1fr; gap:1rem}
+.deck{display:flex; flex-wrap:wrap; gap:.5rem; min-height:48px}
+.tcard{border:1px solid var(--line-2); border-radius:8px; padding:.4rem .6rem; font-size:.86rem; background:var(--surface); display:flex; align-items:center; gap:.4rem}
+.tcard .b{display:flex; gap:.2rem; margin-left:.3rem}
+.tcard .b button{font-size:.7rem; padding:.1rem .4rem; border-radius:5px}
+.tcard.right{border-color:var(--ok); background:var(--ok-soft)}
+.tcard.wrong{border-color:var(--bad); background:var(--bad-soft)}
+.bins{display:grid; grid-template-columns:repeat(3,1fr); gap:.8rem}
+@media (max-width:820px){.bins{grid-template-columns:1fr}}
+.bin{border:1px dashed var(--line-2); border-radius:10px; padding:.6rem; min-height:110px}
+.bin h4{margin-bottom:.4rem; font-size:.85rem}
+.bin .deck{gap:.4rem}
+
+/* misc */
+.two{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
+@media (max-width:820px){.two{grid-template-columns:1fr}}
+.card{background:var(--surface-2); border-radius:10px; padding:.8rem 1rem; font-size:.92rem}
+.card.bad{border-left:3px solid var(--bad)} .card.good{border-left:3px solid var(--ok)}
+.card .k{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); margin-bottom:.25rem}
+.steps{counter-reset:s; list-style:none; padding:0; margin:.8rem 0}
+.steps li{counter-increment:s; display:grid; grid-template-columns:2.2rem 1fr; gap:.6rem; padding:.55rem 0; border-top:1px solid var(--line)}
+.steps li::before{content:counter(s); font-family:var(--font-mono); color:var(--accent); font-size:1.1rem}
+.figure{margin:1rem 0}
+.figure svg{width:100%; height:auto; display:block}
+.figure figcaption{font-size:.82rem; color:var(--ink-2); margin-top:.4rem}
+.svgtxt{fill:var(--ink-2); font-family:var(--font-body); font-size:12px}
+.svgtxt.m{font-family:var(--font-mono)}
+.svgline{stroke:var(--line-2)}
+.kv{display:grid; grid-template-columns:auto 1fr; gap:.3rem 1rem; font-size:.9rem}
+.kv dt{color:var(--ink-2)} .kv dd{margin:0; font-family:var(--font-mono); font-size:.88rem}
+#selfhost dd{font-family:var(--font-body); font-size:.92rem}
+.hw{background:var(--accent-soft); border-radius:12px; padding:1rem 1.2rem; max-width:72ch}
+.hw h3{margin-top:0}
+footer{max-width:1180px; margin:0 auto; padding:1rem 1.2rem 3rem; font-size:.8rem; color:var(--ink-3)}
+
+/* presentation mode: each section is exactly one screen */
+.fit{display:contents}
+body.present{font-size:1.08rem}
+html:has(body.present){scroll-snap-type:y mandatory; scroll-padding-top:var(--topbar-h,52px)}
+body.present main{padding-bottom:0}
+body.present .sec{height:calc(100dvh - var(--topbar-h,52px)); padding:1.4rem 0 1.1rem; overflow:hidden; border-bottom:0; scroll-snap-align:start; scroll-snap-stop:always}
+body.present .sec.overflowing{overflow-y:auto}
+body.present .hero{padding:1.4rem 0 1.1rem}
+body.present .fit{display:block; transform-origin:top center}
+body.present h2{font-size:2rem}
+body.present .stage{font-size:1rem; margin:1rem 0}
+
+/* ===== seminar-specific ===== */
+.stepper{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:1.2rem}
+@media (max-width:900px){.stepper{grid-template-columns:1fr}}
+.stages{display:flex; flex-direction:column; gap:.25rem}
+.stg{display:grid; grid-template-columns:1.6rem 1fr auto; gap:.5rem; align-items:baseline; padding:.35rem .6rem; border-radius:8px; font-size:.9rem; border:1px solid transparent}
+.stg .i{font-family:var(--font-mono); font-size:.75rem; color:var(--ink-3)}
+.stg .sh{font-family:var(--font-mono); font-size:.78rem; color:var(--ink-2); white-space:nowrap}
+.stg.cur{background:var(--accent-soft); border-color:var(--accent)}
+.stg.cur .sh{color:var(--accent)}
+.stg.loop{margin-left:1.2rem; border-left:2px dashed var(--line-2); border-radius:0 8px 8px 0}
+.stg.done{opacity:.6}
+.kvgrid{display:flex; flex-wrap:wrap; gap:3px; margin:.5rem 0; min-height:22px}
+.kvgrid i{display:block; width:14px; height:14px; border-radius:3px; background:var(--s1); opacity:.55}
+.kvgrid i.new{background:var(--s2); opacity:1; outline:2px solid var(--s2); outline-offset:1px}
+.kvgrid i.q{background:var(--s3); opacity:1}
+.codepane{background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); font-family:var(--font-mono); font-size:.8rem; line-height:1.55; padding:.5rem 0; overflow-x:auto}
+.codepane .ln{white-space:pre; padding:0 .8rem; border-left:3px solid transparent}
+.codepane .ln.hl{background:var(--accent-soft); border-left-color:var(--accent)}
+.codepane .cm{color:var(--ink-3)}
+.stepinfo{background:var(--surface-2); border-radius:8px; padding:.7rem .9rem; font-size:.9rem; min-height:80px; margin-bottom:.8rem}
+.stream{background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.9rem 1rem; min-height:140px; font-size:1rem; line-height:1.7; position:relative}
+.stream .cursor{display:inline-block; width:.5em; height:1.1em; background:var(--accent); vertical-align:-2px; animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.stream .wait{color:var(--ink-3); font-style:italic}
+.membar{display:flex; height:26px; border-radius:6px; overflow:hidden; background:var(--surface-2); gap:2px}
+.membar > div{height:100%; position:relative; transition:width .3s}
+.membar > div span{position:absolute; left:.4rem; top:50%; transform:translateY(-50%); font-size:.72rem; color:#fff; white-space:nowrap; text-shadow:0 0 3px rgba(0,0,0,.6)}
+.cachebars{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
+@media (max-width:760px){.cachebars{grid-template-columns:1fr}}
+.cb{display:flex; align-items:flex-end; gap:2px; height:120px; border-bottom:1px solid var(--line-2); padding-bottom:0}
+.cb i{display:block; flex:1; background:var(--s1); border-radius:2px 2px 0 0; min-width:2px}
+.cb.nocache i{background:var(--s2)}
+.ws{display:grid; grid-template-columns:1fr; gap:.5rem}
+.wsq{display:grid; grid-template-columns:minmax(0,2fr) 9rem 1fr; gap:.8rem; align-items:center; padding:.55rem .6rem; border-top:1px solid var(--line); font-size:.92rem}
+@media (max-width:760px){.wsq{grid-template-columns:1fr}}
+.wsq .ans{font-family:var(--font-mono); font-size:.85rem; color:var(--ink-2)}
+.wsq.ok{background:var(--ok-soft)} .wsq.bad{background:var(--bad-soft)}
+.wsq input{width:100%}
+.teacher{display:none}
+body.teacher .teacher{display:block}
+.calc-out{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:.6rem}
+
+/* team / grading */
+.team{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:.9rem; max-width:900px}
+.person{display:flex; flex-direction:column; gap:.2rem; padding:1rem 1.1rem; border:1px solid var(--line); border-radius:12px; background:var(--surface); text-decoration:none; color:var(--ink); box-shadow:var(--shadow)}
+.person:hover{border-color:var(--accent)}
+.person .nm{font-family:var(--font-head); font-size:1.15rem; font-weight:600}
+.person .tg{font-family:var(--font-mono); font-size:.85rem; color:var(--accent)}
+.formula{display:flex; flex-direction:column; gap:.6rem; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:1.1rem 1.4rem; box-shadow:var(--shadow); font-family:var(--font-mono); font-size:1rem; overflow-x:auto}
+.formula .f{white-space:nowrap}
+.formula .f.main{font-size:1.15rem; padding-bottom:.6rem; border-bottom:1px solid var(--line)}
+.formula .lhs{color:var(--accent); font-weight:500}
+.formula sub{font-family:var(--font-body); font-size:.72em; color:var(--ink-2)}
+
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-in">
+  <div class="brand"><b>LLM-системы и агенты</b> · занятие 2</div>
+  <nav class="chips" id="chips" aria-label="Разделы"></nav>
+  <div class="tools"><button id="teacherBtn" aria-pressed="false">Ответы: скрыты</button><button id="presentBtn" aria-pressed="false">Режим: прокрутка</button><button id="themeBtn">Тема: система</button></div>
+</div></div>
+
+<main>
+
+<section id="s0" class="sec hero" data-short="Начало">
+  <div class="eyebrow">LLM-системы и агенты · занятие 2</div>
+  <h1>Transformer с точки зрения инференса</h1>
+  <p class="lede">Что физически происходит на одном шаге генерации, почему prefill и decode — разные режимы, из чего складываются TTFT, TPOT и цена токена, и как на салфетке посчитать, сколько запросов поместится на GPU.</p>
+  <div class="thesis">Каждый выходной токен — полный проход через все веса. Prefill упирается в вычисления, decode — в пропускную способность памяти. KV-cache ограничивает число одновременных запросов. Всё это уже реализовано в vLLM, SGLang и llama.cpp — руками пишется только чтобы понять.</div>
+  <div class="prose">
+    <p class="kicker">Сквозной пример</p>
+    <dl class="kv">
+      <dt>Модель</dt><dd>Llama-3-8B: L = 32, d = 4096, 32 heads × 128, 8 KV-heads (GQA), d_ff = 14336, словарь 128 256</dd>
+      <dt>GPU</dt><dd>H100 80 ГБ: HBM ≈ 3.35 ТБ/с, bf16 ≈ 990 TFLOPS пиковых (реально достижимо 40–60 %)</dd>
+      <dt>Для контраста</dt><dd>RTX 4090 (24 ГБ, ~1 ТБ/с), Mac M4 (120 ГБ/с базовый, 546 ГБ/с Max)</dd>
+    </dl>
+    <p class="note">Формулы и attention для обучения не трогаем — только то, что исполняется при генерации. Кнопка «Ответы» в шапке включает эталонные решения для практики.</p>
+  </div>
+</section>
+
+<section id="s1" class="sec" data-short="Мост">
+  <div class="sec-head">
+    <h2>Три наблюдения с прошлой пары</h2>
+    <p class="lede">Сегодня каждое из них получит физическое объяснение.</p>
+  </div>
+  <div class="cols">
+    <div class="card"><div class="k">Наблюдение 1</div>У провайдеров выходной токен стоит в несколько раз дороже входного.</div>
+    <div class="card"><div class="k">Наблюдение 2</div>Первый токен приходит быстро, а дальше модель «печатает» с постоянной скоростью.</div>
+    <div class="card"><div class="k">Наблюдение 3</div>Тот же промпт второй раз — дешевле (prompt caching).</div>
+  </div>
+</section>
+
+<section id="s2" class="sec" data-short="Веса">
+  <div class="sec-head">
+    <h2>Модель как стопка весов</h2>
+    <p class="lede">Decoder-only transformer = embedding → L × [norm → attention → norm → FFN] → norm → lm_head. Во время инференса это набор матриц, которые нужно где-то хранить и через которые нужно прогнать данные.</p>
+  </div>
+  <div class="cols">
+    <div>
+      <p class="kicker">Считаем параметры по конфигу — вместе со студентами</p>
+      <div class="tablewrap"><table id="paramTable"></table></div>
+      <p class="note">Сходится с названием модели. Число параметров — это ещё и число операций на токен: на каждый вес приходится умножение и сложение, то есть <b>≈ 2·N FLOP на токен</b>. Для 8B — около 16 GFLOP. Запомнить, понадобится дальше.</p>
+    </div>
+    <div>
+      <p class="kicker">Память под веса = параметры × байт на параметр</p>
+      <div class="tablewrap"><table id="memTable"></table></div>
+      <p>Первый вывод: 8B в bf16 не влезает в RTX 4090 с запасом на кэш, а в int4 влезает даже в ноутбук. Квантизация — это торговля качеством за память и скорость (первая пара: бюджет качества).</p>
+    </div>
+  </div>
+</section>
+
+<section id="s3" class="sec" data-short="Один шаг">
+  <div class="sec-head">
+    <h2>Что исполняется на одном шаге генерации</h2>
+    <p class="lede">Вход: id последнего токена и KV-cache всех предыдущих позиций. Через веса проходит один вектор; единственное место, где участвует история, — attention к кэшу.</p>
+  </div>
+  <div class="stage" id="step">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Один шаг — по стадиям</h3>
+      <p class="hint">Стрелки ведут по стадиям одного forward pass; справа подсвечивается соответствующая строка кода и формы тензоров. Переключатель prefill/decode меняет формы с [T, d] на [1, d]. «Следующий токен» дописывает позицию в кэш.</p></div>
+    <div class="controls">
+      <div class="ctl"><label>Режим</label><div class="row"><button id="modePrefill" aria-pressed="false">prefill</button><button id="modeDecode" aria-pressed="true">decode</button></div></div>
+      <div class="ctl"><label>Стадия</label><div class="row"><button id="stPrev">←</button><button class="primary" id="stNext">Следующая стадия →</button><button id="stPlay">▶ автоматически</button></div></div>
+      <div class="ctl"><label>Позиций в кэше: <span class="v" id="stT">6</span></label><div class="row"><button id="stTok">Следующий токен</button><button class="ghost" id="stReset">Сбросить</button></div></div>
+    </div>
+    <div class="stepper">
+      <div class="stages" id="stages"></div>
+      <div>
+        <div class="stepinfo" id="stepInfo"></div>
+        <p class="kicker">KV-cache одного слоя (позиции)</p>
+        <div class="kvgrid" id="kvgrid"></div>
+        <div class="codepane" id="stepCode"></div>
+      </div>
+    </div>
+  </div>
+  <div class="prose">
+    <p>Сэмплинг — крошечная часть стоимости, но единственное место недетерминизма при temperature &gt; 0. Это мост к «стохастичность — структурное ограничение» с первой пары.</p>
+  </div>
+</section>
+
+<section id="s4" class="sec" data-short="Prefill / decode">
+  <div class="sec-head">
+    <h2>Prefill и decode — два разных режима</h2>
+    <p class="lede"><b>Prefill:</b> промпт из T токенов обрабатывается за один проход, тензор [T, d] умножается на веса — большие матричные умножения, GPU загружен. Результат — KV-cache для T позиций и первый токен. Это TTFT. <b>Decode:</b> каждый следующий токен — проход вектора [1, d] через все веса. GPU считает быстрее, чем память отдаёт веса, значит время шага ≈ объём весов / пропускная способность памяти.</p>
+  </div>
+  <div class="stage" id="stream">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Симулятор стриминга</h3>
+      <p class="hint">Текст появляется с расчётной скоростью для выбранной модели и железа. TTFT — из prefill (вычисления), TPOT — из decode (память). Это верхние границы при batch = 1; реальные цифры ниже на 20–40 %, но порядок совпадает с тем, что видно в llama.cpp и Ollama.</p></div>
+    <div class="controls">
+      <div class="ctl"><label>Модель и точность</label><select id="smModel"></select></div>
+      <div class="ctl"><label>Железо</label><select id="smGpu"></select></div>
+      <div class="ctl"><label>Промпт: <span class="v" id="smInV">2000</span> токенов</label><input type="range" id="smIn" min="128" max="8192" step="128" value="2048"></div>
+      <div class="ctl"><label>Ответ: <span class="v" id="smOutV">300</span> токенов</label><input type="range" id="smOut" min="50" max="1000" step="50" value="300"></div>
+      <div class="ctl"><label>Скорость показа</label><div class="row"><button id="smX1" aria-pressed="true">реальное время</button><button id="smX10" aria-pressed="false">×10</button></div></div>
+      <div class="ctl"><button class="primary" id="smRun">Сгенерировать</button></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="l">TTFT</span><span class="n" id="smTtft"></span><span class="s" id="smTtftS">prefill</span></div>
+      <div class="stat"><span class="l">TPOT</span><span class="n" id="smTpot"></span><span class="s" id="smTpotS">мс на токен</span></div>
+      <div class="stat"><span class="l">Скорость</span><span class="n" id="smTps"></span><span class="s">токенов в секунду</span></div>
+      <div class="stat"><span class="l">Полный ответ</span><span class="n" id="smE2e"></span><span class="s">TTFT + N × TPOT</span></div>
+    </div>
+    <div class="stream" id="smText"></div>
+    <div class="note" id="smNote"></div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <p class="kicker">Оценка prefill</p>
+      <p>2 × 8·10⁹ × 2000 токенов ≈ 32 TFLOP; при реальных ~400 TFLOPS → ≈ 80 мс. Промпт в 2000 токенов «стоит» меньше 100 мс.</p>
+      <p class="kicker">Оценка decode, batch = 1</p>
+      <div class="tablewrap"><table id="decodeTable"></table></div>
+    </div>
+    <div>
+      <p class="kicker">Tensor shapes и стоимость шага</p>
+      <div class="tablewrap"><table>
+        <thead><tr><th></th><th>Prefill</th><th>Decode</th></tr></thead>
+        <tbody>
+          <tr><td>Активации на входе слоя</td><td class="mono">[B, T, d]</td><td class="mono">[B, 1, d]</td></tr>
+          <tr><td>Умножение на W (d × d′)</td><td>[B·T, d] × [d, d′] — матрица × матрица</td><td>[B, d] × [d, d′] — B векторов × матрица</td></tr>
+          <tr><td>Attention</td><td class="mono">[B, h, T, T] — квадрат по T</td><td class="mono">[B, h, 1, T] — линейно по T</td></tr>
+          <tr><td>FLOPs</td><td>≈ 2·N·T на последовательность</td><td>≈ 2·N на токен</td></tr>
+          <tr><td>Чтение весов из памяти</td><td>один раз на T токенов</td><td>один раз на 1 токен</td></tr>
+          <tr><td>Чем ограничен</td><td>вычислениями</td><td>пропускной способностью памяти</td></tr>
+        </tbody>
+      </table></div>
+      <p>Из таблицы видно, почему входные и выходные токены считаются по-разному: FLOPs на токен одинаковы, а занятость железа — нет. Вывод для бюджета задержки: e2e ≈ TTFT (зависит от длины промпта) + N_out × TPOT (зависит от размера модели и памяти). 500 выходных токенов на H100 — 2.5 секунды минимум, и никакой промпт-инжиниринг это не ускорит.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s5" class="sec" data-short="KV-cache">
+  <div class="sec-head">
+    <h2>KV-cache: что хранится и сколько это стоит</h2>
+    <p class="lede">Для каждого слоя и каждой позиции — векторы K и V размером n_kv_heads × head_dim. Зачем: чтобы на каждом шаге не пересчитывать k, v для всего промпта. Число одновременных запросов ограничено кэшем, а не весами.</p>
+  </div>
+  <pre><code>bytes_per_token = 2 (K и V) × L × n_kv_heads × head_dim × bytes_per_value
+Llama-3-8B, bf16: 2 × 32 × 8 × 128 × 2 = 131 072 байт = 128 КБ на токен</code></pre>
+  <div class="stage" id="kvcalc">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Калькулятор KV-cache</h3>
+      <p class="hint">Сколько одновременных запросов помещается на карту. Переключатель «как MHA» показывает, зачем ввели GQA; квантизация кэша — второй рычаг.</p></div>
+    <div class="controls">
+      <div class="ctl"><label>Модель</label><select id="kvModel"></select></div>
+      <div class="ctl"><label>Железо</label><select id="kvGpu"></select></div>
+      <div class="ctl"><label>Точность весов</label><select id="kvWdt"><option value="2">bf16</option><option value="1">int8</option><option value="0.5">int4</option></select></div>
+      <div class="ctl"><label>Точность кэша</label><select id="kvKdt"><option value="2">bf16</option><option value="1">fp8 / int8</option></select></div>
+      <div class="ctl"><label>Контекст на запрос: <span class="v" id="kvCtxV">8192</span></label><input type="range" id="kvCtx" min="512" max="32768" step="512" value="8192"></div>
+      <div class="ctl"><label><input type="checkbox" id="kvMha"> как если бы MHA (KV-heads = heads)</label></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="l">KV на токен</span><span class="n" id="kvPerTok"></span><span class="s">КБ</span></div>
+      <div class="stat"><span class="l">На один запрос</span><span class="n" id="kvPerReq"></span><span class="s">ГБ при выбранном контексте</span></div>
+      <div class="stat"><span class="l">Веса</span><span class="n" id="kvW"></span><span class="s">ГБ</span></div>
+      <div class="stat"><span class="l">Одновременных запросов</span><span class="n" id="kvN"></span><span class="s" id="kvNs">при 10 % резерве</span></div>
+    </div>
+    <div class="membar" id="kvBar"></div>
+    <div class="legend"><span><i style="background:var(--s1)"></i>веса</span><span><i style="background:var(--s2)"></i>KV-cache всех запросов</span><span><i style="background:var(--ink-3)"></i>резерв 10 %</span><span><i style="background:var(--surface-2);border:1px solid var(--line-2)"></i>свободно</span></div>
+    <div class="note" id="kvNote"></div>
+  </div>
+
+  <div class="cols">
+    <div class="prose">
+      <ul>
+        <li>Длинный контекст — не бесплатная фича, а прямой расход памяти и денег.</li>
+        <li>Раньше движки резервировали кэш на максимальную длину заранее — память простаивала. <b>PagedAttention</b> (vLLM) выделяет её страницами по факту — это то, что не надо писать самим.</li>
+        <li><b>Prefix caching:</b> общий системный промпт считается один раз и переиспользуется — объяснение «повторный промпт дешевле».</li>
+        <li>Сжатие кэша: GQA / MQA, MLA (DeepSeek), квантизация кэша в int8 / fp8.</li>
+      </ul>
+    </div>
+    <div class="stage" id="cachecmp" style="margin:0">
+      <div class="stage-head"><span class="tag">интерактив</span><h3>С кэшем и без</h3>
+        <p class="hint">Столбик — сколько позиций модель обрабатывает на данном шаге. Без кэша каждый шаг пересчитывает всю последовательность.</p></div>
+      <div class="ctl"><label>Сгенерировано токенов: <span class="v" id="ccTV">32</span></label><input type="range" id="ccT" min="1" max="64" step="1" value="32"></div>
+      <div class="cachebars" style="margin-top:.8rem">
+        <div><div class="kicker">с KV-cache: <span class="mono" id="ccWith"></span> токен-проходов</div><div class="cb" id="cbWith"></div></div>
+        <div><div class="kicker">без кэша: <span class="mono" id="ccWithout"></span> токен-проходов</div><div class="cb nocache" id="cbWithout"></div></div>
+      </div>
+      <div class="row" style="margin-top:.6rem"><button id="ccPlay">▶ прогнать 1 → 64</button></div>
+    </div>
+  </div>
+</section>
+
+<section id="s6" class="sec" data-short="Roofline">
+  <div class="sec-head">
+    <h2>Compute-bound против memory-bound</h2>
+    <p class="lede">Арифметическая интенсивность = FLOPs / прочитанные байты. У железа есть точка баланса: H100 ≈ 990 TFLOPS / 3.35 ТБ/с ≈ 300 FLOP на байт. Ниже — упираемся в память, выше — в вычисления.</p>
+  </div>
+  <div class="cols">
+    <figure class="figure">
+      <svg viewBox="0 0 520 250" role="img" aria-label="Roofline H100 и RTX 4090 с точками decode и prefill">
+        <line x1="60" y1="205" x2="480" y2="205" class="svgline"/><line x1="60" y1="20" x2="60" y2="205" class="svgline"/>
+        <g class="svgtxt m" style="font-size:10px">
+          <text x="60" y="220" text-anchor="middle">1</text><text x="160" y="220" text-anchor="middle">10</text><text x="260" y="220" text-anchor="middle">100</text><text x="360" y="220" text-anchor="middle">1 000</text><text x="460" y="220" text-anchor="middle">10 000</text>
+          <text x="54" y="208" text-anchor="end">1</text><text x="54" y="153" text-anchor="end">10</text><text x="54" y="98" text-anchor="end">100</text><text x="54" y="43" text-anchor="end">1 000</text>
+        </g>
+        <text x="270" y="238" text-anchor="middle" class="svgtxt">арифметическая интенсивность, FLOP / байт</text>
+        <text x="14" y="112" class="svgtxt" transform="rotate(-90 14 112)" text-anchor="middle">TFLOPS</text>
+        <!-- RTX 4090 roof: bw 1.0 TB/s, 165 TFLOPS -->
+        <polyline fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="4 3" points="60,205 281,84 480,84"/>
+        <text x="478" y="80" text-anchor="end" class="svgtxt" style="fill:var(--ink-3)">RTX 4090</text>
+        <!-- H100 roof: bw 3.35, 989 -->
+        <polyline fill="none" stroke="var(--accent)" stroke-width="2" points="60,176 307,41 480,41"/>
+        <text x="478" y="37" text-anchor="end" class="svgtxt" style="fill:var(--accent)">H100</text>
+        <text x="118" y="168" class="svgtxt" style="fill:var(--accent);font-size:11px" transform="rotate(-29 118 168)">наклон = пропускная способность памяти</text>
+        <!-- points -->
+        <circle cx="60" cy="176" r="5" fill="var(--s2)"/><text x="70" y="180" class="svgtxt">decode, B = 1: I ≈ 1 → 3 TFLOPS</text>
+        <circle cx="241" cy="77" r="5" fill="var(--s2)"/><text x="232" y="98" class="svgtxt" text-anchor="end">decode, B = 64: I ≈ 64</text>
+        <circle cx="307" cy="41" r="5" fill="var(--s4)"/><text x="300" y="30" class="svgtxt" text-anchor="end">точка баланса ≈ 300</text>
+        <circle cx="390" cy="41" r="5" fill="var(--s3)"/><text x="400" y="60" class="svgtxt">prefill, T = 2000</text>
+      </svg>
+      <figcaption>Decode при batch = 1 использует доли процента вычислительной мощности; батчинг двигает точку вправо по наклонной части почти бесплатно; prefill сразу на полке.</figcaption>
+    </figure>
+    <figure class="figure">
+      <svg viewBox="0 0 520 250" id="batchChart" role="img" aria-label="Токенов в секунду и время шага в зависимости от размера батча"></svg>
+      <figcaption>Llama-3-8B на H100, оценка: до точки баланса время шага почти не растёт — B токенов по цене одного. Ложка дёгтя: чтение KV-cache батчингом не амортизируется, при длинных контекстах оно начинает доминировать (8k контекста × 60 запросов ≈ 60 ГБ на шаг — в четыре раза больше самих весов).</figcaption>
+    </figure>
+  </div>
+  <div class="prose wide">
+    <p class="kicker">Следствия для бюджета стоимости</p>
+    <ul>
+      <li>Стоимость токена у провайдера ≈ (цена GPU-часа) / (токенов в час), а токенов в час зависит от батча → провайдеры зарабатывают на загрузке, а self-host с batch = 1 в десятки раз дороже.</li>
+      <li>Continuous batching (подмешивание новых запросов в идущий батч) — обязательная функция движка, а не оптимизация.</li>
+      <li>Speculative decoding — способ поднять интенсивность decode: маленькая модель предлагает несколько токенов, большая проверяет их за один проход.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="s7" class="sec" data-short="Практика">
+  <div class="sec-head">
+    <h2>Практика: расчётный лист</h2>
+    <p class="lede">В парах. Выберите свой вариант, посчитайте на бумаге, впишите ответы и проверьте. Допуск ±15 %. Вариант с 70B на одной карте специально не влезает — это ответ про tensor parallelism и «две карты».</p>
+  </div>
+  <div class="stage" id="worksheet">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Расчётный лист</h3>
+      <p class="hint">Конфиг модели — как в config.json на Hugging Face. Считаем в десятичных гигабайтах (10⁹ байт), резерв памяти 10 %, эффективность prefill 40 % от пиковых TFLOPS.</p></div>
+    <div class="controls">
+      <div class="ctl"><label>Модель</label><select id="wsModel"></select></div>
+      <div class="ctl"><label>Железо</label><select id="wsGpu"></select></div>
+      <div class="ctl"><button class="primary" id="wsCheck">Проверить</button></div>
+      <div class="ctl"><button class="ghost" id="wsClear">Очистить</button></div>
+    </div>
+    <div class="tablewrap"><table id="wsConfig"></table></div>
+    <div class="ws" id="wsQ" style="margin-top:.8rem"></div>
+    <div class="row" style="margin-top:.6rem"><span class="pill" id="wsScore" style="display:none"></span></div>
+    <div class="teacher"><p class="note">Режим преподавателя включён: эталонные ответы и ход расчёта показаны справа в каждой строке.</p></div>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <h3 style="margin-top:0">Минимальная реализация — разбор</h3>
+      <p>Полный ноутбук — в домашнем задании; здесь структура. Маленькая модель (0.5–1.5B), чтобы бегало в Colab на T4 или локально.</p>
+      <pre><code>out  = model(prompt_ids, use_cache=True)     # prefill
+past = out.past_key_values                   # KV-cache, T позиций
+tok  = sample(out.logits[:, -1])
+
+for _ in range(max_new_tokens):              # decode
+    out  = model(tok, past_key_values=past, use_cache=True)
+    past = out.past_key_values               # T → T+1
+    tok  = sample(out.logits[:, -1])</code></pre>
+    </div>
+    <div class="prose">
+      <h3 style="margin-top:0">Что измеряем в ноутбуке</h3>
+      <ol>
+        <li>Время prefill против среднего времени шага decode.</li>
+        <li>Размер <code>past</code> в байтах после генерации — сравнить с расчётом 128 КБ × T.</li>
+        <li>Генерация без кэша (пересчёт всей последовательности) — как растёт время шага с длиной.</li>
+        <li>Время шага при batch = 1 / 8 / 32 — увидеть, что «батч почти бесплатен».</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section id="s8" class="sec" data-short="Итог и ДЗ">
+  <div class="sec-head">
+    <h2>Связка с бюджетами и домашнее задание</h2>
+  </div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Бюджет</th><th>Что за ним стоит физически</th><th>Рычаги</th></tr></thead>
+    <tbody>
+      <tr><td><b>Задержка</b></td><td>TTFT = prefill (вычисления, длина промпта); TPOT = decode (память, размер модели)</td><td>короче промпт, меньше модель, квантизация, стриминг, speculative decoding</td></tr>
+      <tr><td><b>Стоимость</b></td><td>GPU-время / токены; зависит от батча и загрузки</td><td>батчинг, prompt caching, роутинг на маленькие модели, короче выход</td></tr>
+      <tr><td><b>Качество</b></td><td>размер модели и точность весов</td><td>торгуется за два предыдущих через размер и квантизацию</td></tr>
+    </tbody>
+  </table></div>
+  <div class="cols" style="margin-top:1.2rem">
+    <div class="prose">
+      <h3 style="margin-top:0">Self-host против API — оценка на салфетке</h3>
+      <dl class="kv" id="selfhost" style="grid-template-columns:auto 1fr"></dl>
+      <p class="note">Цена аренды — иллюстративная, подставьте актуальную. Формула важнее числа: стоимость токена падает с загрузкой, а загрузка — это батч.</p>
+      <p><b>Что не писать руками:</b> движок инференса (vLLM, SGLang, TensorRT-LLM), локальный запуск (llama.cpp, Ollama, MLX), батчинг и PagedAttention, prompt caching. Руками пишется только учебный ноутбук.</p>
+    </div>
+    <div class="hw">
+      <h3>Домашнее задание</h3>
+      <ol>
+        <li>Заполнить расчётный лист для модели, которую планируете использовать в проекте.</li>
+        <li>Посчитать стоимость 1M выходных токенов при self-host на арендованной карте с реалистичной загрузкой против цены у провайдера.</li>
+        <li>Пройти ноутбук и приложить измеренные времена prefill / decode — это станет разделом «бюджет задержки» вашего design doc.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>LLM-системы и агенты · занятие 2 · расчёты в калькуляторах — верхние границы по спецификациям железа; реальные значения ниже на 20–40 %.</footer>
+
+<script>
+/* ---------- shared: theme, presentation mode, section chips ---------- */
+(function(){
+  const root = document.documentElement;
+  const body = document.body;
+  let theme = 'system';
+  try { theme = localStorage.getItem('llm-course-theme') || 'system'; } catch(e){}
+  function applyTheme(){
+    if(theme === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', theme);
+    const b = document.getElementById('themeBtn');
+    if(b) b.textContent = theme === 'system' ? 'Тема: система' : (theme === 'dark' ? 'Тема: тёмная' : 'Тема: светлая');
+  }
+  applyTheme();
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    theme = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system';
+    try { localStorage.setItem('llm-course-theme', theme); } catch(e){}
+    applyTheme();
+  });
+
+  const pBtn = document.getElementById('presentBtn');
+  const secs = Array.from(document.querySelectorAll('main > section'));
+
+  /* каждая секция получает обёртку .fit — её масштабируем, чтобы слайд влезал в экран */
+  const MIN_SCALE = 0.55;
+  const topbar = document.querySelector('.topbar');
+  const fits = secs.map(s => {
+    const w = document.createElement('div');
+    w.className = 'fit';
+    while(s.firstChild) w.appendChild(s.firstChild);
+    s.appendChild(w);
+    return w;
+  });
+  function fitSlide(i){
+    const s = secs[i], f = fits[i];
+    if(!body.classList.contains('present')){ f.style.transform = ''; s.classList.remove('overflowing'); return; }
+    f.style.transform = '';
+    const cs = getComputedStyle(s);
+    const avail = s.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const need = f.scrollHeight;
+    if(avail <= 0 || need <= 0) return;
+    const k = Math.min(1, Math.max(MIN_SCALE, avail / need));
+    const off = Math.max(0, (avail - need * k) / 2);
+    f.style.transform = (off > 1 ? `translateY(${off.toFixed(1)}px) ` : '') + (k < 1 ? `scale(${k.toFixed(4)})` : '');
+    s.classList.toggle('overflowing', need * k > avail + 1);
+  }
+  function fitAll(){
+    root.style.setProperty('--topbar-h', (topbar ? topbar.offsetHeight : 52) + 'px');
+    secs.forEach((_,i) => fitSlide(i));
+  }
+  let raf = 0, pending = new Set();
+  function scheduleFit(i){
+    if(i == null) secs.forEach((_,j) => pending.add(j)); else pending.add(i);
+    if(raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      root.style.setProperty('--topbar-h', (topbar ? topbar.offsetHeight : 52) + 'px');
+      pending.forEach(j => fitSlide(j)); pending.clear();
+    });
+  }
+  if(window.ResizeObserver){
+    const ro = new ResizeObserver(entries => {
+      if(!body.classList.contains('present')) return;
+      entries.forEach(en => { const i = fits.indexOf(en.target); if(i >= 0) scheduleFit(i); });
+    });
+    fits.forEach(f => ro.observe(f));
+  }
+  window.addEventListener('resize', () => scheduleFit(null));
+
+  function setPresent(on){
+    body.classList.toggle('present', on);
+    pBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    pBtn.textContent = on ? 'Режим: презентация' : 'Режим: прокрутка';
+    fitAll();
+    if(on) requestAnimationFrame(fitAll);
+  }
+  setPresent(false);
+  pBtn.addEventListener('click', () => setPresent(!body.classList.contains('present')));
+
+  const chips = document.getElementById('chips');
+  secs.forEach(s => {
+    const a = document.createElement('a');
+    a.className = 'chip'; a.href = '#' + s.id;
+    const t = s.dataset.time ? `<span class="t">${s.dataset.time}</span>` : '';
+    a.innerHTML = t + (s.dataset.short || s.querySelector('h1,h2')?.textContent || s.id);
+    chips.appendChild(a);
+  });
+  const chipEls = Array.from(chips.children);
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if(en.isIntersecting){
+        const i = secs.indexOf(en.target);
+        chipEls.forEach((c,j) => c.classList.toggle('active', i === j));
+        chipEls[i]?.scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'});
+      }
+    });
+  }, {rootMargin:'-40% 0px -55% 0px'});
+  secs.forEach(s => io.observe(s));
+
+  document.addEventListener('keydown', e => {
+    if(!body.classList.contains('present')) return;
+    if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName)) return;
+    if(e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'ArrowLeft' || e.key === 'PageUp'){
+      e.preventDefault();
+      const y = window.scrollY + 60;
+      let idx = secs.findIndex((s,i) => s.offsetTop > y - 5 && (i === 0 || true));
+      let cur = 0;
+      secs.forEach((s,i) => { if(s.offsetTop <= y + 5) cur = i; });
+      const next = (e.key === 'ArrowRight' || e.key === 'PageDown') ? Math.min(cur + 1, secs.length - 1) : Math.max(cur - 1, 0);
+      secs[next].scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  });
+})();
+
+/* ---------- shared helpers ---------- */
+function fmt(n, d=0){ return n.toLocaleString('ru-RU', {maximumFractionDigits:d, minimumFractionDigits:d}); }
+function fmtMs(ms){ return ms >= 1000 ? fmt(ms/1000, ms>=10000?0:1) + ' с' : fmt(ms, 0) + ' мс'; }
+function el(tag, cls, html){ const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; }
+
+/* ================= данные ================= */
+const MODELS = {
+  llama8b:  {name:'Llama-3-8B',  L:32, d:4096, h:32, kv:8, hd:128, dff:14336, V:128256},
+  qwen7b:   {name:'Qwen2.5-7B',  L:28, d:3584, h:28, kv:4, hd:128, dff:18944, V:152064},
+  llama70b: {name:'Llama-3-70B', L:80, d:8192, h:64, kv:8, hd:128, dff:28672, V:128256},
+};
+const GPUS = {
+  h100:   {name:'H100 80 ГБ',        mem:80, bw:3.35e12, tflops:989},
+  a100:   {name:'A100 40 ГБ',        mem:40, bw:1.55e12, tflops:312},
+  rtx4090:{name:'RTX 4090 24 ГБ',    mem:24, bw:1.008e12, tflops:165},
+  m4:     {name:'Mac M4 16 ГБ',      mem:12, bw:120e9,  tflops:8,  note:'GPU доступно ~75 % unified memory'},
+  m4pro:  {name:'Mac M4 Pro 24 ГБ',  mem:18, bw:273e9,  tflops:17, note:'GPU доступно ~75 % unified memory'},
+  m4max:  {name:'Mac M4 Max 128 ГБ', mem:96, bw:546e9,  tflops:34, note:'GPU доступно ~75 % unified memory'},
+};
+function params(m, kvOverride){
+  const kv = kvOverride ?? m.kv;
+  const attn = m.L*(2*m.d*m.d + 2*m.d*kv*m.hd);
+  const ffn = m.L*3*m.d*m.dff;
+  const emb = 2*m.V*m.d;
+  return {attn, ffn, emb, total: attn+ffn+emb};
+}
+const GB = 1e9;
+function weightsGB(m, bytes){ return params(m).total*bytes/GB; }
+function kvPerToken(m, bytes, kv){ return 2*m.L*(kv ?? m.kv)*m.hd*bytes; }
+function maxConcurrent(m, g, wBytes, kBytes, ctx, kv){
+  const free = g.mem*GB*0.9 - weightsGB(m, wBytes)*GB;
+  if(free <= 0) return {n:-1, free};
+  return {n: Math.floor(free/(kvPerToken(m, kBytes, kv)*ctx)), free};
+}
+function decodeMs(m, g, bytes){ return params(m).total*bytes/g.bw*1000; }
+function prefillMs(m, g, T, eff=0.4){ return 2*params(m).total*T/(g.tflops*1e12*eff)*1000; }
+const opt = (sel, obj) => { for(const k in obj){ const o = el('option', null, obj[k].name); o.value = k; sel.appendChild(o); } };
+
+/* ================= 5–15: таблицы параметров и памяти (статика, считается) ================= */
+(function(){
+  const m = MODELS.llama8b, p = params(m);
+  const r = (a,b,c) => `<tr><td>${a}</td><td class="mono" style="font-size:.82rem">${b}</td><td class="num">${c}</td></tr>`;
+  document.getElementById('paramTable').innerHTML = `<thead><tr><th>Компонент</th><th>Формула</th><th class="num">Параметров</th></tr></thead><tbody>` +
+    r('Attention: W_q, W_o', 'L × 2 × d × d', fmt(m.L*2*m.d*m.d/1e6) + ' M') +
+    r('Attention: W_k, W_v (GQA, 8 KV-heads)', 'L × 2 × d × (n_kv × head_dim)', fmt(m.L*2*m.d*m.kv*m.hd/1e6) + ' M') +
+    r('FFN (SwiGLU, три матрицы)', 'L × 3 × d × d_ff', fmt(p.ffn/1e6) + ' M') +
+    r('Embedding + lm_head (не связаны)', '2 × V × d', fmt(p.emb/1e6) + ' M') +
+    `<tr><td><b>Итого</b></td><td></td><td class="num"><b>${(p.total/1e9).toFixed(2)} B</b></td></tr></tbody>`;
+  const rows = [['bf16 / fp16', 2], ['int8', 1], ['int4', 0.5]].map(([n,b]) => `<tr><td>${n}</td><td class="num">${b} байт</td><td class="num">${weightsGB(m,b).toFixed(1)} ГБ</td><td>${b===2?'не влезает в 24 ГБ с кэшем':b===1?'влезает в 24 ГБ, кэша мало':'влезает в ноутбук'}</td></tr>`).join('');
+  document.getElementById('memTable').innerHTML = `<thead><tr><th>Точность</th><th class="num">на параметр</th><th class="num">веса 8B</th><th>Куда влезает</th></tr></thead><tbody>${rows}</tbody>`;
+  // decode table
+  const dt = ['h100','a100','rtx4090','m4'].map(k => { const g = GPUS[k]; const a = decodeMs(m,g,2), b = decodeMs(m,g,0.5); return `<tr><td>${g.name.replace(/ \d+ ГБ/,'')} <span class="mono" style="font-size:.78rem;color:var(--ink-3)">${fmt(g.bw/1e9)} ГБ/с</span></td><td class="num">${a.toFixed(1)} мс → ${fmt(1000/a)} ток/с</td><td class="num">${b.toFixed(1)} мс → ${fmt(1000/b)} ток/с</td></tr>`; }).join('');
+  document.getElementById('decodeTable').innerHTML = `<thead><tr><th>Устройство</th><th class="num">веса bf16 (16 ГБ)</th><th class="num">веса int4 (4 ГБ)</th></tr></thead><tbody>${dt}</tbody>`;
+})();
+
+/* ================= 15–25: один шаг ================= */
+(function(){
+  const m = MODELS.llama8b;
+  let mode = 'decode', T = 6, cur = 0, timer = null;
+  const STAGES = [
+    {n:'Вход', d: () => mode==='decode' ? 'id последнего сгенерированного токена + KV-cache всех предыдущих позиций' : `все ${T} токенов промпта разом; кэш пустой`, sh: () => mode==='decode' ? '[1]' : `[T=${T}]`, code:[0]},
+    {n:'Embedding lookup', d: () => 'строка таблицы V × d для каждого токена — вектор размерности d', sh: () => mode==='decode' ? '[1, 4096]' : `[${T}, 4096]`, code:[0]},
+    {n:'RMSNorm', d: () => 'нормировка вектора перед attention; веса — один вектор d', sh: () => mode==='decode' ? '[1, 4096]' : `[${T}, 4096]`, code:[0], loop:true},
+    {n:'Проекции q, k, v', d: () => 'три умножения на матрицы: W_q (d×d), W_k и W_v (d × n_kv·head_dim = 4096 × 1024). Считаются только для новых позиций.', sh: () => mode==='decode' ? 'q [1, 32×128], k,v [1, 8×128]' : `q [${T}, 32×128], k,v [${T}, 8×128]`, code:[0], loop:true},
+    {n:'Дописать k, v в KV-cache', d: () => mode==='decode' ? 'одна новая позиция на слой: 8 × 128 × 2 байта × 2 (K и V) = 4 КБ на слой, 128 КБ на все 32 слоя' : `в кэш записываются все ${T} позиций сразу — это и есть результат prefill`, sh: () => mode==='decode' ? `кэш: [${T+1}, 8×128] × 2` : `кэш: [${T}, 8×128] × 2`, code:[1], loop:true, kv:true},
+    {n:'Attention: q ко всем k в кэше', d: () => mode==='decode' ? `один запрос против ${T+1} ключей: скоры [32 heads, 1, ${T+1}], взвешенная сумма v. Единственное место, где участвует история.` : `каждый из ${T} токенов смотрит на предыдущие: скоры [32, ${T}, ${T}] — квадрат по T`, sh: () => mode==='decode' ? `[32, 1, ${T+1}]` : `[32, ${T}, ${T}]`, code:[0], loop:true},
+    {n:'W_o и residual', d: () => 'выход attention умножается на W_o (d×d) и прибавляется к входу слоя', sh: () => mode==='decode' ? '[1, 4096]' : `[${T}, 4096]`, code:[0], loop:true},
+    {n:'RMSNorm → FFN', d: () => 'SwiGLU: две матрицы d × d_ff, gate, одна d_ff × d обратно. 176M параметров на слой — самая тяжёлая часть', sh: () => mode==='decode' ? '[1, 14336] → [1, 4096]' : `[${T}, 14336] → [${T}, 4096]`, code:[0], loop:true},
+    {n:'× 32 слоя', d: () => 'стадии 3–8 повторяются для каждого слоя со своими весами. Через все веса проходит ' + (mode==='decode' ? 'один вектор' : `матрица из ${T} векторов`), sh: () => 'L = 32', code:[0]},
+    {n:'Final norm → lm_head', d: () => 'умножение на матрицу d × V: логиты над словарём 128 256 — по одному на каждый возможный следующий токен', sh: () => mode==='decode' ? '[1, 128256]' : `[${T}, 128256] (нужна только последняя строка)`, code:[0]},
+    {n:'Sampling', d: () => 'temperature, top-p → один токен. Крошечная часть стоимости; единственное место недетерминизма', sh: () => '→ 1 токен', code:[2]},
+    {n:'Дописать токен, следующий шаг', d: () => 'выбранный токен становится входом следующего вызова; кэш вырос на одну позицию', sh: () => `T → ${T+1}`, code:[3]},
+  ];
+  const CODE_DECODE = [
+    'out  = model(tok, past_key_values=past, use_cache=True)   # [1, 1] → logits [1, 1, V]',
+    'past = out.past_key_values                                # T → T+1',
+    'tok  = sample(out.logits[:, -1], temperature)',
+    'for _ in range(max_new_tokens): ...                       # следующий шаг',
+  ];
+  const CODE_PREFILL = [
+    'out  = model(prompt_ids, use_cache=True)                  # [1, T] → logits [1, T, V]',
+    'past = out.past_key_values                                # KV-cache: L × (K, V) × [1, n_kv, T, hd]',
+    'tok  = sample(out.logits[:, -1], temperature)             # первый токен ответа',
+    '# дальше — decode',
+  ];
+  const stagesEl = document.getElementById('stages'), info = document.getElementById('stepInfo'), grid = document.getElementById('kvgrid'), code = document.getElementById('stepCode');
+  function render(){
+    stagesEl.innerHTML = '';
+    STAGES.forEach((s,i) => {
+      const d = el('div', 'stg' + (s.loop?' loop':'') + (i===cur?' cur':'') + (i<cur?' done':''));
+      d.innerHTML = `<span class="i">${i+1}</span><span>${s.n}</span><span class="sh">${s.sh()}</span>`;
+      d.onclick = () => { cur = i; render(); };
+      stagesEl.appendChild(d);
+    });
+    const s = STAGES[cur];
+    info.innerHTML = `<b>${cur+1}. ${s.n}</b><br>${s.d()}`;
+    // kv grid
+    grid.innerHTML = '';
+    const filled = mode==='decode' ? T : (cur >= 4 ? T : 0);
+    for(let i=0;i<filled;i++){ const c = el('i'); if(mode==='prefill' && cur===4) c.className='new'; grid.appendChild(c); }
+    if(mode==='decode' && cur >= 4){ const c = el('i','new'); grid.appendChild(c); }
+    if(cur === 5){ const q = el('i','q'); q.title = 'q текущей позиции'; grid.appendChild(q); }
+    if(!grid.children.length) grid.innerHTML = '<span class="pill">пусто</span>';
+    const lines = mode==='decode' ? CODE_DECODE : CODE_PREFILL;
+    code.innerHTML = lines.map((l,i) => `<div class="ln${s.code.includes(i)?' hl':''}">${l.replace(/(#.*)$/, '<span class="cm">$1</span>')}</div>`).join('');
+    document.getElementById('stT').textContent = T;
+  }
+  const g = id => document.getElementById(id);
+  g('stNext').onclick = () => { cur = (cur+1) % STAGES.length; render(); };
+  g('stPrev').onclick = () => { cur = (cur-1+STAGES.length) % STAGES.length; render(); };
+  g('stTok').onclick = () => { if(mode==='prefill'){ mode='decode'; g('modePrefill').setAttribute('aria-pressed',false); g('modeDecode').setAttribute('aria-pressed',true); } else T++; cur = 0; render(); };
+  g('stReset').onclick = () => { T = 6; cur = 0; render(); };
+  g('modePrefill').onclick = () => { mode='prefill'; cur=0; g('modePrefill').setAttribute('aria-pressed',true); g('modeDecode').setAttribute('aria-pressed',false); render(); };
+  g('modeDecode').onclick = () => { mode='decode'; cur=0; g('modeDecode').setAttribute('aria-pressed',true); g('modePrefill').setAttribute('aria-pressed',false); render(); };
+  g('stPlay').onclick = () => {
+    if(timer){ clearInterval(timer); timer=null; g('stPlay').textContent = '▶ автоматически'; return; }
+    g('stPlay').textContent = '⏸ стоп';
+    timer = setInterval(() => { cur++; if(cur >= STAGES.length){ cur = 0; if(mode==='decode') T++; } render(); }, 1400);
+  };
+  render();
+})();
+
+/* ================= 25–40: симулятор стриминга ================= */
+(function(){
+  const g = id => document.getElementById(id);
+  const VARIANTS = {
+    l8_bf16:{name:'Llama-3-8B, bf16', m:'llama8b', b:2}, l8_int4:{name:'Llama-3-8B, int4', m:'llama8b', b:0.5},
+    q7_bf16:{name:'Qwen2.5-7B, bf16', m:'qwen7b', b:2}, q7_int4:{name:'Qwen2.5-7B, int4', m:'qwen7b', b:0.5},
+    l70_bf16:{name:'Llama-3-70B, bf16', m:'llama70b', b:2}, l70_int4:{name:'Llama-3-70B, int4', m:'llama70b', b:0.5},
+  };
+  opt(g('smModel'), VARIANTS); opt(g('smGpu'), GPUS);
+  let speed = 1, run = null;
+  const TEXT = 'Память чат-бота живёт не в модели, а в хранилище: перед каждым вызовом оркестратор собирает промпт из истории диалога, найденных документов и результатов инструментов. Модель получает эту последовательность токенов и возвращает распределение следующего токена — один токен за один полный проход через все веса. Поэтому длинный ответ медленный: каждый выходной токен — это ещё одно чтение шестнадцати гигабайт весов из памяти видеокарты. Промпт при этом обрабатывается за один проход, и его стоимость упирается не в память, а в вычисления. Отсюда разная цена входных и выходных токенов, отсюда же время до первого токена и скорость «печати». Батчинг делает decode почти бесплатным до точки баланса, а KV-cache ограничивает, сколько таких запросов поместится рядом. Всё это уже реализовано в vLLM и llama.cpp; руками это пишут только чтобы понять, что внутри. ';
+  function calc(){
+    const v = VARIANTS[g('smModel').value], m = MODELS[v.m], gpu = GPUS[g('smGpu').value];
+    const T = +g('smIn').value, N = +g('smOut').value;
+    g('smInV').textContent = fmt(T); g('smOutV').textContent = fmt(N);
+    const w = weightsGB(m, v.b), fits = w < gpu.mem*0.9;
+    const tpot = decodeMs(m, gpu, v.b), ttft = prefillMs(m, gpu, T) + 20;
+    const e2e = ttft + N*tpot;
+    g('smTtft').textContent = fmtMs(ttft); g('smTtftS').textContent = `prefill ${fmt(T)} токенов при 40 % от ${fmt(gpu.tflops)} TFLOPS`;
+    g('smTpot').textContent = tpot.toFixed(1); g('smTpotS').textContent = `${w.toFixed(1)} ГБ весов / ${fmt(gpu.bw/1e9)} ГБ/с`;
+    g('smTps').textContent = fmt(1000/tpot);
+    g('smE2e').textContent = fmtMs(e2e);
+    let note = `Веса ${w.toFixed(1)} ГБ, память ${gpu.mem} ГБ${gpu.note ? ' (' + gpu.note + ')' : ''}. `;
+    if(!fits) note += `<b class="badc">Не влезает.</b> Нужна квантизация, модель меньше или несколько карт (tensor parallelism).`;
+    else note += `Decode — ${fmt(1000/tpot)} ток/с — это чтение всех весов ${fmt(1000/tpot)} раз в секунду. Prefill ${fmt(T)} токенов — ${fmt(2*params(m).total*T/1e12,1)} TFLOP.`;
+    g('smNote').innerHTML = note;
+    g('smRun').disabled = !fits;
+    return {ttft, tpot, N, fits};
+  }
+  function start(){
+    if(run){ clearTimeout(run); run = null; }
+    const {ttft, tpot, N, fits} = calc(); if(!fits) return;
+    const box = g('smText');
+    const toks = []; let s = TEXT; while(toks.length < N){ for(let i=0;i<s.length && toks.length<N;i+=3) toks.push(s.slice(i,i+3)); }
+    box.innerHTML = `<span class="wait">ждём первый токен… (prefill ${fmtMs(ttft)})</span>`;
+    const t0 = performance.now();
+    let i = 0;
+    function tick(){
+      const now = performance.now() - t0;
+      const target = Math.min(N, Math.floor(Math.max(0, now*speed - ttft)/tpot) + (now*speed >= ttft ? 1 : 0));
+      if(target > i){ i = target; box.innerHTML = toks.slice(0,i).join('') + (i < N ? '<span class="cursor"></span>' : ` <span class="pill acc">${N} токенов за ${fmtMs(ttft + N*tpot)}${speed>1?' (показано ×'+speed+')':''}</span>`); }
+      if(i < N) run = setTimeout(tick, 16);
+    }
+    tick();
+  }
+  ['smModel','smGpu','smIn','smOut'].forEach(id => g(id).addEventListener('input', calc));
+  g('smX1').onclick = () => { speed = 1; g('smX1').setAttribute('aria-pressed',true); g('smX10').setAttribute('aria-pressed',false); };
+  g('smX10').onclick = () => { speed = 10; g('smX10').setAttribute('aria-pressed',true); g('smX1').setAttribute('aria-pressed',false); };
+  g('smRun').onclick = start;
+  calc();
+  g('smText').innerHTML = '<span class="wait">нажмите «Сгенерировать» — текст появится с расчётной скоростью</span>';
+})();
+
+/* ================= 40–50: калькулятор KV-cache ================= */
+(function(){
+  const g = id => document.getElementById(id);
+  opt(g('kvModel'), MODELS); opt(g('kvGpu'), GPUS);
+  function calc(){
+    const m = MODELS[g('kvModel').value], gpu = GPUS[g('kvGpu').value], wb = +g('kvWdt').value, kb = +g('kvKdt').value, ctx = +g('kvCtx').value;
+    const kv = g('kvMha').checked ? m.h : m.kv;
+    g('kvCtxV').textContent = fmt(ctx);
+    const per = kvPerToken(m, kb, kv), w = weightsGB(m, wb), perReq = per*ctx/GB;
+    const {n, free} = maxConcurrent(m, gpu, wb, kb, ctx, kv);
+    g('kvPerTok').textContent = fmt(per/1024); g('kvPerReq').textContent = perReq.toFixed(2); g('kvW').textContent = w.toFixed(1);
+    g('kvN').textContent = n < 0 ? '—' : fmt(n);
+    const bar = g('kvBar'); bar.innerHTML = '';
+    const total = gpu.mem;
+    const seg = (gb, c, label) => { const d = el('div'); d.style.background = c; d.style.width = Math.max(0, Math.min(100, gb/total*100)) + '%'; d.innerHTML = `<span>${label}</span>`; d.title = label; bar.appendChild(d); };
+    if(n < 0){ seg(total, 'var(--bad)', `веса ${w.toFixed(0)} ГБ > ${gpu.mem} ГБ — не влезает`); }
+    else { seg(w, 'var(--s1)', `веса ${w.toFixed(1)} ГБ`); seg(n*perReq, 'var(--s2)', `кэш ${fmt(n)} × ${perReq.toFixed(2)} ГБ`); seg(total*0.1, 'var(--ink-3)', 'резерв'); }
+    let note = `${m.name}: 2 × ${m.L} × ${kv} × ${m.hd} × ${kb} байт = ${fmt(per)} байт на токен. `;
+    if(g('kvMha').checked) note += `Без GQA кэш был бы в ${(m.h/m.kv)} раза больше — GQA ввели именно ради инференса. `;
+    if(n < 0) note += `На одной карте не помещаются даже веса: ${w.toFixed(0)} ГБ при ${gpu.mem} ГБ. Нужно ${Math.ceil(w/(gpu.mem*0.9))}+ карт с tensor parallelism или квантизация.`;
+    else if(n === 0) note += `Веса влезли, а один запрос с таким контекстом — уже нет: свободно ${(free/GB).toFixed(1)} ГБ, нужно ${perReq.toFixed(1)} ГБ.`;
+    else note += `Свободно под кэш ${(free/GB).toFixed(1)} ГБ → ${fmt(free/per)} токенов кэша → ${fmt(n)} запросов по ${fmt(ctx)} токенов. Это идеал с PagedAttention; статическое резервирование под max_len даёт заметно меньше.`;
+    g('kvNote').innerHTML = note;
+  }
+  ['kvModel','kvGpu','kvWdt','kvKdt','kvCtx','kvMha'].forEach(id => g(id).addEventListener('input', calc));
+  calc();
+})();
+
+/* ================= с кэшем и без ================= */
+(function(){
+  const g = id => document.getElementById(id);
+  let timer = null;
+  function draw(){
+    const T = +g('ccT').value; g('ccTV').textContent = T;
+    const a = g('cbWith'), b = g('cbWithout'); a.innerHTML = ''; b.innerHTML = '';
+    for(let t=1;t<=T;t++){ const i1 = el('i'); i1.style.height = (1/T*100) + '%'; i1.title = `шаг ${t}: 1 токен`; a.appendChild(i1); const i2 = el('i'); i2.style.height = (t/T*100) + '%'; i2.title = `шаг ${t}: ${t} токенов`; b.appendChild(i2); }
+    g('ccWith').textContent = fmt(T); g('ccWithout').textContent = fmt(T*(T+1)/2);
+  }
+  g('ccT').addEventListener('input', draw);
+  g('ccPlay').onclick = () => { if(timer) clearInterval(timer); let t = 1; g('ccT').value = 1; draw(); timer = setInterval(() => { t++; g('ccT').value = t; draw(); if(t >= 64){ clearInterval(timer); timer = null; } }, 60); };
+  draw();
+})();
+
+/* ================= 50–60: график throughput vs batch (статика, считается) ================= */
+(function(){
+  const m = MODELS.llama8b, gpu = GPUS.h100, N = params(m).total;
+  const memMs = N*2/gpu.bw*1000, EFF = 0.6;
+  const pts = []; for(let B=1;B<=512;B*=Math.SQRT2){ const b = Math.round(B); const compMs = 2*N*b/(gpu.tflops*1e12*EFF)*1000; const step = Math.max(memMs, compMs); pts.push({B:b, step, tps: b/step*1000}); }
+  const W=520,H=250, x0=60, x1=480, y0=205, y1=25;
+  const lx = B => x0 + Math.log2(B)/9*(x1-x0);
+  const maxT = Math.max(...pts.map(p=>p.tps));
+  const ly = v => y0 - v/maxT*(y0-y1);
+  const svg = document.getElementById('batchChart');
+  let s = `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y0}" class="svgline"/><line x1="${x0}" y1="${y1}" x2="${x0}" y2="${y0}" class="svgline"/>`;
+  [1,4,16,64,256].forEach(B => { s += `<text x="${lx(B)}" y="${y0+14}" text-anchor="middle" class="svgtxt m" style="font-size:10px">${B}</text>`; });
+  s += `<text x="${(x0+x1)/2}" y="${H-12}" text-anchor="middle" class="svgtxt">размер батча B (лог)</text>`;
+  const bal = gpu.tflops*1e12*EFF/gpu.bw/ (2*N/ (N*2)) ; // balance point in B: memMs = compMs → B = tflops*eff*memMs/(2N)
+  const Bbal = gpu.tflops*1e12*EFF*memMs/1000/(2*N);
+  s += `<line x1="${lx(Bbal)}" y1="${y1}" x2="${lx(Bbal)}" y2="${y0}" stroke="var(--s4)" stroke-dasharray="3 3"/><text x="${lx(Bbal)-4}" y="${y1+40}" text-anchor="end" class="svgtxt" style="fill:var(--s4)">баланс, B ≈ ${fmt(Bbal)}</text>`;
+  s += `<polyline fill="none" stroke="var(--s1)" stroke-width="2" points="${pts.map(p => lx(p.B).toFixed(1)+','+ly(p.tps).toFixed(1)).join(' ')}"/>`;
+  const last = pts[pts.length-1];
+  s += `<text x="${lx(last.B)-6}" y="${ly(last.tps)-8}" text-anchor="end" class="svgtxt" style="fill:var(--s1)">токенов/с: ${fmt(last.tps/1000,0)}k при B=${last.B}</text>`;
+  const p1 = pts[0]; s += `<circle cx="${lx(p1.B)}" cy="${ly(p1.tps)}" r="4" fill="var(--s1)"/><text x="${lx(p1.B)+8}" y="${ly(p1.tps)-14}" class="svgtxt">B=1: ${fmt(p1.tps)} ток/с, шаг ${p1.step.toFixed(1)} мс</text>`;
+  const p64 = pts.find(p => p.B >= 64); s += `<circle cx="${lx(p64.B)}" cy="${ly(p64.tps)}" r="4" fill="var(--s1)"/><text x="${lx(p64.B)+8}" y="${ly(p64.tps)+14}" class="svgtxt">B=${p64.B}: шаг всё ещё ${p64.step.toFixed(1)} мс</text>`;
+  s += `<text x="${x0+6}" y="${y1+12}" class="svgtxt" style="font-size:11px">суммарно токенов/с (все запросы батча)</text>`;
+  svg.innerHTML = s;
+})();
+
+/* ================= 60–75: расчётный лист ================= */
+(function(){
+  const g = id => document.getElementById(id);
+  opt(g('wsModel'), MODELS); opt(g('wsGpu'), GPUS);
+  let checked = false, answers = {};
+  const QUESTIONS = [
+    {id:'params', q:'Число параметров по конфигу, млрд', unit:'B', f:(m,gp) => params(m).total/1e9, how:(m)=>`L × (2d² + 2·d·n_kv·hd + 3·d·d_ff) + 2·V·d = ${(params(m).total/1e9).toFixed(2)} B`},
+    {id:'w16', q:'Память под веса в bf16, ГБ', unit:'ГБ', f:(m,gp) => weightsGB(m,2), how:(m)=>`${(params(m).total/1e9).toFixed(2)}·10⁹ × 2 байта = ${weightsGB(m,2).toFixed(1)} ГБ`},
+    {id:'w4', q:'Память под веса в int4, ГБ', unit:'ГБ', f:(m,gp) => weightsGB(m,0.5), how:(m)=>`× 0.5 байта = ${weightsGB(m,0.5).toFixed(1)} ГБ`},
+    {id:'kv', q:'KV-cache на один токен в bf16, КБ', unit:'КБ', f:(m,gp) => kvPerToken(m,2)/1024, how:(m)=>`2 × ${m.L} × ${m.kv} × ${m.hd} × 2 = ${fmt(kvPerToken(m,2))} байт = ${fmt(kvPerToken(m,2)/1024)} КБ`},
+    {id:'n4k', q:'Одновременных запросов при контексте 4 096, bf16 веса и кэш, резерв 10 % (0, если не влезает)', unit:'', f:(m,gp) => Math.max(0, maxConcurrent(m,gp,2,2,4096).n), how:(m,gp)=>{ const r = maxConcurrent(m,gp,2,2,4096); return r.n < 0 ? `${gp.mem}×0.9 − ${weightsGB(m,2).toFixed(1)} < 0 — веса не влезают, ответ 0` : `(${gp.mem}×0.9 − ${weightsGB(m,2).toFixed(1)}) ГБ / (${fmt(kvPerToken(m,2)/1024)} КБ × 4096) = ${r.n}`; }},
+    {id:'tps', q:'Предел скорости decode при batch = 1, bf16, токенов/с', unit:'ток/с', f:(m,gp) => 1000/decodeMs(m,gp,2), how:(m,gp)=>`${fmt(gp.bw/1e9)} ГБ/с / ${weightsGB(m,2).toFixed(1)} ГБ = ${fmt(1000/decodeMs(m,gp,2))} ток/с (${decodeMs(m,gp,2).toFixed(1)} мс на токен)`},
+    {id:'ttft', q:'TTFT для промпта 2 048 токенов при 40 % от пиковых TFLOPS, мс', unit:'мс', f:(m,gp) => prefillMs(m,gp,2048), how:(m,gp)=>`2 × N × 2048 = ${fmt(2*params(m).total*2048/1e12,1)} TFLOP / (${gp.tflops} × 0.4) TFLOPS = ${fmt(prefillMs(m,gp,2048))} мс`},
+  ];
+  function config(){
+    const m = MODELS[g('wsModel').value], gp = GPUS[g('wsGpu').value];
+    g('wsConfig').innerHTML = `<thead><tr><th>num_hidden_layers</th><th>hidden_size</th><th>num_attention_heads</th><th>num_key_value_heads</th><th>head_dim</th><th>intermediate_size</th><th>vocab_size</th><th>память GPU</th><th>HBM</th><th>bf16 TFLOPS</th></tr></thead><tbody><tr class="mono"><td>${m.L}</td><td>${m.d}</td><td>${m.h}</td><td>${m.kv}</td><td>${m.hd}</td><td>${m.dff}</td><td>${m.V}</td><td>${gp.mem} ГБ${gp.note?'*':''}</td><td>${fmt(gp.bw/1e9)} ГБ/с</td><td>${gp.tflops}</td></tr></tbody>`;
+    return {m,gp};
+  }
+  function render(){
+    const {m,gp} = config();
+    const box = g('wsQ'); box.innerHTML = '';
+    let score = 0;
+    QUESTIONS.forEach(q => {
+      const ref = q.f(m,gp);
+      const row = el('div','wsq');
+      const val = answers[q.id] ?? '';
+      let cls = '';
+      if(checked && val !== ''){ const v = parseFloat(String(val).replace(',','.')); const ok = ref === 0 ? Math.abs(v) < 0.5 : Math.abs(v-ref)/ref <= 0.15; cls = ok ? 'ok' : 'bad'; if(ok) score++; }
+      row.className = 'wsq ' + cls;
+      row.innerHTML = `<div>${q.q}</div><div><input type="text" inputmode="decimal" placeholder="${q.unit}" value="${val}" data-q="${q.id}"></div><div class="ans"><span class="teacher">${typeof ref === 'number' ? (ref >= 100 ? fmt(ref) : ref.toFixed(ref < 10 ? 2 : 1)) : ref} ${q.unit}<br><span style="color:var(--ink-3)">${q.how(m,gp)}</span></span>${checked && cls ? (cls==='ok' ? '<span class="pill ok">верно</span>' : '<span class="pill bad">не сходится</span>') : ''}</div>`;
+      row.querySelector('input').addEventListener('input', e => { answers[q.id] = e.target.value; });
+      box.appendChild(row);
+    });
+    const sc = g('wsScore');
+    if(checked){ sc.style.display = ''; sc.textContent = `${score} из ${QUESTIONS.length} в допуске ±15 %`; sc.className = 'pill ' + (score === QUESTIONS.length ? 'ok' : 'acc'); } else sc.style.display = 'none';
+  }
+  g('wsCheck').onclick = () => { checked = true; render(); };
+  g('wsClear').onclick = () => { answers = {}; checked = false; render(); };
+  ['wsModel','wsGpu'].forEach(id => g(id).addEventListener('input', () => { checked = false; render(); }));
+  render();
+  // teacher toggle
+  const tb = g('teacherBtn');
+  tb.onclick = () => { const on = !document.body.classList.contains('teacher'); document.body.classList.toggle('teacher', on); tb.setAttribute('aria-pressed', on); tb.textContent = on ? 'Ответы: показаны' : 'Ответы: скрыты'; };
+})();
+
+/* ================= self-host vs API (статика, считается) ================= */
+(function(){
+  const m = MODELS.llama8b, gpu = GPUS.h100, price = 2.5, B = 64, util = 0.3;
+  const tps1 = 1000/decodeMs(m,gpu,2), tpsB = tps1*B*0.75; // 75%: часть шага уходит на attention/кэш и prefill-вставки
+  const perHour = tpsB*3600, costFull = price/perHour*1e6, costUtil = costFull/util;
+  document.getElementById('selfhost').innerHTML = `
+    <dt>Аренда H100</dt><dd>$${price} в час (пример)</dd>
+    <dt>Decode при B = ${B}</dt><dd>≈ ${fmt(tps1)} ток/с × ${B} × 0.75 ≈ ${fmt(tpsB)} ток/с ≈ ${fmt(perHour/1e6,1)} M токенов в час</dd>
+    <dt>$ за 1M выходных при 100 % загрузке</dt><dd>${price} / ${fmt(perHour/1e6,1)} ≈ $${costFull.toFixed(2)}</dd>
+    <dt>При реальной загрузке ${util*100} %</dt><dd>≈ $${costUtil.toFixed(2)} за 1M — сравнить с ценой провайдера за модель того же класса</dd>
+    <dt>При batch = 1 (свой ноутбук, один пользователь)</dt><dd>≈ $${(price/(tps1*3600)*1e6).toFixed(2)} за 1M — в ${fmt(B*0.75)} раз дороже</dd>`;
+})();
+
+</script>
+</body>
+</html>

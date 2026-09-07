@@ -1,0 +1,1291 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Анатомия системы и бюджет решения</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E9EDF2;
+  --ink:#151A21; --ink-2:#4E5968; --ink-3:#8593A2; --line:#D6DCE4; --line-2:#C3CBD5;
+  --accent:#1D4E9E; --accent-ink:#FFFFFF; --accent-soft:#E2EAF8;
+  --warm:#BF5218; --warm-soft:#FBE8DC;
+  --ok:#1C7A4C; --ok-soft:#DDF3E6; --bad:#B8362A; --bad-soft:#FBE2DE;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --code-bg:#F6F8FA;
+  --shadow:0 1px 2px rgba(21,26,33,.06), 0 8px 24px -12px rgba(21,26,33,.18);
+  --radius:10px;
+  --font-body:"IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-head:"IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --font-mono:"IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#111418; --surface:#1A1F26; --surface-2:#232A33;
+    --ink:#ECEFF3; --ink-2:#AAB4C0; --ink-3:#77828F; --line:#2C343E; --line-2:#3A434F;
+    --accent:#86ACF2; --accent-ink:#0E1522; --accent-soft:#213456;
+    --warm:#F0905B; --warm-soft:#3B2417;
+    --ok:#52C58E; --ok-soft:#173526; --bad:#F07A70; --bad-soft:#3D1F1C;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --code-bg:#12161B;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111418; --surface:#1A1F26; --surface-2:#232A33;
+  --ink:#ECEFF3; --ink-2:#AAB4C0; --ink-3:#77828F; --line:#2C343E; --line-2:#3A434F;
+  --accent:#86ACF2; --accent-ink:#0E1522; --accent-soft:#213456;
+  --warm:#F0905B; --warm-soft:#3B2417;
+  --ok:#52C58E; --ok-soft:#173526; --bad:#F07A70; --bad-soft:#3D1F1C;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --code-bg:#12161B;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html{font-size:17px; scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important; animation:none!important} }
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; -webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+h1,h2,h3,h4{font-family:var(--font-head); font-weight:600; line-height:1.2; margin:0; text-wrap:balance; letter-spacing:-.01em}
+h1{font-size:2.4rem} h2{font-size:1.75rem} h3{font-size:1.2rem; margin-top:1.6rem} h4{font-size:1rem; font-family:var(--font-body); font-weight:600}
+p{margin:.6rem 0}
+code,pre,.mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums}
+code{font-size:.9em; background:var(--surface-2); padding:.05em .35em; border-radius:4px}
+pre{background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.9rem 1rem; overflow-x:auto; font-size:.85rem; line-height:1.5}
+pre code{background:none; padding:0; font-size:inherit}
+ul,ol{padding-left:1.3rem} li{margin:.25rem 0}
+table{border-collapse:collapse; width:100%; font-size:.93rem}
+th,td{text-align:left; padding:.5rem .65rem; border-bottom:1px solid var(--line); vertical-align:top}
+th{font-weight:600; color:var(--ink-2); font-size:.8rem; text-transform:uppercase; letter-spacing:.05em}
+td.num,th.num{text-align:right; font-family:var(--font-mono); font-variant-numeric:tabular-nums; white-space:nowrap}
+.tablewrap{overflow-x:auto}
+button,select,input{font:inherit; color:inherit}
+button{cursor:pointer; background:var(--surface); border:1px solid var(--line-2); border-radius:8px; padding:.4rem .85rem; font-size:.9rem; font-weight:500}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+button.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+button.ghost{background:transparent}
+button[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent)}
+select,input[type=number],input[type=text]{background:var(--surface); border:1px solid var(--line-2); border-radius:8px; padding:.35rem .5rem}
+input[type=range]{width:100%; accent-color:var(--accent)}
+label{font-size:.85rem; color:var(--ink-2)}
+
+/* top bar */
+.topbar{position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1180px; margin:0 auto; padding:.5rem 1.2rem; display:flex; align-items:center; gap:1rem}
+.brand{font-family:var(--font-head); font-size:.95rem; white-space:nowrap; color:var(--ink-2)}
+.brand b{color:var(--ink); font-weight:600}
+.chips{display:flex; gap:.35rem; overflow-x:auto; flex:1; scrollbar-width:none; padding:.15rem 0}
+.chips::-webkit-scrollbar{display:none}
+.chip{white-space:nowrap; font-size:.78rem; padding:.25rem .6rem; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); text-decoration:none}
+.chip .t{font-family:var(--font-mono); color:var(--ink-3); margin-right:.3rem}
+.chip.active{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+.tools{display:flex; gap:.35rem}
+.tools button{font-size:.78rem; padding:.3rem .6rem}
+
+/* sections */
+main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
+.sec{padding:3.2rem 0 2.2rem; border-bottom:1px solid var(--line)}
+.sec:last-child{border-bottom:0}
+.sec-head{max-width:72ch; margin-bottom:1.2rem}
+.time{display:inline-block; font-family:var(--font-mono); font-size:.75rem; color:var(--accent); background:var(--accent-soft); padding:.15rem .5rem; border-radius:4px; margin-bottom:.6rem; letter-spacing:.03em}
+.lede{font-size:1.08rem; color:var(--ink-2); margin-top:.5rem}
+.prose{max-width:72ch}
+.prose.wide{max-width:none}
+.cols{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.2rem 2rem}
+.hero{padding:4rem 0 3rem}
+.hero .eyebrow{font-family:var(--font-mono); font-size:.8rem; color:var(--ink-3); letter-spacing:.06em; text-transform:uppercase}
+.hero h1{margin:.5rem 0 .8rem; font-size:clamp(2rem,4.5vw,3.2rem)}
+.hero .lede{max-width:64ch}
+.thesis{border-left:3px solid var(--accent); padding:.4rem 1rem; margin:1.2rem 0; color:var(--ink); font-family:var(--font-head); font-size:1.1rem; max-width:72ch}
+.note{font-size:.85rem; color:var(--ink-2); border:1px dashed var(--line-2); border-radius:8px; padding:.5rem .8rem; margin:.8rem 0}
+.slot{color:var(--warm); font-style:italic}
+.kicker{font-size:.78rem; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3); font-weight:600}
+
+/* interactive stage */
+.stage{background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:1.2rem 1.4rem; margin:1.4rem 0}
+.stage-head{display:flex; align-items:baseline; gap:.8rem; flex-wrap:wrap; margin-bottom:.8rem}
+.stage-head .tag{font-family:var(--font-mono); font-size:.72rem; color:var(--warm); background:var(--warm-soft); padding:.15rem .5rem; border-radius:4px; letter-spacing:.05em}
+.stage-head h3{margin:0; font-size:1.15rem}
+.stage-head .hint{color:var(--ink-2); font-size:.88rem; flex-basis:100%}
+.controls{display:flex; gap:1rem 1.4rem; flex-wrap:wrap; align-items:end; margin:.6rem 0 1rem}
+.ctl{display:flex; flex-direction:column; gap:.2rem; min-width:150px}
+.ctl .v{font-family:var(--font-mono); font-size:.8rem; color:var(--ink)}
+.row{display:flex; gap:.6rem; flex-wrap:wrap; align-items:center}
+.stat{display:flex; flex-direction:column; gap:.1rem; padding:.6rem .9rem; background:var(--surface-2); border-radius:8px; min-width:140px}
+.stat .l{font-size:.75rem; color:var(--ink-2); text-transform:uppercase; letter-spacing:.05em}
+.stat .n{font-family:var(--font-mono); font-size:1.35rem; font-weight:500; font-variant-numeric:tabular-nums}
+.stat .s{font-size:.78rem; color:var(--ink-3)}
+.stats{display:flex; gap:.6rem; flex-wrap:wrap; margin:.8rem 0}
+.bar{height:14px; border-radius:4px; background:var(--surface-2); overflow:hidden; display:flex}
+.bar > span{display:block; height:100%; transition:width .4s ease}
+.legend{display:flex; gap:.9rem; flex-wrap:wrap; font-size:.8rem; color:var(--ink-2); margin-top:.4rem}
+.legend i{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:.35rem; vertical-align:-1px}
+.good{color:var(--ok)} .badc{color:var(--bad)}
+.pill{display:inline-block; font-size:.75rem; padding:.1rem .5rem; border-radius:999px; border:1px solid var(--line-2); color:var(--ink-2)}
+.pill.ok{background:var(--ok-soft); color:var(--ok); border-color:transparent}
+.pill.bad{background:var(--bad-soft); color:var(--bad); border-color:transparent}
+.pill.acc{background:var(--accent-soft); color:var(--accent); border-color:transparent}
+
+/* code quiz */
+.codeq{display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:1rem}
+@media (max-width:820px){.codeq{grid-template-columns:1fr}}
+.codelines{background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); overflow-x:auto; font-family:var(--font-mono); font-size:.82rem; line-height:1.5; padding:.4rem 0}
+.codelines .ln{display:flex; padding:0 .8rem; cursor:pointer; white-space:pre}
+.codelines .ln:hover{background:var(--accent-soft)}
+.codelines .ln .no{width:2.2em; color:var(--ink-3); user-select:none; flex-shrink:0}
+.codelines .ln.hit{background:var(--ok-soft); box-shadow:inset 3px 0 0 var(--ok)}
+.codelines .ln.miss{animation:shake .25s}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.explain{background:var(--surface-2); border-radius:var(--radius); padding:.9rem 1rem; font-size:.92rem; min-height:100px}
+.explain.hidden-x{color:var(--ink-3)}
+
+/* anatomy */
+.blocks{display:grid; grid-template-columns:repeat(7,1fr); gap:.5rem; align-items:stretch}
+@media (max-width:900px){.blocks{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:560px){.blocks{grid-template-columns:repeat(2,1fr)}}
+.blk{border:1px solid var(--line-2); border-radius:10px; padding:.6rem .6rem; background:var(--surface); cursor:pointer; text-align:left; min-height:74px; display:flex; flex-direction:column; gap:.15rem}
+.blk .k{font-size:.7rem; color:var(--ink-3); font-family:var(--font-mono)}
+.blk .n{font-weight:600; font-size:.9rem}
+.blk[aria-pressed="true"]{border-color:var(--accent); background:var(--accent-soft)}
+.blk.obs{grid-column:1 / -1; min-height:auto; flex-direction:row; align-items:center; gap:.8rem}
+.detail{margin-top:.8rem; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:.8rem}
+.detail .cell{background:var(--surface-2); border-radius:8px; padding:.6rem .8rem; font-size:.9rem}
+.detail .cell .k{font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); margin-bottom:.2rem}
+.journey{margin-top:.8rem}
+.jbar{display:flex; height:34px; border-radius:6px; overflow:hidden; background:var(--surface-2); gap:2px}
+.jbar > div{height:100%; width:0; transition:width .25s linear; position:relative}
+.jbar > div span{position:absolute; left:.35rem; top:50%; transform:translateY(-50%); font-size:.72rem; color:#fff; white-space:nowrap; overflow:hidden; max-width:calc(100% - .5rem); text-overflow:ellipsis; text-shadow:0 0 3px rgba(0,0,0,.5)}
+.jclock{font-family:var(--font-mono); font-size:1.4rem; margin-top:.4rem}
+.jclock small{font-size:.8rem; color:var(--ink-3); margin-left:.6rem}
+.jmarks{display:flex; gap:1.2rem; font-size:.8rem; color:var(--ink-2); margin-top:.3rem; flex-wrap:wrap}
+
+/* autoregression */
+.ar{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:1.2rem}
+@media (max-width:860px){.ar{grid-template-columns:1fr}}
+.seq{min-height:90px; background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.8rem 1rem; font-size:1.05rem; line-height:1.8}
+.seq .tok{padding:.05em .1em; border-radius:3px}
+.seq .tok.gen{background:var(--accent-soft); color:var(--accent)}
+.seq .tok.last{outline:2px solid var(--accent)}
+.dist{display:flex; flex-direction:column; gap:.35rem}
+.dist .d{display:grid; grid-template-columns:8em 1fr 3.5em; align-items:center; gap:.5rem; font-size:.88rem}
+.dist .d .w{font-family:var(--font-mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.dist .d .b{height:12px; background:var(--surface-2); border-radius:3px; overflow:hidden}
+.dist .d .b i{display:block; height:100%; background:var(--s1); border-radius:3px; transition:width .3s}
+.dist .d .p{font-family:var(--font-mono); font-size:.8rem; text-align:right; color:var(--ink-2)}
+.dist .d.pick .b i{background:var(--s2)}
+.prompt-view{font-family:var(--font-mono); font-size:.78rem; background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.7rem .9rem; white-space:pre-wrap; line-height:1.5}
+.prompt-view .sys{color:var(--ink-3)} .prompt-view .u{color:var(--accent)} .prompt-view .a{color:var(--s3)} .prompt-view .new{background:var(--warm-soft)}
+
+/* budget */
+.budget{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1.4rem}
+@media (max-width:860px){.budget{grid-template-columns:1fr}}
+.gauges{display:flex; flex-direction:column; gap:.9rem}
+.gauge .l{display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:.25rem}
+.gauge .l b{font-family:var(--font-mono); font-weight:500}
+.gauge .bar{height:18px}
+.breakdown{font-size:.85rem; color:var(--ink-2); margin-top:.6rem}
+
+/* cases */
+.cases{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:.9rem}
+.case{border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem; background:var(--surface); cursor:pointer; display:flex; flex-direction:column; gap:.5rem}
+.case:hover{border-color:var(--accent)}
+.case h4{font-family:var(--font-head); font-size:1.05rem; font-weight:600}
+.case .st{display:none; font-size:.9rem; padding:.45rem .6rem; border-radius:6px; background:var(--surface-2)}
+.case .st .k{font-size:.7rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); display:block; margin-bottom:.15rem}
+.case .st.on{display:block}
+.case .st.on.last{background:var(--accent-soft)}
+.case .more{font-size:.78rem; color:var(--ink-3); margin-top:auto}
+
+/* sorter */
+.sorter{display:grid; grid-template-columns:1fr; gap:1rem}
+.deck{display:flex; flex-wrap:wrap; gap:.5rem; min-height:48px}
+.tcard{border:1px solid var(--line-2); border-radius:8px; padding:.4rem .6rem; font-size:.86rem; background:var(--surface); display:flex; align-items:center; gap:.4rem}
+.tcard .b{display:flex; gap:.2rem; margin-left:.3rem}
+.tcard .b button{font-size:.7rem; padding:.1rem .4rem; border-radius:5px}
+.tcard.right{border-color:var(--ok); background:var(--ok-soft)}
+.tcard.wrong{border-color:var(--bad); background:var(--bad-soft)}
+.bins{display:grid; grid-template-columns:repeat(3,1fr); gap:.8rem}
+@media (max-width:820px){.bins{grid-template-columns:1fr}}
+.bin{border:1px dashed var(--line-2); border-radius:10px; padding:.6rem; min-height:110px}
+.bin h4{margin-bottom:.4rem; font-size:.85rem}
+.bin .deck{gap:.4rem}
+
+/* misc */
+.two{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
+@media (max-width:820px){.two{grid-template-columns:1fr}}
+.cardgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:.9rem}
+.card{background:var(--surface-2); border-radius:10px; padding:.8rem 1rem; font-size:.92rem}
+.card.bad{border-left:3px solid var(--bad)} .card.good{border-left:3px solid var(--ok)}
+.card .k{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); margin-bottom:.25rem}
+.steps{counter-reset:s; list-style:none; padding:0; margin:.8rem 0}
+.steps li{counter-increment:s; display:grid; grid-template-columns:2.2rem 1fr; gap:.6rem; padding:.55rem 0; border-top:1px solid var(--line)}
+.steps li::before{content:counter(s); font-family:var(--font-mono); color:var(--accent); font-size:1.1rem}
+.figure{margin:1rem 0}
+.figure svg{width:100%; height:auto; display:block}
+.figure figcaption{font-size:.82rem; color:var(--ink-2); margin-top:.4rem}
+.svgtxt{fill:var(--ink-2); font-family:var(--font-body); font-size:12px}
+.svgtxt.m{font-family:var(--font-mono)}
+.svgline{stroke:var(--line-2)}
+.kv{display:grid; grid-template-columns:auto 1fr; gap:.3rem 1rem; font-size:.9rem}
+.kv dt{color:var(--ink-2)} .kv dd{margin:0; font-family:var(--font-mono); font-size:.88rem}
+#selfhost dd{font-family:var(--font-body); font-size:.92rem}
+.hw{background:var(--accent-soft); border-radius:12px; padding:1rem 1.2rem; max-width:72ch}
+.hw h3{margin-top:0}
+.chatband{display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap; background:var(--accent-soft); border-radius:12px; padding:1rem 1.2rem; max-width:900px}
+.chatband a{font-family:var(--font-mono); font-size:1.05rem; color:var(--accent); font-weight:600; text-decoration:none}
+.chatband a:hover{text-decoration:underline}
+.chatband span{color:var(--ink-2); font-size:.95rem}
+footer{max-width:1180px; margin:0 auto; padding:1rem 1.2rem 3rem; font-size:.8rem; color:var(--ink-3)}
+
+/* presentation mode: each section is exactly one screen */
+.fit{display:contents}
+body.present{font-size:1.08rem}
+html:has(body.present){scroll-snap-type:y mandatory; scroll-padding-top:var(--topbar-h,52px)}
+body.present main{padding-bottom:0}
+body.present .sec{height:calc(100dvh - var(--topbar-h,52px)); padding:1.4rem 0 1.1rem; overflow:hidden; border-bottom:0; scroll-snap-align:start; scroll-snap-stop:always}
+body.present .sec.overflowing{overflow-y:auto}
+body.present .hero{padding:1.4rem 0 1.1rem}
+body.present .fit{display:block; transform-origin:top center}
+body.present h2{font-size:2rem}
+body.present .stage{font-size:1rem; margin:1rem 0}
+
+/* ===== seminar-specific ===== */
+.stepper{display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:1.2rem}
+@media (max-width:900px){.stepper{grid-template-columns:1fr}}
+.stages{display:flex; flex-direction:column; gap:.25rem}
+.stg{display:grid; grid-template-columns:1.6rem 1fr auto; gap:.5rem; align-items:baseline; padding:.35rem .6rem; border-radius:8px; font-size:.9rem; border:1px solid transparent}
+.stg .i{font-family:var(--font-mono); font-size:.75rem; color:var(--ink-3)}
+.stg .sh{font-family:var(--font-mono); font-size:.78rem; color:var(--ink-2); white-space:nowrap}
+.stg.cur{background:var(--accent-soft); border-color:var(--accent)}
+.stg.cur .sh{color:var(--accent)}
+.stg.loop{margin-left:1.2rem; border-left:2px dashed var(--line-2); border-radius:0 8px 8px 0}
+.stg.done{opacity:.6}
+.kvgrid{display:flex; flex-wrap:wrap; gap:3px; margin:.5rem 0; min-height:22px}
+.kvgrid i{display:block; width:14px; height:14px; border-radius:3px; background:var(--s1); opacity:.55}
+.kvgrid i.new{background:var(--s2); opacity:1; outline:2px solid var(--s2); outline-offset:1px}
+.kvgrid i.q{background:var(--s3); opacity:1}
+.codepane{background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); font-family:var(--font-mono); font-size:.8rem; line-height:1.55; padding:.5rem 0; overflow-x:auto}
+.codepane .ln{white-space:pre; padding:0 .8rem; border-left:3px solid transparent}
+.codepane .ln.hl{background:var(--accent-soft); border-left-color:var(--accent)}
+.codepane .cm{color:var(--ink-3)}
+.stepinfo{background:var(--surface-2); border-radius:8px; padding:.7rem .9rem; font-size:.9rem; min-height:80px; margin-bottom:.8rem}
+.stream{background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.9rem 1rem; min-height:140px; font-size:1rem; line-height:1.7; position:relative}
+.stream .cursor{display:inline-block; width:.5em; height:1.1em; background:var(--accent); vertical-align:-2px; animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+.stream .wait{color:var(--ink-3); font-style:italic}
+.membar{display:flex; height:26px; border-radius:6px; overflow:hidden; background:var(--surface-2); gap:2px}
+.membar > div{height:100%; position:relative; transition:width .3s}
+.membar > div span{position:absolute; left:.4rem; top:50%; transform:translateY(-50%); font-size:.72rem; color:#fff; white-space:nowrap; text-shadow:0 0 3px rgba(0,0,0,.6)}
+.cachebars{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
+@media (max-width:760px){.cachebars{grid-template-columns:1fr}}
+.cb{display:flex; align-items:flex-end; gap:2px; height:120px; border-bottom:1px solid var(--line-2); padding-bottom:0}
+.cb i{display:block; flex:1; background:var(--s1); border-radius:2px 2px 0 0; min-width:2px}
+.cb.nocache i{background:var(--s2)}
+.ws{display:grid; grid-template-columns:1fr; gap:.5rem}
+.wsq{display:grid; grid-template-columns:minmax(0,2fr) 9rem 1fr; gap:.8rem; align-items:center; padding:.55rem .6rem; border-top:1px solid var(--line); font-size:.92rem}
+@media (max-width:760px){.wsq{grid-template-columns:1fr}}
+.wsq .ans{font-family:var(--font-mono); font-size:.85rem; color:var(--ink-2)}
+.wsq.ok{background:var(--ok-soft)} .wsq.bad{background:var(--bad-soft)}
+.wsq input{width:100%}
+.teacher{display:none}
+body.teacher .teacher{display:block}
+.calc-out{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:.6rem}
+
+/* team / grading */
+.team{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:.9rem; max-width:900px}
+.person{display:flex; flex-direction:column; gap:.2rem; padding:1rem 1.1rem; border:1px solid var(--line); border-radius:12px; background:var(--surface); text-decoration:none; color:var(--ink); box-shadow:var(--shadow)}
+.person:hover{border-color:var(--accent)}
+.person .nm{font-family:var(--font-head); font-size:1.15rem; font-weight:600}
+.person .tg{font-family:var(--font-mono); font-size:.85rem; color:var(--accent)}
+.person .bio{font-size:.85rem; color:var(--ink-2); line-height:1.35}
+.formula{display:flex; flex-direction:column; gap:.6rem; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:1.1rem 1.4rem; box-shadow:var(--shadow); font-family:var(--font-mono); font-size:1rem; overflow-x:auto}
+.formula .f{white-space:nowrap}
+.formula .f.main{font-size:1.15rem; padding-bottom:.6rem; border-bottom:1px solid var(--line)}
+.formula .lhs{color:var(--accent); font-weight:500}
+.formula sub{font-family:var(--font-body); font-size:.72em; color:var(--ink-2)}
+
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-in">
+  <div class="brand"><b>LLM-системы и агенты</b> · занятие 1</div>
+  <nav class="chips" id="chips" aria-label="Разделы"></nav>
+  <div class="tools"><button id="presentBtn" aria-pressed="false">Режим: прокрутка</button><button id="themeBtn">Тема: система</button></div>
+</div></div>
+
+<main>
+
+<section id="s0" class="sec hero" data-short="Начало">
+  <div class="eyebrow">LLM-системы и агенты · занятие 1</div>
+  <h1>Анатомия системы и бюджет решения</h1>
+  <p class="lede">Что происходит между «отправил сообщение» и «получил ответ», и почему проектирование начинается с ограничений, а не с выбора модели.</p>
+  <div class="thesis">Модель — один блок из семи. Всё остальное — инженерия вокруг неё.</div>
+  <div class="prose">
+    <p class="note">Стрелки ← → листают разделы в режиме презентации. Этот же файл — раздатка, интерактивы работают без сети.</p>
+  </div>
+</section>
+
+<section id="team" class="sec" data-short="Преподаватели">
+  <div class="sec-head">
+    <h2>Преподаватели</h2>
+    <p class="lede">Вопросы по курсу, проекту и домашним заданиям — в Telegram.</p>
+  </div>
+  <div class="team">
+    <a class="person" href="https://t.me/Xufana" target="_blank" rel="noopener"><span class="nm">Дарья Андреева</span><span class="tg">@Xufana</span><span class="bio">ПМИ ФКН ВШЭ, четвёртый год преподаёт на ФКН, NLP-инженер в X5 Tech</span></a>
+    <a class="person" href="https://t.me/SamoedR" target="_blank" rel="noopener"><span class="nm">Роман Соломатин</span><span class="tg">@SamoedR</span><span class="bio">Аспирант Skoltech, работает в Сбере, мейнтейнер бенчмарка ruMTEB</span></a>
+    <a class="person" href="https://t.me/al_potekhin" target="_blank" rel="noopener"><span class="nm">Александр Потехин</span><span class="tg">@al_potekhin</span><span class="bio">Аспирант Skoltech, тимлид NLP-команды в X5 Tech</span></a>
+  </div>
+  <div class="sec-head" style="margin-top:1.6rem">
+    <h3 style="margin:0">Материалы курса</h3>
+  </div>
+  <div class="team">
+    <a class="person" href="https://github.com/xufana/llm-system-engineering" target="_blank" rel="noopener"><span class="nm">GitHub</span><span class="tg">xufana/llm-system-engineering</span><span class="bio">Слайды, домашние задания, шаблоны и код к занятиям</span></a>
+    <a class="person" href="https://wiki.cs.hse.ru/Инженерия_LLM-систем" target="_blank" rel="noopener"><span class="nm">Wiki ФКН</span><span class="tg">Инженерия LLM-систем</span><span class="bio">Программа курса, расписание, критерии оценивания</span></a>
+  </div>
+  <div class="chatband" style="margin-top:1.6rem">
+    <a href="https://t.me/+xXrYwaMIgDlmNTcy" target="_blank" rel="noopener">t.me/+xXrYwaMIgDlmNTcy</a>
+    <span>— чат курса: объявления и вопросы</span>
+  </div>
+</section>
+
+<section id="org" class="sec" data-short="Курс и оценка">
+  <div class="sec-head">
+    <h2>Как устроен курс</h2>
+    <p class="lede">Лекции с практикой, сквозной проект вместо экзамена и домашние задания, которые к нему подводят.</p>
+  </div>
+  <div class="sec-head">
+    <h3 style="margin:0">Проект</h3>
+  </div>
+  <div class="cardgrid">
+    <div class="card"><div class="k">Продукт</div>Агентский продукт по вашей идее: от контракта и бюджетов до прототипа. <span class="slot">[подробнее — дальше]</span></div>
+    <div class="card"><div class="k">Артефакты</div><b>Design doc</b> и <b>ADR</b> (Architecture Decision Record) — страница на каждое архитектурное решение.</div>
+    <div class="card"><div class="k">Методика оценивания</div>Оффлайн-критерии: сложность и оригинальность темы, соответствие design doc'у, обоснование решений, идея, процесс разработки.</div>
+    <div class="card"><div class="k">Защита = экзамен</div>Показываете систему, design doc и ADR. Отвечаете на вопросы о решениях и ограничениях.</div>
+  </div>
+  <div class="sec-head" style="margin-top:1.6rem">
+    <h3 style="margin:0">Домашние задания</h3>
+  </div>
+  <div class="cardgrid">
+    <div class="card"><div class="k">Соревнование</div>BitGN by Rinat Abdullin.</div>
+    <div class="card"><div class="k">Контрольные точки</div>Сдача разделов design doc по ходу курса. Первая: контракт, бюджеты и design doc с описанием спецификаций.</div>
+    <div class="card"><div class="k">Бонус</div>Контрибьют в материалы курса: исправления, примеры, интерактивы, задачи.</div>
+  </div>
+  <div class="sec-head" style="margin-top:1.6rem">
+    <h3 style="margin:0">Оценка</h3>
+  </div>
+  <div class="formula">
+    <div class="f main"><span class="lhs">Итог</span> = 0,5 · О<sub>проект</sub> + 0,5 · О<sub>ДЗ</sub> + 0,1 · О<sub>бонус</sub></div>
+    <div class="f"><span class="lhs">О<sub>проект</sub></span> = 0,6 · О<sub>защита</sub> + 0,4 · О<sub>методика оценивания</sub></div>
+    <div class="f"><span class="lhs">О<sub>ДЗ</sub></span> = 0,6 · О<sub>соревнование</sub> + 0,4 · О<sub>КТ по проекту</sub></div>
+  </div>
+</section>
+
+<section id="s1" class="sec" data-short="Вводная">
+  <div class="sec-head">
+    <h2>Зачем этот курс</h2>
+    <p class="lede">Понимать, что такое LLM и агенты. Уметь спроектировать агентский продукт. Знать, где границы.</p>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <h3 style="margin-top:0">Про вайбкод</h3>
+      <ul>
+        <li>Вайбкодить можно: прототип за вечер, черновик пайплайна, незнакомая библиотека.</li>
+        <li>Нельзя — принимать результат, не умея его проверить.</li>
+        <li>Разница не в том, кто набирал код, а в том, знаете ли вы, где он сломается.</li>
+      </ul>
+    </div>
+    <div class="prose">
+      <h3 style="margin-top:0">Заменят ли нас модели</h3>
+      <p>Код они пишут уже хорошо. Но:</p>
+      <ul>
+        <li>не держат контракт и не отвечают за результат;</li>
+        <li>не знают, чего не знают — уверенность ответа ≠ его правильность;</li>
+        <li>хуже всего справляются с самым дорогим: сформулировать, что нужно, и где границы;</li>
+        <li>проверка дешевле написания только для того, кто знает предмет.</li>
+      </ul>
+      <p>Работа смещается к спецификации, архитектуре и верификации. Курс — про эти три вещи.</p>
+    </div>
+  </div>
+</section>
+
+<section id="s1b" class="sec" data-short="Модель врёт">
+  <div class="sec-head">
+    <h2>Главный навык: заметить, что модель врёт</h2>
+    <p class="lede">Код запустится, ответ будет складным, тесты пройдут.</p>
+  </div>
+  <div class="prose">
+    <h3 style="margin-top:0">Три типовых сценария</h3>
+    <ol>
+      <li><b>Выдуманный API.</b> Метода или параметра нет — или он был две версии назад. Хуже падения — молчаливое игнорирование.</li>
+      <li><b>Правдоподобно, но неверно.</b> «O(n)», а на деле O(n²). Метрика посчитана не по определению. Тест «починен» ослаблением assert.</li>
+      <li><b>Велосипед вместо библиотеки.</b> 150 строк своего retry, когда в зависимостях уже есть готовый. Работает — но теперь это ваш код и ваши баги.</li>
+    </ol>
+    <p>Знать, какие блоки уже существуют, — чтобы распознать велосипед. Знать, как устроено внутри, — чтобы распознать ошибку.</p>
+  </div>
+
+  <div class="stage" id="quiz">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Найди, где модель врёт</h3>
+      <p class="hint">Три фрагмента, сгенерированные уверенно и без предупреждений. Кликните на строку с проблемой.</p></div>
+    <div class="row" id="quizTabs"></div>
+    <div class="codeq" style="margin-top:.8rem">
+      <div class="codelines" id="quizCode"></div>
+      <div>
+        <div class="explain hidden-x" id="quizExplain">Кликните на подозрительную строку.</div>
+        <div class="row" style="margin-top:.6rem"><button class="ghost" id="quizReveal">Показать ответ</button><button class="ghost" id="quizReset">Сбросить</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p><b>Вопрос:</b> что происходит, когда вы отправляете сообщение в ChatGPT?</p>
+  </div>
+</section>
+
+<section id="s2" class="sec" data-short="Анатомия">
+  <div class="sec-head">
+    <h2>Анатомия системы: семь блоков</h2>
+    <p class="lede">Модель — арендуемый ресурс, её меняют за день. Остальные шесть блоков — ваш код, ваши данные, ваша ответственность.</p>
+  </div>
+
+  <div class="stage" id="anatomy">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Путешествие запроса</h3>
+      <p class="hint">Клик по блоку — что он делает и что в нём берётся готовым. «Отправить запрос» — куда уходит время.</p></div>
+    <div class="blocks" id="blocks"></div>
+    <div class="detail" id="blockDetail"></div>
+    <div class="journey">
+      <div class="controls">
+        <div class="ctl"><label>Выходных токенов: <span class="v" id="jOutV">400</span></label><input type="range" id="jOut" min="50" max="1500" step="50" value="400"></div>
+        <div class="ctl"><label>Шагов агента (вызовов инструментов): <span class="v" id="jStepsV">0</span></label><input type="range" id="jSteps" min="0" max="6" step="1" value="0"></div>
+        <div class="ctl"><label><input type="checkbox" id="jRag" checked> Retrieval перед ответом</label></div>
+        <div class="ctl"><button class="primary" id="jRun">Отправить запрос</button></div>
+      </div>
+      <div class="jbar" id="jBar"></div>
+      <div class="jclock"><span id="jClock">0 мс</span><small id="jTotalHint"></small></div>
+      <div class="jmarks" id="jMarks"></div>
+      <div class="legend" id="jLegend"></div>
+      <p class="note">Времена условные, порядок величин реальный: сеть и шлюз — десятки мс, retrieval — 100–300 мс, prefill промпта на 2–3k токенов — под 100 мс, decode — 5–10 мс на токен. Откуда берутся prefill и decode — на следующей паре.</p>
+    </div>
+  </div>
+
+  <div class="prose">
+    <h3>Как LLM генерирует — минимум</h3>
+    <ul>
+      <li>LLM — функция без состояния. На вход — токены, на выход — распределение следующего токена. Между вызовами ничего не помнит.</li>
+      <li>Генерация авторегрессионна: выбрали токен → дописали к входу → вызвали снова. Ответ на 400 токенов — 400 вызовов.</li>
+    </ul>
+    <h4>Что из этого следует</h4>
+    <ul>
+      <li><b>Память.</b> Модель знает о диалоге ровно то, что ей передали в этом вызове. Историю, документы, результаты инструментов вклеивает в промпт оркестратор, хранит — хранилище.</li>
+      <li><b>Уверенный бред.</b> Модель не «решает», а выбирает следующий токен по вероятности. Правдоподобное продолжение и правильный ответ — не одно и то же.</li>
+      <li><b>Цена и скорость.</b> Каждый выходной токен — отдельный проход, промпт обрабатывается за один. Отсюда TTFT, TPOT и разная цена входных и выходных токенов.</li>
+    </ul>
+  </div>
+
+  <div class="stage" id="argen">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Авторегрессия и «память» чат-бота</h3>
+      <p class="hint">Слева — игрушечная n-грамная модель, обученная в браузере на предложениях из этого занятия. Делает то же, что большая LLM: по контексту выдаёт распределение следующего токена. Справа — промпт, который оркестратор собрал для этого вызова.</p></div>
+    <div class="ar">
+      <div>
+        <div class="controls">
+          <div class="ctl"><label>Начало</label><select id="arStart"></select></div>
+          <div class="ctl"><label>Temperature: <span class="v" id="arTV">1.0</span></label><input type="range" id="arT" min="0.1" max="2.5" step="0.1" value="1"></div>
+          <div class="ctl"><div class="row"><button class="primary" id="arNext">Следующий токен</button><button id="arAuto">+10</button><button class="ghost" id="arReset">Сбросить</button></div></div>
+        </div>
+        <div class="seq" id="arSeq"></div>
+        <p class="kicker" style="margin-top:.8rem">Распределение следующего токена</p>
+        <div class="dist" id="arDist"></div>
+      </div>
+      <div>
+        <div class="row" style="margin-bottom:.5rem"><span class="kicker">Промпт, который видит модель</span>
+          <button class="ghost" id="arCall" aria-pressed="false">Показать второй вызов</button></div>
+        <div class="prompt-view" id="arPrompt"></div>
+        <p class="note">Во втором вызове «память» — это первый вопрос и ответ, вклеенные в промпт как текст. Сама модель ничего не сохранила.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="prose">
+    <p><b>Вопрос:</b> где живёт память чат-бота?</p>
+  </div>
+</section>
+
+<section id="s3" class="sec" data-short="Контракт">
+  <div class="sec-head">
+    <h2>Контракт сервиса: что именно мы обещаем</h2>
+    <p class="lede">Каждый пункт контракта превращается в метрику или тест. Что нельзя измерить — не контракт, а пожелание.</p>
+  </div>
+  <div class="two">
+    <div class="card bad"><div class="k">Плохой контракт</div>«Бот отвечает на вопросы сотрудников по внутренней документации».</div>
+    <div class="card good"><div class="k">Хороший контракт</div>«На вопрос на русском языке возвращает ответ, опирающийся на ≥1 фрагмент документации, со ссылкой на источник. Если релевантных фрагментов нет — говорит об этом явно. Первый токен ≤ 1.5 с, полный ответ ≤ 10 с. На вопросы вне базы не отвечает».</div>
+  </div>
+  <div class="tablewrap" style="margin-top:1rem">
+  <table>
+    <thead><tr><th>Поле контракта</th><th>Что записать</th><th>Во что превращается</th></tr></thead>
+    <tbody>
+      <tr><td><b>Вход</b></td><td>какие запросы принимаем (язык, длина, домен), что делаем с остальными</td><td>классификатор «в домене / вне», тест на отказ</td></tr>
+      <tr><td><b>Выход</b></td><td>формат (текст / JSON по схеме / ссылки), гарантии (только из документов? может отказаться?)</td><td>валидация схемы, проверка groundedness</td></tr>
+      <tr><td><b>Поведение при неуверенности</b></td><td>«не знаю» / уточнить / передать оператору</td><td>доля корректных отказов на eval-сете</td></tr>
+      <tr><td><b>Чего не обещаем</b></td><td>точность вычислений, юридическую силу, отсутствие ошибок</td><td>дисклеймер в UI, границы в design doc</td></tr>
+      <tr><td><b>Нефункциональные</b></td><td>задержка, доступность, приватность данных</td><td>SLO, аудит хранения</td></tr>
+    </tbody>
+  </table></div>
+  <div class="prose">
+    <p class="note"><b>Обсуждение:</b> контракт для агента, который бронирует столик в ресторане. «Удобно», «быстро», «правильно понимает» — не считается.</p>
+  </div>
+</section>
+
+<section id="s4" class="sec" data-short="Бюджеты">
+  <div class="sec-head">
+    <h2>Три бюджета: качество, задержка, стоимость</h2>
+    <p class="lede">Бюджет фиксируется до выбора архитектуры. Это ограничение, а не пожелание.</p>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <h3>Качество</h3>
+      <ul>
+        <li>Измеряется eval-сетом. 50–200 примеров достаточно, чтобы начать.</li>
+        <li>Метрики под контракт: точность извлечения, groundedness, валидность формата, доля корректных отказов. LLM-as-judge — с проверкой на людях.</li>
+        <li>Качество — не «модель умнее», а «система выполняет контракт на наших запросах».</li>
+      </ul>
+      <h3>Задержка</h3>
+      <ul>
+        <li>TTFT, TPOT, end-to-end. Всегда P50 и P95, не среднее.</li>
+        <li>Агентный цикл умножает всё на число шагов.</li>
+        <li>Стриминг не уменьшает задержку, но меняет её восприятие.</li>
+      </ul>
+    </div>
+    <div class="prose">
+      <h3>Стоимость</h3>
+      <pre><code>cost_req   ≈ in_tokens × price_in
+           + out_tokens × price_out
+           + retrieval + инструменты
+cost_month = cost_req × requests_month</code></pre>
+      <p>Скрытая стоимость: разметка eval, время инженеров на обвязку, GPU-часы при self-host.</p>
+      <h3>Как они связаны</h3>
+      <ul>
+        <li>Большая модель: качество ↑, цена ↑, задержка ↑.</li>
+        <li>Агент с самопроверкой: качество ↑, цена и задержка ×N.</li>
+        <li>Кэш и маленькая модель: дешевле и быстрее, хуже на хвосте запросов.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage" id="budget">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Калькулятор трёх бюджетов</h3>
+      <p class="hint">Двигайте один рычаг — реагируют все три шкалы. Цены примерные и редактируемые, шкала качества условная.</p></div>
+    <div class="budget">
+      <div>
+        <div class="controls">
+          <div class="ctl"><label>Токенов на вход: <span class="v" id="bInV">3000</span></label><input type="range" id="bIn" min="200" max="12000" step="100" value="3000"></div>
+          <div class="ctl"><label>Токенов на выход: <span class="v" id="bOutV">400</span></label><input type="range" id="bOut" min="20" max="2000" step="20" value="400"></div>
+          <div class="ctl"><label>Запросов в месяц: <span class="v" id="bReqV">1 000 000</span></label><input type="range" id="bReq" min="4" max="8" step="0.1" value="6"></div>
+          <div class="ctl"><label>Шагов агента: <span class="v" id="bStepsV">1</span></label><input type="range" id="bSteps" min="1" max="6" step="1" value="1"></div>
+          <div class="ctl"><label>Доля промпта из кэша: <span class="v" id="bCacheV">0 %</span></label><input type="range" id="bCache" min="0" max="90" step="10" value="0"></div>
+          <div class="ctl"><label>Ярус модели</label><select id="bTier"><option value="s">маленькая (мини)</option><option value="m" selected>средняя</option><option value="l">большая (флагман)</option></select></div>
+          <div class="ctl"><label>$ за 1M входных</label><input type="number" id="bPin" value="0.5" step="0.05" min="0"></div>
+          <div class="ctl"><label>$ за 1M выходных</label><input type="number" id="bPout" value="2" step="0.1" min="0"></div>
+        </div>
+      </div>
+      <div>
+        <div class="gauges">
+          <div class="gauge"><div class="l"><span>Стоимость в месяц</span><b id="gCost"></b></div><div class="bar"><span id="gCostBar" style="background:var(--s2)"></span></div></div>
+          <div class="gauge"><div class="l"><span>Задержка e2e (оценка P50)</span><b id="gLat"></b></div><div class="bar"><span id="gLatBar" style="background:var(--s1)"></span></div></div>
+          <div class="gauge"><div class="l"><span>Качество (условно)</span><b id="gQ"></b></div><div class="bar"><span id="gQBar" style="background:var(--s3)"></span></div></div>
+        </div>
+        <div class="stats">
+          <div class="stat"><span class="l">за запрос</span><span class="n" id="bPerReq"></span><span class="s">долларов</span></div>
+          <div class="stat"><span class="l">вход / выход</span><span class="n" id="bShare"></span><span class="s">доля стоимости</span></div>
+          <div class="stat"><span class="l">TTFT</span><span class="n" id="bTtft"></span><span class="s">первый токен</span></div>
+        </div>
+        <div class="breakdown" id="bNote"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="s5" class="sec" data-short="SLI / SLO">
+  <div class="sec-head">
+    <h2>SLI и SLO для генеративных сервисов</h2>
+    <p class="lede">Система деградирует незаметно: провайдер обновил модель, кто-то поправил промпт, изменились запросы. Без SLI об этом расскажут пользователи.</p>
+  </div>
+  <div class="cols">
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>SLI</th><th>Как считать</th><th class="num">Пример SLO</th></tr></thead>
+        <tbody>
+          <tr><td>Доля валидных по формату ответов</td><td>парсинг JSON / схемы</td><td class="num">≥ 99.5 %</td></tr>
+          <tr><td>Groundedness (ответ со ссылкой на источник)</td><td>judge-модель на выборке</td><td class="num">≥ 95 %</td></tr>
+          <tr><td>Доля корректных отказов</td><td>вопросы вне домена на eval-сете</td><td class="num">≥ 90 %</td></tr>
+          <tr><td>Успешность вызова инструментов</td><td>валидные аргументы, успешный ответ</td><td class="num">≥ 98 %</td></tr>
+          <tr><td>Оценка на canary eval-сете</td><td>100 примеров на каждый релиз</td><td class="num">≥ baseline − 2 п.п.</td></tr>
+          <tr><td>Пользовательский фидбек</td><td>доля 👎, эскалаций к оператору</td><td class="num">≤ X %</td></tr>
+          <tr><td>TTFT P95 / e2e P95</td><td>трейсы</td><td class="num">≤ 1.5 с / ≤ 10 с</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Классические SLI никуда не делись: доступность, P95 задержки, доля ошибок и таймаутов.</p>
+    </div>
+    <figure class="figure">
+      <svg viewBox="0 0 520 250" role="img" aria-label="SLI groundedness по релизам с линией SLO">
+        <line x1="50" y1="190" x2="500" y2="190" class="svgline" stroke-width="1"/>
+        <line x1="50" y1="20" x2="50" y2="190" class="svgline" stroke-width="1"/>
+        <line x1="50" y1="80" x2="500" y2="80" stroke="var(--warm)" stroke-dasharray="5 4" stroke-width="1.5"/>
+        <text x="500" y="74" text-anchor="end" class="svgtxt" style="fill:var(--warm)">SLO 95 %</text>
+        <text x="44" y="194" text-anchor="end" class="svgtxt m">80</text>
+        <text x="44" y="84" text-anchor="end" class="svgtxt m">95</text>
+        <text x="44" y="24" text-anchor="end" class="svgtxt m">100</text>
+        <polyline fill="none" stroke="var(--s1)" stroke-width="2" points="70,60 110,56 150,62 190,52 230,58 270,50 310,56 350,150 390,140 430,66 470,58"/>
+        <g fill="var(--s1)"><circle cx="70" cy="60" r="4"/><circle cx="110" cy="56" r="4"/><circle cx="150" cy="62" r="4"/><circle cx="190" cy="52" r="4"/><circle cx="230" cy="58" r="4"/><circle cx="270" cy="50" r="4"/><circle cx="310" cy="56" r="4"/><circle cx="350" cy="150" r="4" fill="var(--bad)"/><circle cx="390" cy="140" r="4" fill="var(--bad)"/><circle cx="430" cy="66" r="4"/><circle cx="470" cy="58" r="4"/></g>
+        <line x1="350" y1="30" x2="350" y2="190" stroke="var(--bad)" stroke-width="1" stroke-dasharray="2 3"/>
+        <text x="345" y="26" text-anchor="end" class="svgtxt" style="fill:var(--bad)">провайдер обновил модель</text>
+        <text x="400" y="110" class="svgtxt">откат промпта, +2 релиза</text>
+        <text x="70" y="206" class="svgtxt m">релиз 1</text><text x="470" y="206" text-anchor="end" class="svgtxt m">релиз 11</text>
+        <text x="50" y="226" class="svgtxt" style="font-size:10px">error budget за квартал — сгорел на релизах 8–9</text>
+        <rect x="50" y="232" width="450" height="6" rx="3" fill="var(--surface-2)"/>
+        <rect x="50" y="232" width="300" height="6" rx="3" fill="var(--bad)"/>
+      </svg>
+      <figcaption>Регрессия, которую без SLI никто бы не заметил: ответы остались складными, но перестали опираться на документы. Error budget — разрешение на эксперименты: пока он не выбран, можно катить изменения.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="s6" class="sec" data-short="Порядок работы">
+  <div class="sec-head">
+    <h2>Budget-first, evaluation-first, baseline-first</h2>
+    <p class="lede">Порядок работы, который нужен в design doc. Антипаттерн: «выбрали фреймворк и модель, теперь думаем, что строить».</p>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <ol class="steps">
+        <li><div><b>Budget-first.</b> Контракт и три бюджета — до первой строчки кода.</div></li>
+        <li><div><b>Evaluation-first.</b> 50–100 реальных или правдоподобных запросов с ожидаемыми ответами. Собирается за день.</div></li>
+        <li><div><b>Baseline-first.</b> Один промпт, самая сильная модель, без RAG и агентов. Измерить. Часто этого уже достаточно.</div></li>
+        <li><div><b>Усложнять по числу.</b> RAG, инструменты, агентный цикл, fine-tune — только если eval-сет показал прирост, а бюджет позволяет.</div></li>
+      </ol>
+    </div>
+    <div class="prose">
+      <h3 style="margin-top:0">Почему от ограничений, а не от модели</h3>
+      <p>Ограничения вырезают большую часть вариантов:</p>
+      <ul>
+        <li>данные не покидают контур → self-host → GPU-бюджет и инженер под vLLM;</li>
+        <li>TTFT ≤ 500 мс → никаких многошаговых агентов в синхронном пути;</li>
+        <li>10 млн запросов в месяц → маленькая модель + кэш + роутинг сложных запросов на большую;</li>
+        <li>ответы должны быть проверяемы → только со ссылками → RAG обязателен.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="s7" class="sec" data-short="Кейсы">
+  <div class="sec-head">
+    <h2>Кейсы: что было выполнимо, что нет, как менялось</h2>
+    <p class="lede">Один формат на все истории: казалось → оказалось → как изменилось → вывод в терминах контракта и бюджетов.</p>
+  </div>
+  <div class="stage" id="cases">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Карточки кейсов</h3>
+      <p class="hint">Клик по карточке — следующая стадия. <span class="slot">[детали из рабочего проекта]</span></p>
+      <div class="row"><button class="ghost" id="casesReset">Свернуть все</button></div></div>
+    <div class="cases" id="caseGrid"></div>
+  </div>
+
+  <div class="prose wide">
+    <h3>Возможности и ограничения</h3>
+  </div>
+  <div class="stage" id="sorter">
+    <div class="stage-head"><span class="tag">интерактив</span><h3>Умеет / структурно не умеет / стало можно</h3>
+      <p class="hint">Разложите задачи по трём корзинам и проверьте. Спорные карточки — повод для разговора.</p></div>
+    <div class="sorter">
+      <div class="deck" id="deck"></div>
+      <div class="bins" id="bins"></div>
+      <div class="row"><button class="primary" id="sortCheck">Проверить</button><button class="ghost" id="sortReset">Заново</button><span id="sortScore" class="pill"></span></div>
+    </div>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <h4>Умеет хорошо</h4>
+      <p>Перевод, переписывание, суммаризация. Извлечение структуры из текста, классификация, генерация кода. Следование формату, рассуждение над данным контекстом.</p>
+      <h4>Было нельзя — стало можно</h4>
+      <p>Надёжные структурированные выходы, длинный контекст, дешёвые маленькие модели, function calling, мультимодальность. Этот список пересматривается раз в полгода.</p>
+    </div>
+    <div class="prose">
+      <h4>Структурно плохо — лечится не промптом, а обвязкой</h4>
+      <ul>
+        <li>арифметика и подсчёты → калькулятор / код;</li>
+        <li>факты вне контекста → retrieval;</li>
+        <li>не знает, чего не знает → отказы в контракте, проверка groundedness;</li>
+        <li>консистентность между запросами → детерминированный код вокруг;</li>
+        <li>длинные планы без проверок → внешний контроль состояния;</li>
+        <li>нет состояния → хранилища;</li>
+        <li>недетерминизм → тесты на распределении, а не на одном примере.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="s8" class="sec" data-short="Итог и ДЗ">
+  <div class="sec-head">
+    <h2>Design doc, ADR и домашнее задание</h2>
+  </div>
+  <div class="cols">
+    <div class="prose">
+      <h3 style="margin-top:0">Design doc — структура</h3>
+      <ol>
+        <li>Контекст и пользователь</li>
+        <li>Контракт</li>
+        <li>Три бюджета и SLO</li>
+        <li>Схема системы по семи блокам</li>
+        <li>Eval-план</li>
+        <li>Baseline и план усложнений</li>
+        <li>Риски и структурные ограничения</li>
+        <li>Открытые вопросы</li>
+      </ol>
+      <h3>ADR — одна страница на решение</h3>
+      <p>Контекст → варианты → решение → последствия.</p>
+      <p>Точно потребуют ADR: API vs self-host, RAG vs длинный контекст, агентный цикл vs фиксированный пайплайн, выбор фреймворка оркестрации.</p>
+    </div>
+    <div class="hw">
+      <h3>Домашнее задание</h3>
+      <p>Выбрать идею агентского продукта (можно временную) и написать на одну страницу:</p>
+      <ul>
+        <li>контракт — пять полей из таблицы;</li>
+        <li>три бюджета с числами, пусть и грубыми;</li>
+        <li>eval-сет из 20 запросов с ожидаемыми ответами.</li>
+      </ul>
+      <p>Это первая секция design doc. Следующая пара — откуда берутся числа в бюджетах задержки и стоимости.</p>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>LLM-системы и агенты · занятие 1 · интерактивные элементы работают без сети; цены и времена в калькуляторах — иллюстративные.</footer>
+
+<script>
+/* ---------- shared: theme, presentation mode, section chips ---------- */
+(function(){
+  const root = document.documentElement;
+  const body = document.body;
+  let theme = 'system';
+  try { theme = localStorage.getItem('llm-course-theme') || 'system'; } catch(e){}
+  function applyTheme(){
+    if(theme === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', theme);
+    const b = document.getElementById('themeBtn');
+    if(b) b.textContent = theme === 'system' ? 'Тема: система' : (theme === 'dark' ? 'Тема: тёмная' : 'Тема: светлая');
+  }
+  applyTheme();
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    theme = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system';
+    try { localStorage.setItem('llm-course-theme', theme); } catch(e){}
+    applyTheme();
+  });
+
+  const pBtn = document.getElementById('presentBtn');
+  const secs = Array.from(document.querySelectorAll('main > section'));
+
+  /* каждая секция получает обёртку .fit — её масштабируем, чтобы слайд влезал в экран */
+  const MIN_SCALE = 0.55;
+  const topbar = document.querySelector('.topbar');
+  const fits = secs.map(s => {
+    const w = document.createElement('div');
+    w.className = 'fit';
+    while(s.firstChild) w.appendChild(s.firstChild);
+    s.appendChild(w);
+    return w;
+  });
+  function fitSlide(i){
+    const s = secs[i], f = fits[i];
+    if(!body.classList.contains('present')){ f.style.transform = ''; s.classList.remove('overflowing'); return; }
+    f.style.transform = '';
+    const cs = getComputedStyle(s);
+    const avail = s.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const need = f.scrollHeight;
+    if(avail <= 0 || need <= 0) return;
+    const k = Math.min(1, Math.max(MIN_SCALE, avail / need));
+    const off = Math.max(0, (avail - need * k) / 2);
+    f.style.transform = (off > 1 ? `translateY(${off.toFixed(1)}px) ` : '') + (k < 1 ? `scale(${k.toFixed(4)})` : '');
+    s.classList.toggle('overflowing', need * k > avail + 1);
+  }
+  function fitAll(){
+    root.style.setProperty('--topbar-h', (topbar ? topbar.offsetHeight : 52) + 'px');
+    secs.forEach((_,i) => fitSlide(i));
+  }
+  let raf = 0, pending = new Set();
+  function scheduleFit(i){
+    if(i == null) secs.forEach((_,j) => pending.add(j)); else pending.add(i);
+    if(raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      root.style.setProperty('--topbar-h', (topbar ? topbar.offsetHeight : 52) + 'px');
+      pending.forEach(j => fitSlide(j)); pending.clear();
+    });
+  }
+  if(window.ResizeObserver){
+    const ro = new ResizeObserver(entries => {
+      if(!body.classList.contains('present')) return;
+      entries.forEach(en => { const i = fits.indexOf(en.target); if(i >= 0) scheduleFit(i); });
+    });
+    fits.forEach(f => ro.observe(f));
+  }
+  window.addEventListener('resize', () => scheduleFit(null));
+
+  function setPresent(on){
+    body.classList.toggle('present', on);
+    pBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    pBtn.textContent = on ? 'Режим: презентация' : 'Режим: прокрутка';
+    fitAll();
+    if(on) requestAnimationFrame(fitAll);
+  }
+  setPresent(false);
+  pBtn.addEventListener('click', () => setPresent(!body.classList.contains('present')));
+
+  const chips = document.getElementById('chips');
+  secs.forEach(s => {
+    const a = document.createElement('a');
+    a.className = 'chip'; a.href = '#' + s.id;
+    const t = s.dataset.time ? `<span class="t">${s.dataset.time}</span>` : '';
+    a.innerHTML = t + (s.dataset.short || s.querySelector('h1,h2')?.textContent || s.id);
+    chips.appendChild(a);
+  });
+  const chipEls = Array.from(chips.children);
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if(en.isIntersecting){
+        const i = secs.indexOf(en.target);
+        chipEls.forEach((c,j) => c.classList.toggle('active', i === j));
+        chipEls[i]?.scrollIntoView({block:'nearest', inline:'center', behavior:'smooth'});
+      }
+    });
+  }, {rootMargin:'-40% 0px -55% 0px'});
+  secs.forEach(s => io.observe(s));
+
+  document.addEventListener('keydown', e => {
+    if(!body.classList.contains('present')) return;
+    if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName)) return;
+    if(e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'ArrowLeft' || e.key === 'PageUp'){
+      e.preventDefault();
+      const y = window.scrollY + 60;
+      let idx = secs.findIndex((s,i) => s.offsetTop > y - 5 && (i === 0 || true));
+      let cur = 0;
+      secs.forEach((s,i) => { if(s.offsetTop <= y + 5) cur = i; });
+      const next = (e.key === 'ArrowRight' || e.key === 'PageDown') ? Math.min(cur + 1, secs.length - 1) : Math.max(cur - 1, 0);
+      secs[next].scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  });
+})();
+
+/* ---------- shared helpers ---------- */
+function fmt(n, d=0){ return n.toLocaleString('ru-RU', {maximumFractionDigits:d, minimumFractionDigits:d}); }
+function fmtMs(ms){ return ms >= 1000 ? fmt(ms/1000, ms>=10000?0:1) + ' с' : fmt(ms, 0) + ' мс'; }
+function el(tag, cls, html){ const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; }
+
+/* ================= 1. Найди, где модель врёт ================= */
+const QUIZ = [
+  {
+    title: 'Выдуманный параметр',
+    lines: [
+      'from langchain_community.vectorstores import Chroma',
+      '',
+      'vectorstore = Chroma(collection_name="docs", embedding_function=emb)',
+      'retriever = vectorstore.as_retriever(',
+      '    search_kwargs={"k": 5, "min_similarity": 0.8},',
+      ')',
+      '',
+      'docs = retriever.invoke(question)',
+      'context = "\\n\\n".join(d.page_content for d in docs)',
+    ],
+    answer: [4],
+    explain: '<b>Строка 5.</b> Ключа <code>min_similarity</code> не существует. Порог задаётся через <code>search_type="similarity_score_threshold"</code> и <code>score_threshold</code>. Хуже всего, что ошибки не будет: неизвестный ключ проигнорируется, retriever вернёт пять ближайших чанков независимо от их релевантности — и «отказываться, когда нечего ответить» бот никогда не научится. Заметит только тот, кто открыл документацию или измерил долю отказов на eval-сете.'
+  },
+  {
+    title: 'Правдоподобно, но неверно',
+    lines: [
+      'def recall_at_k(retrieved: list[str], relevant: set[str], k: int) -> float:',
+      '    """Recall@k for a single query."""',
+      '    top = retrieved[:k]',
+      '    hits = sum(1 for doc_id in top if doc_id in relevant)',
+      '    return hits / k',
+      '',
+      'scores = [recall_at_k(r, rel, 5) for r, rel in zip(runs, gold)]',
+      'print(f"recall@5 = {sum(scores)/len(scores):.3f}")',
+    ],
+    answer: [4],
+    explain: '<b>Строка 5.</b> Делить надо на число релевантных документов, <code>len(relevant)</code>, а не на k. С делением на k это precision@k. Код работает, число печатается, выглядит как метрика — но если у запроса один релевантный документ, «recall» никогда не поднимется выше 0.2, и вы будете чинить retrieval, который уже работает. Docstring, написанный той же моделью, уверенно подтверждает неправду.'
+  },
+  {
+    title: 'Велосипед вместо библиотеки',
+    lines: [
+      'import time, random',
+      'from tenacity import retry  # уже в зависимостях проекта',
+      '',
+      'def call_with_retry(fn, *args, max_attempts=5, base=0.5, cap=8.0):',
+      '    attempt = 0',
+      '    while True:',
+      '        try:',
+      '            return fn(*args)',
+      '        except Exception as e:  # noqa',
+      '            attempt += 1',
+      '            if attempt >= max_attempts:',
+      '                raise',
+      '            delay = min(cap, base * (2 ** attempt))',
+      '            delay = delay * (0.5 + random.random())',
+      '            time.sleep(delay)',
+      '',
+      'answer = call_with_retry(client.chat.completions.create, payload)',
+    ],
+    answer: [3,4,5,6,7,8,9,10,11,12,13,14],
+    explain: '<b>Строки 4–15.</b> Библиотека <code>tenacity</code> уже импортирована — и не используется. Готовое решение в три строки: <code>@retry(wait=wait_exponential_jitter(initial=0.5, max=8), stop=stop_after_attempt(5), retry=retry_if_exception_type(RateLimitError))</code>. В самописной версии — ловим все исключения подряд (включая невалидный запрос, который повторять бессмысленно), нет логирования, нет лимита по времени, и это теперь ваш код, который надо тестировать. Модель «не нашла» метод, хотя он лежал в той же строке импорта.'
+  }
+];
+(function(){
+  const tabs = document.getElementById('quizTabs'), code = document.getElementById('quizCode'), ex = document.getElementById('quizExplain');
+  let cur = 0, solved = false;
+  function render(){
+    tabs.innerHTML = '';
+    QUIZ.forEach((q,i) => { const b = el('button', null, (i+1) + '. ' + q.title); b.setAttribute('aria-pressed', i===cur); b.onclick = () => { cur = i; solved = false; render(); }; tabs.appendChild(b); });
+    code.innerHTML = '';
+    QUIZ[cur].lines.forEach((l,i) => {
+      const d = el('div', 'ln'); d.innerHTML = `<span class="no">${i+1}</span><span>${l.replace(/</g,'&lt;') || ' '}</span>`;
+      d.onclick = () => {
+        if(QUIZ[cur].answer.includes(i)) reveal(); else { d.classList.remove('miss'); void d.offsetWidth; d.classList.add('miss'); }
+      };
+      code.appendChild(d);
+    });
+    ex.className = 'explain hidden-x'; ex.innerHTML = 'Кликните на подозрительную строку.';
+  }
+  function reveal(){
+    solved = true;
+    Array.from(code.children).forEach((d,i) => d.classList.toggle('hit', QUIZ[cur].answer.includes(i)));
+    ex.className = 'explain'; ex.innerHTML = QUIZ[cur].explain;
+  }
+  document.getElementById('quizReveal').onclick = reveal;
+  document.getElementById('quizReset').onclick = render;
+  render();
+})();
+
+/* ================= 2. Анатомия и путешествие запроса ================= */
+const BLOCKS = [
+  {k:'01', n:'Клиент', does:'UI, стриминг ответа, история диалога на стороне пользователя.', ready:'фронтовые SDK, стриминг через SSE', breaks:'ждёт весь ответ целиком вместо стриминга — ощущение «зависло»', color:'var(--ink-3)'},
+  {k:'02', n:'Шлюз', does:'аутентификация, rate limit, роутинг между моделями и провайдерами, ретраи, fallback, учёт токенов.', ready:'LiteLLM, OpenRouter, API-gateway провайдера', breaks:'нет лимитов — один пользователь съедает месячный бюджет за ночь', color:'var(--ink-3)'},
+  {k:'03', n:'Оркестратор', does:'сборка промпта, вызов инструментов, агентный цикл, ветвления, guardrails. Это ваш код.', ready:'LangGraph, PydanticAI, OpenAI Agents SDK, Semantic Kernel', breaks:'свободный цикл без графа состояний — агент зацикливается', color:'var(--s3)'},
+  {k:'04', n:'Движок инференса', does:'собственно forward pass: prefill, decode, батчинг. Арендуемый ресурс.', ready:'API провайдера; vLLM / SGLang / TensorRT-LLM при self-host; llama.cpp, Ollama, MLX локально', breaks:'самописный цикл генерации без батчинга — в десятки раз дороже', color:'var(--s1)'},
+  {k:'05', n:'Хранилища', does:'документы, векторный индекс, память диалога, кэш ответов, состояние агента.', ready:'Postgres + pgvector, Qdrant, Redis, объектное хранилище', breaks:'память диалога «в модели» — то есть нигде', color:'var(--s4)'},
+  {k:'06', n:'Инструменты', does:'поиск, выполнение кода, внешние API, БД компании.', ready:'MCP-серверы, готовые коннекторы', breaks:'инструмент без таймаута — задержка агента не ограничена ничем', color:'var(--s4)'},
+  {k:'07', n:'Наблюдаемость', does:'логи, трейсы, метрики, eval в проде, фидбек пользователя. Из этого считаются SLI.', ready:'Langfuse, Phoenix, LangSmith; Prometheus, Loki, Sentry', breaks:'только логи, без трейса по шагам — «ответ плохой, а почему — неизвестно»', color:'var(--ink-3)'},
+];
+(function(){
+  const wrap = document.getElementById('blocks'), det = document.getElementById('blockDetail');
+  let sel = 3;
+  function render(){
+    wrap.innerHTML = '';
+    BLOCKS.forEach((b,i) => {
+      const d = el('button', 'blk' + (i===6 ? ' obs' : ''), `<span class="k">${b.k}</span><span class="n">${b.n}</span>`);
+      d.setAttribute('aria-pressed', i===sel); d.onclick = () => { sel = i; render(); };
+      wrap.appendChild(d);
+    });
+    const b = BLOCKS[sel];
+    det.innerHTML = `<div class="cell"><div class="k">Что делает</div>${b.does}</div><div class="cell"><div class="k">Не изобретать — брать готовое</div>${b.ready}</div><div class="cell"><div class="k">Как ломается</div>${b.breaks}</div>`;
+  }
+  render();
+
+  // journey
+  const jOut = document.getElementById('jOut'), jSteps = document.getElementById('jSteps'), jRag = document.getElementById('jRag');
+  const bar = document.getElementById('jBar'), clock = document.getElementById('jClock'), marks = document.getElementById('jMarks'), legend = document.getElementById('jLegend'), hint = document.getElementById('jTotalHint');
+  const TPOT = 8, PREFILL = 80, NET = 40, RETR = 150, TOOL = 500, INNER = 120;
+  function segments(){
+    const out = +jOut.value, steps = +jSteps.value, rag = jRag.checked;
+    const s = [{n:'сеть + шлюз', ms:NET, c:'var(--ink-3)'}];
+    if(rag) s.push({n:'retrieval', ms:RETR, c:'var(--s3)'});
+    for(let i=0;i<steps;i++){
+      s.push({n:`prefill (шаг ${i+1})`, ms:PREFILL, c:'var(--s1)'});
+      s.push({n:`decode: вызов инструмента`, ms:INNER*TPOT, c:'var(--s2)'});
+      s.push({n:`инструмент ${i+1}`, ms:TOOL, c:'var(--s4)'});
+    }
+    s.push({n:'prefill', ms:PREFILL, c:'var(--s1)'});
+    s.push({n:`decode: ${out} токенов`, ms:out*TPOT, c:'var(--s2)'});
+    return s;
+  }
+  function draw(animate){
+    const segs = segments(), total = segs.reduce((a,b)=>a+b.ms,0);
+    bar.innerHTML = '';
+    segs.forEach(sg => { const d = el('div'); d.style.background = sg.c; d.style.width = animate ? '0%' : (sg.ms/total*100) + '%'; d.title = `${sg.n}: ${fmtMs(sg.ms)}`; d.innerHTML = `<span>${sg.n}</span>`; bar.appendChild(d); });
+    // first token to user: after final prefill
+    let ttft = 0; for(const sg of segs){ ttft += sg.ms; if(sg === segs[segs.length-2]) break; }
+    marks.innerHTML = `<span>Первый токен пользователю: <b class="mono">${fmtMs(ttft)}</b></span><span>Полный ответ: <b class="mono">${fmtMs(total)}</b></span><span>Доля decode: <b class="mono">${fmt(segs.filter(s=>s.c==='var(--s2)').reduce((a,b)=>a+b.ms,0)/total*100)} %</b></span>`;
+    legend.innerHTML = [['var(--ink-3)','сеть, шлюз'],['var(--s3)','retrieval'],['var(--s1)','prefill'],['var(--s2)','decode'],['var(--s4)','инструмент']].map(([c,n]) => `<span><i style="background:${c}"></i>${n}</span>`).join('');
+    hint.textContent = animate ? '' : `всего ${fmtMs(total)}`;
+    return {segs,total};
+  }
+  let timer = null;
+  function run(){
+    if(timer) { clearInterval(timer); timer = null; }
+    const {segs,total} = draw(true);
+    const DUR = 3500; const start = performance.now();
+    const divs = Array.from(bar.children);
+    timer = setInterval(() => {
+      const t = Math.min(1, (performance.now()-start)/DUR); const ms = t*total;
+      let acc = 0;
+      divs.forEach((d,i) => { const sg = segs[i]; const done = Math.max(0, Math.min(sg.ms, ms-acc)); d.style.width = (done/total*100)+'%'; acc += sg.ms; });
+      clock.textContent = fmtMs(ms);
+      if(t>=1){ clearInterval(timer); timer=null; hint.textContent = `всего ${fmtMs(total)}`; }
+    }, 30);
+  }
+  [jOut,jSteps].forEach(i => i.addEventListener('input', () => { document.getElementById('jOutV').textContent = jOut.value; document.getElementById('jStepsV').textContent = jSteps.value; const r = draw(false); clock.textContent = fmtMs(r.total); }));
+  jRag.addEventListener('change', () => { const r = draw(false); clock.textContent = fmtMs(r.total); });
+  document.getElementById('jRun').onclick = run;
+  const r0 = draw(false); clock.textContent = fmtMs(r0.total);
+})();
+
+/* ================= 3. Игрушечная авторегрессия ================= */
+const CORPUS = `память чат-бота хранится не в модели , а в хранилище .
+оркестратор собирает промпт из истории диалога и документов .
+модель получает на вход последовательность токенов и возвращает распределение следующего токена .
+модель не хранит состояние между вызовами .
+каждый выходной токен — это отдельный вызов модели .
+история диалога хранится в базе данных , а не в модели .
+оркестратор вклеивает историю диалога в промпт перед каждым вызовом .
+веса модели не меняются после обучения .
+память чат-бота — это текст , который передали модели в этом вызове .
+хранилище хранит документы , историю диалога и результаты инструментов .
+модель выбирает следующий токен по вероятности .
+температура меняет распределение следующего токена .
+длинный ответ — это много вызовов модели .
+промпт обрабатывается за один проход , а ответ — по одному токену .
+оркестратор вызывает инструменты и передаёт результаты в промпт .
+модель не знает , что было в прошлом вызове .
+память чат-бота собирает оркестратор .
+документы попадают в промпт через retrieval .
+retrieval ищет документы в хранилище по запросу пользователя .
+пользователь видит ответ системы , а не модели .
+система — это модель плюс оркестратор плюс хранилище плюс инструменты .
+шлюз считает токены и ограничивает нагрузку .
+модель генерирует текст по одному токену .
+следующий токен выбирается из распределения .
+распределение следующего токена зависит от всего промпта .
+промпт — это история диалога , документы и инструкции .
+инструкции описывают , как модель должна отвечать .
+модель отвечает на основе промпта , а не памяти .
+память — это промпт .
+хранилище — это база данных или векторный индекс .
+векторный индекс хранит документы для retrieval .
+оркестратор решает , какие документы положить в промпт .
+каждый вызов модели начинается с пустого состояния .
+модель видит только токены этого вызова .
+если история диалога не попала в промпт , модель её не помнит .
+модель не помнит прошлый диалог сама по себе .
+результаты инструментов тоже попадают в промпт .
+вызов модели стоит токенов и времени .
+ответ модели — это последовательность токенов .
+токен — это кусок слова или слово .
+модель предсказывает следующий токен , а не ответ целиком .
+оркестратор дописывает выбранный токен к промпту и вызывает модель снова .
+так работает авторегрессия .
+авторегрессия — это генерация по одному токену .
+память чат-бота живёт в хранилище и собирается оркестратором .
+состояние диалога хранится вне модели .
+модель — это функция без состояния .
+функция без состояния не помнит прошлые вызовы .
+пользователь пишет сообщение , оркестратор собирает промпт , модель генерирует токены .
+хранилище отвечает за память , модель — за генерацию .`;
+(function(){
+  const uni = {}, bi = {}, tri = {};
+  const add = (m,k,w) => { (m[k] = m[k] || {}); m[k][w] = (m[k][w]||0)+1; };
+  CORPUS.split('\n').forEach(line => {
+    const t = ['<s>','<s>', ...line.trim().split(/\s+/), '</s>'];
+    for(let i=2;i<t.length;i++){ uni[t[i]] = (uni[t[i]]||0)+1; add(bi, t[i-1], t[i]); add(tri, t[i-2]+' '+t[i-1], t[i]); }
+  });
+  const norm = o => { const s = Object.values(o).reduce((a,b)=>a+b,0); const r = {}; for(const k in o) r[k] = o[k]/s; return r; };
+  const U = norm(uni);
+  function dist(ctx){
+    const w1 = ctx[ctx.length-2] ?? '<s>', w2 = ctx[ctx.length-1] ?? '<s>';
+    const t = tri[w1+' '+w2] ? norm(tri[w1+' '+w2]) : null, b = bi[w2] ? norm(bi[w2]) : null;
+    const p = {};
+    const mix = (m, wgt) => { if(!m) return; for(const k in m) p[k] = (p[k]||0) + wgt*m[k]; };
+    if(t && b){ mix(t,.7); mix(b,.25); mix(U,.05); } else if(b){ mix(b,.85); mix(U,.15); } else mix(U,1);
+    return p;
+  }
+  function temper(p, T){
+    const r = {}; let s = 0; for(const k in p){ r[k] = Math.pow(p[k], 1/T); s += r[k]; } for(const k in r) r[k] /= s; return r;
+  }
+  const starts = ['память чат-бота', 'модель не', 'оркестратор собирает', 'следующий токен', 'хранилище —', 'пользователь'];
+  const sel = document.getElementById('arStart'); starts.forEach(s => sel.appendChild(el('option', null, s)));
+  const seqEl = document.getElementById('arSeq'), distEl = document.getElementById('arDist'), tEl = document.getElementById('arT'), tV = document.getElementById('arTV');
+  let seq = [], nGen = 0, lastPick = null, done = false;
+  function reset(){ seq = sel.value.split(' '); nGen = 0; lastPick = null; done = false; render(); }
+  function render(){
+    seqEl.innerHTML = seq.map((w,i) => `<span class="tok${i >= seq.length-nGen ? ' gen' : ''}${i===seq.length-1 && nGen>0 ? ' last' : ''}">${w}</span>`).join(' ') + (done ? ' <span class="pill">&lt;/s&gt; — конец</span>' : '');
+    const T = +tEl.value; tV.textContent = T.toFixed(1);
+    if(done){ distEl.innerHTML = '<div class="note">Модель выбрала токен конца последовательности. Сбросьте или выберите другое начало.</div>'; return; }
+    const p = temper(dist(seq), T);
+    const top = Object.entries(p).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    distEl.innerHTML = top.map(([w,pr]) => `<div class="d${w===lastPick?' pick':''}"><span class="w">${w==='</s>'?'&lt;/s&gt;':w}</span><span class="b"><i style="width:${(pr*100).toFixed(1)}%"></i></span><span class="p">${(pr*100).toFixed(1)} %</span></div>`).join('');
+  }
+  function step(){
+    if(done) return;
+    const p = temper(dist(seq), +tEl.value);
+    let r = Math.random(), pick = null; for(const [w,pr] of Object.entries(p)){ r -= pr; if(r <= 0){ pick = w; break; } }
+    if(pick == null) pick = Object.keys(p)[0];
+    lastPick = pick;
+    if(pick === '</s>'){ done = true; render(); return; }
+    seq.push(pick); nGen++; render();
+  }
+  document.getElementById('arNext').onclick = step;
+  document.getElementById('arAuto').onclick = () => { for(let i=0;i<10;i++) step(); };
+  document.getElementById('arReset').onclick = reset;
+  sel.onchange = reset; tEl.oninput = render;
+  reset();
+
+  // prompt view
+  const pv = document.getElementById('arPrompt'), btn = document.getElementById('arCall');
+  let second = false;
+  const SYS = '[system] Ты — ассистент по внутренней документации. Отвечай только по фрагментам ниже, иначе скажи, что не знаешь.\n[документы из retrieval]\n  (1) «Отпуск согласуется в HR-портале за 14 дней…»\n  (2) «Заявление подписывает руководитель…»\n';
+  function renderPV(){
+    let s = `<span class="sys">${SYS}</span>`;
+    s += `<span class="u">[user] Как оформить отпуск?</span>\n`;
+    if(second){
+      s += `<span class="a">[assistant] Через HR-портал, за 14 дней; заявление подписывает руководитель (фрагменты 1, 2).</span>\n`;
+      s += `<span class="u new">[user] А если руководитель в отпуске?</span>\n`;
+      s += `<span class="sys">← модель видит весь этот текст целиком; «помнит» первый вопрос только потому, что оркестратор его вклеил</span>`;
+    } else {
+      s += `<span class="sys">← первый вызов: модель видит системный промпт, документы и один вопрос</span>`;
+    }
+    pv.innerHTML = s;
+    btn.setAttribute('aria-pressed', second); btn.textContent = second ? 'Показать первый вызов' : 'Показать второй вызов';
+  }
+  btn.onclick = () => { second = !second; renderPV(); };
+  renderPV();
+})();
+
+/* ================= 5. Калькулятор трёх бюджетов ================= */
+(function(){
+  const g = id => document.getElementById(id);
+  const TIER = { s:{price:.25, tpot:5, ttft:30, q:55, name:'маленькая'}, m:{price:1, tpot:10, ttft:60, q:74, name:'средняя'}, l:{price:5, tpot:25, ttft:150, q:90, name:'большая'} };
+  function calc(){
+    const tin = +g('bIn').value, tout = +g('bOut').value, req = Math.round(Math.pow(10, +g('bReq').value)), steps = +g('bSteps').value, cache = +g('bCache').value/100;
+    const tier = TIER[g('bTier').value], pin = +g('bPin').value * tier.price, pout = +g('bPout').value * tier.price;
+    g('bInV').textContent = fmt(tin); g('bOutV').textContent = fmt(tout); g('bReqV').textContent = fmt(req); g('bStepsV').textContent = steps; g('bCacheV').textContent = Math.round(cache*100) + ' %';
+    // tokens per request: each step re-sends the prompt (growing a bit) and emits some tokens
+    const inTok = tin*steps + 150*(steps-1);          // extra steps carry tool results
+    const outTok = tout + 150*(steps-1);
+    const inEff = inTok*(1-cache) + inTok*cache*0.25;  // cached tokens ~25% price
+    const costReq = (inEff*pin + outTok*pout)/1e6;
+    const costMonth = costReq*req;
+    const inCost = inEff*pin/1e6, outCost = outTok*pout/1e6;
+    const ttft = tier.ttft*(tin/1000) + 150;           // + retrieval
+    const lat = 150 + steps*(tier.ttft*(tin/1000)) + outTok*tier.tpot + (steps-1)*(500);
+    let q = tier.q + Math.min(12, (steps-1)*4) - (tin < 800 ? 6 : 0); q = Math.min(96, q);
+    g('gCost').textContent = '$' + fmt(costMonth, costMonth<100?1:0);
+    g('gCostBar').style.width = Math.min(100, Math.log10(Math.max(1,costMonth))/5.5*100) + '%';
+    g('gLat').textContent = fmtMs(lat);
+    g('gLatBar').style.width = Math.min(100, lat/30000*100) + '%';
+    g('gQ').textContent = q + ' / 100'; g('gQBar').style.width = q + '%';
+    g('bPerReq').textContent = costReq < 0.01 ? costReq.toFixed(4) : costReq.toFixed(3);
+    g('bShare').textContent = `${Math.round(inCost/(inCost+outCost)*100)} / ${Math.round(outCost/(inCost+outCost)*100)}`;
+    g('bTtft').textContent = fmtMs(ttft);
+    const notes = [];
+    if(inCost > outCost*1.5) notes.push('Стоимость сидит во входных токенах: системный промпт и контекст. Первые рычаги — сократить промпт и включить prompt caching.');
+    if(outCost > inCost*1.5) notes.push('Стоимость сидит в выходе: короче ответы, структурированный формат вместо прозы, маленькая модель для простых случаев.');
+    if(steps > 1) notes.push(`Агент из ${steps} шагов: промпт отправляется ${steps} раз, плюс ${steps-1} вызовов инструментов — задержка растёт линейно, стоимость почти линейно.`);
+    if(lat > 10000) notes.push('e2e больше 10 секунд — синхронный UI уже не подходит, нужен стриминг промежуточных шагов или асинхронный сценарий.');
+    if(cache >= .5) notes.push('Кэш работает только на общем префиксе (системный промпт, инструкции, общие документы) — не на уникальной части запроса.');
+    g('bNote').innerHTML = notes.map(n => '• ' + n).join('<br>');
+  }
+  ['bIn','bOut','bReq','bSteps','bCache','bTier','bPin','bPout'].forEach(id => g(id).addEventListener('input', calc));
+  calc();
+})();
+
+/* ================= 8. Карточки кейсов ================= */
+const CASES = [
+  {t:'A. Вопросно-ответный бот по документации', s:[
+    ['казалось','«Подключим документы к модели — она будет отвечать».'],
+    ['оказалось','Модель — не проблема. Проблема — данные: PDF с таблицами, дубли, устаревшие версии, чанкинг. И без eval-сета не понять, стало ли лучше после правки. <span class="slot">[детали проекта]</span>'],
+    ['эволюция','Длинный контекст снял часть retrieval; появились готовые парсеры и реранкеры. <span class="slot">[что именно поменяли]</span>'],
+    ['вывод','Бюджет качества упирается в данные и eval, а не в модель. Retrieval и предобработка — то, что делаешь сам.']]},
+  {t:'B. Агент с инструментами', s:[
+    ['казалось','«Модель сама разберётся, какой инструмент вызвать».'],
+    ['оказалось','Выдуманные аргументы, не тот инструмент, зацикливание. Надёжность цепочки ≈ pⁿ: при p = 0.95 и пяти шагах — 77 %. <span class="slot">[пример из проекта]</span>'],
+    ['эволюция','Structured outputs и function calling подняли p. Явный граф состояний вместо свободного цикла.'],
+    ['вывод','Контракт агента описывает, что происходит при неудаче шага. Число шагов — статья бюджета задержки и стоимости.']]},
+  {t:'C. Задержка и её восприятие', s:[
+    ['казалось','«N секунд на ответ — неприемлемо». <span class="slot">[сколько было]</span>'],
+    ['оказалось','Со стримингом и TTFT меньше секунды пользователи ждали спокойно. Проблема была в другом: <span class="slot">[retrieval / последовательные вызовы / холодный старт]</span>.'],
+    ['эволюция','Prompt caching, меньшая модель для простых запросов, спекулятивное декодирование у провайдеров.'],
+    ['вывод','Бюджет задержки — TTFT и P95, а не среднее e2e. Стриминг — инженерное решение, а не косметика.']]},
+  {t:'D. Наблюдаемость', s:[
+    ['казалось','«Логов достаточно».'],
+    ['оказалось','Ответ плохой — а почему? Retrieval не нашёл, промпт собрался неправильно, модель проигнорировала контекст? Без трейса по шагам не понять. Стек: Prometheus, Loki, Sentry + <span class="slot">[что добавили]</span>.'],
+    ['эволюция','Готовые LLM-трейсеры (Langfuse и аналоги) — то, что раньше писали сами.'],
+    ['вывод','Наблюдаемость — блок системы, а не «потом добавим». Из неё считаются SLI.']]},
+  {t:'E. Стоимость на масштабе', s:[
+    ['казалось','«Токены — копейки».'],
+    ['оказалось','Системный промпт в несколько тысяч токенов × миллионы запросов. Агент с шестью вызовами на запрос. <span class="slot">[порядок счёта]</span>'],
+    ['эволюция','Prompt caching, дешёвые «мини»-модели, роутинг простых запросов.'],
+    ['вывод','Стоимость считается на салфетке до запуска. Первые рычаги — короче промпт и кэш.']]},
+];
+(function(){
+  const grid = document.getElementById('caseGrid');
+  const state = CASES.map(() => 0);
+  function render(){
+    grid.innerHTML = '';
+    CASES.forEach((c,i) => {
+      const d = el('div','case'); d.setAttribute('tabindex','0'); d.setAttribute('role','button');
+      d.innerHTML = `<h4>${c.t}</h4>` + c.s.map(([k,v],j) => `<div class="st${j < state[i] ? ' on' : ''}${j===3 && state[i]===4 ? ' last' : ''}"><span class="k">${k}</span>${v}</div>`).join('') + `<div class="more">${state[i] < 4 ? 'клик — следующая стадия (' + state[i] + '/4)' : 'раскрыто полностью'}</div>`;
+      const adv = () => { state[i] = Math.min(4, state[i]+1); render(); };
+      d.onclick = adv; d.onkeydown = e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); adv(); } };
+      grid.appendChild(d);
+    });
+  }
+  document.getElementById('casesReset').onclick = () => { state.fill(0); render(); };
+  render();
+})();
+
+/* ================= 9. Сортировка возможностей ================= */
+const SORT_ITEMS = [
+  ['Перевести письмо на английский', 0],
+  ['Сложить суммы по таблице из 300 строк', 1],
+  ['Ответить про вчерашние новости', 1],
+  ['Вернуть строго валидный JSON по схеме', 2],
+  ['Сказать «не знаю», когда ответа нет в документах', 1],
+  ['Суммаризовать 200-страничный PDF', 2],
+  ['Дать одинаковый ответ на одинаковый запрос', 1],
+  ['Извлечь даты и суммы из письма', 0],
+  ['Вызвать нужный инструмент с правильными аргументами', 2],
+  ['Выполнить 20-шаговый план без проверок', 1],
+  ['Написать SQL по описанию на русском', 0],
+  ['Прочитать текст со скриншота', 2],
+];
+const BINS = ['Умеет хорошо', 'Структурно плохо → лечится обвязкой', 'Было нельзя → стало можно'];
+(function(){
+  const deck = document.getElementById('deck'), bins = document.getElementById('bins'), score = document.getElementById('sortScore');
+  let place = SORT_ITEMS.map(() => -1), checked = false;
+  function card(i){
+    const [t,ans] = SORT_ITEMS[i];
+    const d = el('div','tcard'); d.innerHTML = `<span>${t}</span>`;
+    if(checked && place[i] >= 0) d.classList.add(place[i] === ans ? 'right' : 'wrong');
+    const b = el('span','b');
+    BINS.forEach((_,k) => { if(k === place[i]) return; const btn = el('button', null, ['умеет','плохо','стало'][k]); btn.title = BINS[k]; btn.onclick = () => { place[i] = k; checked = false; render(); }; b.appendChild(btn); });
+    d.appendChild(b); return d;
+  }
+  function render(){
+    deck.innerHTML = ''; bins.innerHTML = '';
+    SORT_ITEMS.forEach((_,i) => { if(place[i] < 0) deck.appendChild(card(i)); });
+    if(!deck.children.length) deck.innerHTML = '<span class="pill">все карточки разложены</span>';
+    BINS.forEach((name,k) => {
+      const b = el('div','bin'); b.innerHTML = `<h4>${name}</h4>`; const dk = el('div','deck');
+      SORT_ITEMS.forEach((_,i) => { if(place[i] === k) dk.appendChild(card(i)); });
+      b.appendChild(dk); bins.appendChild(b);
+    });
+    if(checked){ const n = SORT_ITEMS.filter((it,i) => place[i] === it[1]).length; score.textContent = `${n} из ${SORT_ITEMS.length}`; score.className = 'pill ' + (n === SORT_ITEMS.length ? 'ok' : 'acc'); }
+    else { score.textContent = ''; score.className = 'pill'; score.style.display = 'none'; }
+    score.style.display = checked ? '' : 'none';
+  }
+  document.getElementById('sortCheck').onclick = () => { checked = true; render(); };
+  document.getElementById('sortReset').onclick = () => { place = SORT_ITEMS.map(() => -1); checked = false; render(); };
+  render();
+})();
+
+</script>
+</body>
+</html>
