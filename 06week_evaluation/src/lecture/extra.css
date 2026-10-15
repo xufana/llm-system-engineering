@@ -1,0 +1,171 @@
+
+/* ===== занятие 7: свои блоки ===== */
+.topbar{top:env(safe-area-inset-top, 0px)}
+.recap{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:.8rem; margin-top:1.4rem}
+.recap .card .src{font-family:var(--font-mono); font-size:.72rem; color:var(--ink-3); letter-spacing:.04em; text-transform:uppercase}
+.recap .card b{display:block; margin:.2rem 0 .25rem; font-size:1rem}
+@media (max-width:760px){.topbar-in{flex-wrap:wrap; gap:.4rem .8rem} .chips{order:3; flex-basis:100%} .tools{margin-left:auto; flex-wrap:wrap; justify-content:flex-end} .brand{white-space:normal}}
+@media (max-width:480px){.tools button{font-size:.7rem; padding:.25rem .45rem}}
+
+/* цепочка решения */
+.chain{display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; font-size:.92rem; margin:1rem 0}
+.chain span{padding:.35rem .8rem; border-radius:999px; background:var(--surface-2)}
+.chain span.on{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.chain em{color:var(--ink-3); font-style:normal}
+
+/* сноски-объяснения */
+.fn{border-left:3px solid var(--line-2); padding:.3rem .9rem; margin:.8rem 0; font-size:.9rem; color:var(--ink-2); background:var(--surface)}
+.fn summary{color:var(--accent); font-weight:500}
+.fn p{margin:.45rem 0}
+.fn .formula{margin:.5rem 0}
+
+/* дерево метрик */
+.apick{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:.5rem; margin-bottom:1rem}
+.apick button{text-align:left; display:flex; flex-direction:column; gap:.15rem; padding:.55rem .7rem; height:100%}
+.apick button .t{font-weight:600; font-size:.9rem; line-height:1.25}
+.apick button .m{font-size:.76rem; color:var(--ink-2)}
+.abrief{font-size:.95rem; margin-bottom:.8rem; max-width:90ch}
+.slots-legend{display:flex; flex-wrap:wrap; gap:.4rem 1rem; font-size:.8rem; color:var(--ink-2); margin:.4rem 0 .8rem}
+.slots-legend b{font-weight:600; color:var(--ink)}
+.mets{display:flex; flex-direction:column; gap:.5rem}
+.met{border:1px solid var(--line); border-radius:10px; padding:.6rem .8rem; background:var(--surface); display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:.5rem 1rem; align-items:center}
+@media (max-width:760px){.met{grid-template-columns:1fr}}
+.met .mt{font-size:.92rem}
+.met .mo{display:flex; flex-wrap:wrap; gap:.3rem; justify-content:flex-end}
+@media (max-width:760px){.met .mo{justify-content:flex-start}}
+.met .mo button{font-size:.78rem; padding:.22rem .55rem}
+.met .mo button.ideal{box-shadow:inset 0 0 0 2px var(--ok)}
+.met .why{display:none; grid-column:1/-1; font-size:.86rem; color:var(--ink-2); border-left:2px solid var(--ok); padding-left:.6rem}
+.mstage.shown .met .why{display:block}
+.met.hit{border-color:var(--ok)} .met.miss{border-color:var(--bad)}
+.tree{display:none; margin-top:1rem}
+.mstage.shown .tree{display:block}
+.tree .lvl{display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; margin:.3rem 0}
+.tree .lvl .k{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); min-width:9rem}
+.tree .lvl span.m{font-size:.82rem; padding:.2rem .6rem; border-radius:6px; background:var(--surface-2)}
+.tree .lvl.ns span.m{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.tree .lvl.lim span.m{background:var(--warm-soft)}
+.score{font-family:var(--font-mono); font-size:.85rem; color:var(--ink-2)}
+
+/* измерители */
+.meas{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:.8rem}
+.meas .card h4{font-family:var(--font-head); font-size:1.05rem; margin-bottom:.3rem}
+.meas .card .row2{display:flex; gap:.4rem; flex-wrap:wrap; margin:.4rem 0}
+
+/* каппа */
+.kgrid{display:grid; grid-template-columns:auto repeat(5,minmax(2.2rem,1fr)); gap:3px; max-width:340px; font-family:var(--font-mono); font-size:.78rem}
+.kgrid .h{color:var(--ink-3); text-align:center; padding:.2rem}
+.kgrid .c{text-align:center; padding:.35rem .2rem; border-radius:4px; background:var(--surface-2); color:var(--ink)}
+.kgrid .c.d{outline:1px solid var(--ok)}
+.kwrap{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:1rem 2rem; align-items:start}
+@media (max-width:860px){.kwrap{grid-template-columns:1fr}}
+
+/* графики */
+.chartwrap{position:relative}
+.chartwrap svg{width:100%; height:auto; display:block; overflow:visible}
+.chartwrap .ax{stroke:var(--line-2); stroke-width:1}
+.chartwrap .gr{stroke:var(--line); stroke-width:1}
+.chartwrap .tx{fill:var(--ink-2); font-family:var(--font-mono); font-size:11px}
+.chartwrap .lb{fill:var(--ink); font-family:var(--font-body); font-size:12px; font-weight:600}
+.chartwrap .zero{stroke:var(--ink-3); stroke-width:1; stroke-dasharray:4 4}
+.chartwrap .cross{stroke:var(--ink-3); stroke-width:1}
+.tip{position:absolute; pointer-events:none; background:var(--surface); border:1px solid var(--line-2); border-radius:8px; box-shadow:var(--shadow); padding:.45rem .6rem; font-size:.78rem; min-width:170px; z-index:5}
+.tip .h{font-family:var(--font-mono); color:var(--ink-3); margin-bottom:.2rem}
+.tip .r{display:flex; justify-content:space-between; gap:.8rem; align-items:center}
+.tip .r i{display:inline-block; width:.6rem; height:.6rem; border-radius:2px; margin-right:.35rem}
+.tip .r b{font-family:var(--font-mono); font-weight:500}
+.verdict{margin-top:.8rem}
+
+/* агенты: трассы и граф */
+.tpick{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:.5rem; margin-bottom:1rem}
+.tpick button{text-align:left; display:flex; flex-direction:column; gap:.15rem; padding:.55rem .7rem; height:100%}
+.tpick button .n{font-family:var(--font-mono); font-size:.7rem; color:var(--ink-3)}
+.tpick button .t{font-weight:600; font-size:.9rem; line-height:1.25}
+.tbody{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); gap:1.2rem}
+@media (max-width:960px){.tbody{grid-template-columns:1fr}}
+.task{font-size:.92rem; margin-bottom:.6rem}
+.task .pill{margin-left:.3rem}
+.steps{display:flex; flex-direction:column; gap:.3rem; font-size:.84rem}
+.step{display:grid; grid-template-columns:1.6rem minmax(0,1fr); gap:.5rem; padding:.35rem .55rem; border:1px solid var(--line); border-radius:8px; background:var(--surface)}
+.step .i{font-family:var(--font-mono); font-size:.72rem; color:var(--ink-3)}
+.step .call{font-family:var(--font-mono); font-size:.8rem}
+.step .obs{color:var(--ink-2); font-size:.8rem; margin-top:.15rem}
+.step .obs.err{color:var(--bad)}
+.step.div{border-color:var(--bad); background:var(--bad-soft)}
+.step.rep{border-style:dashed}
+.step.extra{border-color:var(--warm)}
+.gwrap{overflow-x:auto}
+.gwrap svg{display:block; min-width:520px; width:100%; height:auto}
+.gwrap .gn{font-family:var(--font-mono); font-size:11px; fill:var(--ink)}
+.gwrap .gl{font-family:var(--font-body); font-size:11px; fill:var(--ink-3); text-transform:uppercase; letter-spacing:.06em}
+.gwrap .ed{stroke:var(--ink-3); stroke-width:1.5; fill:none}
+.gwrap .ed.extra{stroke:var(--warm)}
+.gwrap .ed.loop{stroke:var(--bad); stroke-dasharray:3 3}
+.gwrap .match{stroke:var(--line-2); stroke-width:1; stroke-dasharray:2 3}
+.gwrap rect.node{fill:var(--surface-2); stroke:var(--line-2); stroke-width:1}
+.gwrap rect.node.ok{fill:var(--accent-soft); stroke:var(--accent)}
+.gwrap rect.node.extra{fill:var(--warm-soft); stroke:var(--warm)}
+.gwrap rect.node.miss{fill:none; stroke:var(--bad); stroke-dasharray:4 3}
+.gwrap rect.node.divg{stroke:var(--bad); stroke-width:2}
+.gwrap rect.node.gold{fill:var(--surface); stroke:var(--ink-3)}
+.mrow{display:grid; grid-template-columns:repeat(auto-fit,minmax(122px,1fr)); gap:.5rem; margin:.8rem 0}
+.mrow .m{display:flex; flex-direction:column; gap:.1rem; padding:.5rem .7rem; border-radius:8px; background:var(--surface-2)}
+.mrow .m .l{font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-2)}
+.mrow .m .n{font-family:var(--font-mono); font-size:1.15rem}
+.mrow .m .s{font-size:.75rem; color:var(--ink-3)}
+.mrow .m.ok .n{color:var(--ok)} .mrow .m.bad .n{color:var(--bad)} .mrow .m.warm .n{color:var(--warm)}
+.judges{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:.5rem; margin-top:.8rem}
+.judges .card .v{font-weight:600; margin:.2rem 0}
+.judges .card .v.ok{color:var(--ok)} .judges .card .v.bad{color:var(--bad)} .judges .card .v.na{color:var(--ink-3)}
+.judges .card .t{font-size:.84rem; color:var(--ink-2)}
+.divg-box{display:none; margin-top:.8rem}
+.tstage.shown .divg-box, body.teacher .divg-box{display:block}
+.legend{display:flex; flex-wrap:wrap; gap:.4rem 1rem; font-size:.8rem; color:var(--ink-2); margin-top:.5rem}
+.legend i{display:inline-block; width:.8rem; height:.8rem; border-radius:3px; vertical-align:-1px; margin-right:.3rem; border:1px solid var(--line-2)}
+
+/* бенчмарки, таблицы */
+.ptable td,.ptable th{font-size:.86rem}
+
+/* грехи */
+.sins{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:.8rem}
+.sin{border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem; background:var(--surface); display:flex; flex-direction:column; gap:.6rem}
+.sin .claim{font-family:var(--font-head); font-size:1.02rem; line-height:1.3}
+.sin .vote{display:flex; flex-direction:column; gap:.3rem}
+.sin .vote button{text-align:left; font-size:.84rem; padding:.35rem .6rem; white-space:normal}
+.sin .res{display:none; font-size:.88rem; color:var(--ink-2)}
+.sin.open .res, body.teacher .sin .res{display:block}
+.sin .res .src{font-family:var(--font-mono); font-size:.74rem; color:var(--ink-3); margin-top:.3rem}
+.sin .you{font-size:.78rem; color:var(--ink-3)}
+
+/* бюджет */
+.budget .stats .stat{min-width:160px}
+.changes{display:flex; flex-direction:column; gap:.3rem; margin-top:.6rem}
+.changes .ch{font-size:.86rem; padding:.35rem .6rem; border-radius:8px; background:var(--surface-2); color:var(--ink-2)}
+.changes .ch.on{background:var(--warm-soft); color:var(--ink)}
+
+/* итог */
+.theses{counter-reset:t; padding-left:0; list-style:none; max-width:90ch}
+.theses li{counter-increment:t; display:grid; grid-template-columns:2rem minmax(0,1fr); gap:.6rem; padding:.5rem 0; border-bottom:1px solid var(--line)}
+.theses li::before{content:counter(t); font-family:var(--font-mono); color:var(--ink-3)}
+.cols>*,.two>*,.tbody>*,.kwrap>*,.met>*{min-width:0}
+.refs{font-size:.84rem; color:var(--ink-2)}
+.ladder{display:flex; flex-direction:column; gap:.9rem; margin:1rem 0 1.6rem}
+.rung{position:relative; display:grid; grid-template-columns:250px minmax(0,1fr); gap:.9rem 1.4rem; margin-left:calc(var(--i) * 1.6rem); background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; box-shadow:var(--shadow); padding:1rem 1.2rem}
+.rung .rn{font-family:var(--font-head); font-size:2.4rem; font-weight:700; line-height:1; color:var(--accent)}
+.rung h4{margin:.3rem 0 .15rem; font-size:1.05rem}
+.rung .chg{font-size:.82rem; color:var(--ink-2); margin-bottom:.5rem}
+.meter{display:flex; align-items:center; gap:.45rem; font-size:.76rem; color:var(--ink-2); margin-top:.3rem}
+.meter .ml{width:4.9rem; white-space:nowrap; color:var(--ink-3); text-transform:uppercase; letter-spacing:.04em; font-size:.68rem}
+.meter .dots{display:inline-flex; gap:3px; flex:none}
+.meter .dots i{width:11px; height:11px; border-radius:3px; background:var(--line)}
+.meter .dots i.on{background:var(--warm)}
+.tiles{display:grid; grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr)); gap:.6rem}
+.tile{display:flex; flex-direction:column; gap:.35rem; background:var(--surface-2); border-radius:8px; padding:.65rem .8rem; font-size:.86rem; line-height:1.45}
+.tile b{font-size:.92rem; color:var(--ink)}
+.tile .kn{align-self:flex-start; font-family:var(--font-mono); font-size:.74rem; background:var(--ok-soft); color:var(--ok); padding:.12rem .45rem; border-radius:4px}
+.tile .refs{margin-top:auto; padding-top:.2rem; font-size:.76rem}
+.tile.lim{background:var(--bad-soft)} .tile.lim b{color:var(--bad)}
+.rung .next{grid-column:1/-1; font-size:.86rem; color:var(--ink-2); border-top:1px dashed var(--line-2); padding-top:.55rem}
+.rung .next b{color:var(--accent)}
+.rung>*{min-width:0}
+@media (max-width:860px){.rung{grid-template-columns:minmax(0,1fr); margin-left:0; padding:.9rem}}

@@ -1,0 +1,1294 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Как понять, что это работает, и работает хорошо?</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  color-scheme:light;
+  --bg:#F2F4F7; --surface:#FFFFFF; --surface-2:#E9EDF2;
+  --ink:#151A21; --ink-2:#4E5968; --ink-3:#8593A2; --line:#D6DCE4; --line-2:#C3CBD5;
+  --accent:#1D4E9E; --accent-ink:#FFFFFF; --accent-soft:#E2EAF8;
+  --warm:#BF5218; --warm-soft:#FBE8DC;
+  --ok:#1C7A4C; --ok-soft:#DDF3E6; --bad:#B8362A; --bad-soft:#FBE2DE;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --code-bg:#F6F8FA;
+  --shadow:0 1px 2px rgba(21,26,33,.06), 0 8px 24px -12px rgba(21,26,33,.18);
+  --radius:10px;
+  --font-body:"IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-head:"IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --font-mono:"IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#111418; --surface:#1A1F26; --surface-2:#232A33;
+    --ink:#ECEFF3; --ink-2:#AAB4C0; --ink-3:#77828F; --line:#2C343E; --line-2:#3A434F;
+    --accent:#86ACF2; --accent-ink:#0E1522; --accent-soft:#213456;
+    --warm:#F0905B; --warm-soft:#3B2417;
+    --ok:#52C58E; --ok-soft:#173526; --bad:#F07A70; --bad-soft:#3D1F1C;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --code-bg:#12161B;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111418; --surface:#1A1F26; --surface-2:#232A33;
+  --ink:#ECEFF3; --ink-2:#AAB4C0; --ink-3:#77828F; --line:#2C343E; --line-2:#3A434F;
+  --accent:#86ACF2; --accent-ink:#0E1522; --accent-soft:#213456;
+  --warm:#F0905B; --warm-soft:#3B2417;
+  --ok:#52C58E; --ok-soft:#173526; --bad:#F07A70; --bad-soft:#3D1F1C;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --code-bg:#12161B;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html{font-size:17px; scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important; animation:none!important} }
+body{margin:0; background:var(--bg); color:var(--ink); font-family:var(--font-body); line-height:1.55; -webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+h1,h2,h3,h4{font-family:var(--font-head); font-weight:600; line-height:1.2; margin:0; text-wrap:balance; letter-spacing:-.01em}
+h1{font-size:2.4rem} h2{font-size:1.75rem} h3{font-size:1.2rem; margin-top:1.6rem} h4{font-size:1rem; font-family:var(--font-body); font-weight:600}
+p{margin:.6rem 0}
+code,pre,.mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums}
+code{font-size:.9em; background:var(--surface-2); padding:.05em .35em; border-radius:4px}
+pre{background:var(--code-bg); border:1px solid var(--line); border-radius:var(--radius); padding:.9rem 1rem; overflow-x:auto; font-size:.85rem; line-height:1.5}
+pre code{background:none; padding:0; font-size:inherit}
+ul,ol{padding-left:1.3rem} li{margin:.25rem 0}
+table{border-collapse:collapse; width:100%; font-size:.93rem}
+th,td{text-align:left; padding:.5rem .65rem; border-bottom:1px solid var(--line); vertical-align:top}
+th{font-weight:600; color:var(--ink-2); font-size:.8rem; text-transform:uppercase; letter-spacing:.05em}
+td.num,th.num{text-align:right; font-family:var(--font-mono); font-variant-numeric:tabular-nums; white-space:nowrap}
+.tablewrap{overflow-x:auto}
+button,select,input,textarea{font:inherit; color:inherit}
+button{cursor:pointer; background:var(--surface); border:1px solid var(--line-2); border-radius:8px; padding:.4rem .85rem; font-size:.9rem; font-weight:500}
+button:hover{border-color:var(--accent)}
+button:disabled{opacity:.5; cursor:default}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+button.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+button.ghost{background:transparent}
+button.small{font-size:.78rem; padding:.2rem .55rem}
+button[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent)}
+select,input[type=number],input[type=text],textarea{background:var(--surface); border:1px solid var(--line-2); border-radius:8px; padding:.35rem .5rem}
+textarea{width:100%; min-height:80px; resize:vertical; line-height:1.45}
+input[type=range]{width:100%; accent-color:var(--accent)}
+label{font-size:.85rem; color:var(--ink-2)}
+details summary{cursor:pointer; color:var(--accent); font-size:.92rem}
+details{margin:.4rem 0}
+
+/* top bar */
+.topbar{position:sticky; top:0; z-index:20; background:color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1180px; margin:0 auto; padding:.5rem 1.2rem; display:flex; align-items:center; gap:1rem}
+.brand{font-family:var(--font-head); font-size:.95rem; white-space:nowrap; color:var(--ink-2)}
+.brand b{color:var(--ink); font-weight:600}
+.chips{display:flex; gap:.35rem; overflow-x:auto; flex:1; scrollbar-width:none; padding:.15rem 0}
+.chips::-webkit-scrollbar{display:none}
+.chip{white-space:nowrap; font-size:.78rem; padding:.25rem .6rem; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink-2); text-decoration:none}
+.chip.active{border-color:var(--accent); color:var(--accent); background:var(--accent-soft)}
+.tools{display:flex; gap:.35rem}
+.tools button{font-size:.78rem; padding:.3rem .6rem}
+
+/* sections */
+main{max-width:1180px; margin:0 auto; padding:0 1.2rem 6rem}
+.sec{padding:3.2rem 0 2.2rem; border-bottom:1px solid var(--line)}
+.sec:last-child{border-bottom:0}
+.sec-head{margin-bottom:1.2rem; max-width:90ch}
+.lede{font-size:1.08rem; color:var(--ink-2); margin-top:.5rem}
+.prose{max-width:90ch}
+.prose.wide{max-width:none}
+.cols{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.2rem 2rem}
+.hero{padding:4rem 0 3rem}
+.hero .eyebrow{font-family:var(--font-mono); font-size:.8rem; color:var(--ink-3); letter-spacing:.06em; text-transform:uppercase}
+.hero h1{margin:.5rem 0 .8rem; font-size:clamp(2rem,4.5vw,3.2rem)}
+.hero .lede{max-width:72ch}
+.thesis{border-left:3px solid var(--accent); padding:.4rem 1rem; margin:1.2rem 0; color:var(--ink); font-family:var(--font-head); font-size:1.1rem; max-width:80ch}
+.note{font-size:.88rem; color:var(--ink-2); border:1px dashed var(--line-2); border-radius:8px; padding:.5rem .8rem; margin:.8rem 0}
+.kicker{font-size:.78rem; text-transform:uppercase; letter-spacing:.07em; color:var(--ink-3); font-weight:600}
+.pill{display:inline-block; font-size:.75rem; padding:.1rem .5rem; border-radius:999px; border:1px solid var(--line-2); color:var(--ink-2); vertical-align:middle}
+.pill.ok{background:var(--ok-soft); color:var(--ok); border-color:transparent}
+.pill.bad{background:var(--bad-soft); color:var(--bad); border-color:transparent}
+.pill.acc{background:var(--accent-soft); color:var(--accent); border-color:transparent}
+.pill.warm{background:var(--warm-soft); color:var(--warm); border-color:transparent}
+.good{color:var(--ok)} .badc{color:var(--bad)}
+
+/* interactive stage */
+.stage{background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:1.2rem 1.4rem; margin:1.4rem 0}
+.stage-head{display:flex; align-items:baseline; gap:.8rem; flex-wrap:wrap; margin-bottom:.8rem}
+.stage-head .tag{font-family:var(--font-mono); font-size:.72rem; color:var(--warm); background:var(--warm-soft); padding:.15rem .5rem; border-radius:4px; letter-spacing:.05em}
+.stage-head .tag.real{color:var(--ok); background:var(--ok-soft)}
+.stage-head .tag.script{color:var(--ink-2); background:var(--surface-2)}
+.stage-head h3{margin:0; font-size:1.15rem}
+.stage-head .hint{color:var(--ink-2); font-size:.9rem; flex-basis:100%}
+.controls{display:flex; gap:1rem 1.4rem; flex-wrap:wrap; align-items:end; margin:.6rem 0 1rem}
+.ctl{display:flex; flex-direction:column; gap:.2rem; min-width:150px}
+.ctl.grow{flex:1; min-width:260px}
+.ctl .v{font-family:var(--font-mono); font-size:.8rem; color:var(--ink)}
+.row{display:flex; gap:.6rem; flex-wrap:wrap; align-items:center}
+.stat{display:flex; flex-direction:column; gap:.1rem; padding:.6rem .9rem; background:var(--surface-2); border-radius:8px; min-width:140px}
+.stat .l{font-size:.75rem; color:var(--ink-2); text-transform:uppercase; letter-spacing:.05em}
+.stat .n{font-family:var(--font-mono); font-size:1.35rem; font-weight:500; font-variant-numeric:tabular-nums}
+.stat .s{font-size:.78rem; color:var(--ink-3)}
+.stats{display:flex; gap:.6rem; flex-wrap:wrap; margin:.8rem 0}
+.card{background:var(--surface-2); border-radius:10px; padding:.8rem 1rem; font-size:.92rem}
+.card.bad{border-left:3px solid var(--bad)} .card.good{border-left:3px solid var(--ok)} .card.acc{border-left:3px solid var(--accent)}
+.card .k{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); margin-bottom:.25rem}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:1rem}
+@media (max-width:860px){.two{grid-template-columns:1fr}}
+.tabs{display:flex; gap:.3rem; border-bottom:1px solid var(--line); margin-bottom:1rem; flex-wrap:wrap}
+.tabs button{border:0; border-bottom:2px solid transparent; border-radius:0; background:none; padding:.5rem .8rem; color:var(--ink-2)}
+.tabs button[aria-selected="true"]{color:var(--accent); border-bottom-color:var(--accent)}
+.tabpane{display:none} .tabpane.on{display:block}
+.reveal{display:none} body.teacher .reveal{display:block}
+.qz{background:var(--accent-soft); border-radius:10px; padding:.8rem 1rem; margin:.8rem 0}
+.qz .q{font-weight:600}
+.qz .a{display:none; margin-top:.5rem; color:var(--ink)}
+.qz.open .a, body.teacher .qz .a{display:block}
+.qz button{margin-top:.4rem}
+.figure{margin:1rem 0}
+.figure svg{width:100%; height:auto; display:block}
+.figure figcaption{font-size:.82rem; color:var(--ink-2); margin-top:.4rem}
+.hw{background:var(--accent-soft); border-radius:12px; padding:1rem 1.2rem; max-width:80ch}
+.hw h3{margin-top:0}
+footer{max-width:1180px; margin:0 auto; padding:1rem 1.2rem 3rem; font-size:.8rem; color:var(--ink-3)}
+body.present{font-size:1.15rem}
+html:has(body.present){scroll-snap-type:y proximity}
+body.present .sec{min-height:calc(100vh - 52px); scroll-snap-align:start; padding-top:2.5rem}
+body.present .hero{min-height:calc(100vh - 52px)}
+body.present h2{font-size:2.2rem}
+body.present .stage{font-size:1rem}
+
+.formula{background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:.8rem 1rem; font-family:var(--font-mono); font-size:.9rem; overflow-x:auto; white-space:nowrap}
+.formula .lhs{color:var(--accent)}
+
+/* ===== занятие 7: свои блоки ===== */
+.topbar{top:env(safe-area-inset-top, 0px)}
+.recap{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:.8rem; margin-top:1.4rem}
+.recap .card .src{font-family:var(--font-mono); font-size:.72rem; color:var(--ink-3); letter-spacing:.04em; text-transform:uppercase}
+.recap .card b{display:block; margin:.2rem 0 .25rem; font-size:1rem}
+@media (max-width:760px){.topbar-in{flex-wrap:wrap; gap:.4rem .8rem} .chips{order:3; flex-basis:100%} .tools{margin-left:auto; flex-wrap:wrap; justify-content:flex-end} .brand{white-space:normal}}
+@media (max-width:480px){.tools button{font-size:.7rem; padding:.25rem .45rem}}
+
+/* цепочка решения */
+.chain{display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; font-size:.92rem; margin:1rem 0}
+.chain span{padding:.35rem .8rem; border-radius:999px; background:var(--surface-2)}
+.chain span.on{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.chain em{color:var(--ink-3); font-style:normal}
+
+/* сноски-объяснения */
+.fn{border-left:3px solid var(--line-2); padding:.3rem .9rem; margin:.8rem 0; font-size:.9rem; color:var(--ink-2); background:var(--surface)}
+.fn summary{color:var(--accent); font-weight:500}
+.fn p{margin:.45rem 0}
+.fn .formula{margin:.5rem 0}
+
+/* дерево метрик */
+.apick{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:.5rem; margin-bottom:1rem}
+.apick button{text-align:left; display:flex; flex-direction:column; gap:.15rem; padding:.55rem .7rem; height:100%}
+.apick button .t{font-weight:600; font-size:.9rem; line-height:1.25}
+.apick button .m{font-size:.76rem; color:var(--ink-2)}
+.abrief{font-size:.95rem; margin-bottom:.8rem; max-width:90ch}
+.slots-legend{display:flex; flex-wrap:wrap; gap:.4rem 1rem; font-size:.8rem; color:var(--ink-2); margin:.4rem 0 .8rem}
+.slots-legend b{font-weight:600; color:var(--ink)}
+.mets{display:flex; flex-direction:column; gap:.5rem}
+.met{border:1px solid var(--line); border-radius:10px; padding:.6rem .8rem; background:var(--surface); display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:.5rem 1rem; align-items:center}
+@media (max-width:760px){.met{grid-template-columns:1fr}}
+.met .mt{font-size:.92rem}
+.met .mo{display:flex; flex-wrap:wrap; gap:.3rem; justify-content:flex-end}
+@media (max-width:760px){.met .mo{justify-content:flex-start}}
+.met .mo button{font-size:.78rem; padding:.22rem .55rem}
+.met .mo button.ideal{box-shadow:inset 0 0 0 2px var(--ok)}
+.met .why{display:none; grid-column:1/-1; font-size:.86rem; color:var(--ink-2); border-left:2px solid var(--ok); padding-left:.6rem}
+.mstage.shown .met .why{display:block}
+.met.hit{border-color:var(--ok)} .met.miss{border-color:var(--bad)}
+.tree{display:none; margin-top:1rem}
+.mstage.shown .tree{display:block}
+.tree .lvl{display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; margin:.3rem 0}
+.tree .lvl .k{font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); min-width:9rem}
+.tree .lvl span.m{font-size:.82rem; padding:.2rem .6rem; border-radius:6px; background:var(--surface-2)}
+.tree .lvl.ns span.m{background:var(--accent-soft); color:var(--accent); font-weight:600}
+.tree .lvl.lim span.m{background:var(--warm-soft)}
+.score{font-family:var(--font-mono); font-size:.85rem; color:var(--ink-2)}
+
+/* измерители */
+.meas{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:.8rem}
+.meas .card h4{font-family:var(--font-head); font-size:1.05rem; margin-bottom:.3rem}
+.meas .card .row2{display:flex; gap:.4rem; flex-wrap:wrap; margin:.4rem 0}
+
+/* каппа */
+.kgrid{display:grid; grid-template-columns:auto repeat(5,minmax(2.2rem,1fr)); gap:3px; max-width:340px; font-family:var(--font-mono); font-size:.78rem}
+.kgrid .h{color:var(--ink-3); text-align:center; padding:.2rem}
+.kgrid .c{text-align:center; padding:.35rem .2rem; border-radius:4px; background:var(--surface-2); color:var(--ink)}
+.kgrid .c.d{outline:1px solid var(--ok)}
+.kwrap{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:1rem 2rem; align-items:start}
+@media (max-width:860px){.kwrap{grid-template-columns:1fr}}
+
+/* графики */
+.chartwrap{position:relative}
+.chartwrap svg{width:100%; height:auto; display:block; overflow:visible}
+.chartwrap .ax{stroke:var(--line-2); stroke-width:1}
+.chartwrap .gr{stroke:var(--line); stroke-width:1}
+.chartwrap .tx{fill:var(--ink-2); font-family:var(--font-mono); font-size:11px}
+.chartwrap .lb{fill:var(--ink); font-family:var(--font-body); font-size:12px; font-weight:600}
+.chartwrap .zero{stroke:var(--ink-3); stroke-width:1; stroke-dasharray:4 4}
+.chartwrap .cross{stroke:var(--ink-3); stroke-width:1}
+.tip{position:absolute; pointer-events:none; background:var(--surface); border:1px solid var(--line-2); border-radius:8px; box-shadow:var(--shadow); padding:.45rem .6rem; font-size:.78rem; min-width:170px; z-index:5}
+.tip .h{font-family:var(--font-mono); color:var(--ink-3); margin-bottom:.2rem}
+.tip .r{display:flex; justify-content:space-between; gap:.8rem; align-items:center}
+.tip .r i{display:inline-block; width:.6rem; height:.6rem; border-radius:2px; margin-right:.35rem}
+.tip .r b{font-family:var(--font-mono); font-weight:500}
+.verdict{margin-top:.8rem}
+
+/* агенты: трассы и граф */
+.tpick{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:.5rem; margin-bottom:1rem}
+.tpick button{text-align:left; display:flex; flex-direction:column; gap:.15rem; padding:.55rem .7rem; height:100%}
+.tpick button .n{font-family:var(--font-mono); font-size:.7rem; color:var(--ink-3)}
+.tpick button .t{font-weight:600; font-size:.9rem; line-height:1.25}
+.tbody{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); gap:1.2rem}
+@media (max-width:960px){.tbody{grid-template-columns:1fr}}
+.task{font-size:.92rem; margin-bottom:.6rem}
+.task .pill{margin-left:.3rem}
+.steps{display:flex; flex-direction:column; gap:.3rem; font-size:.84rem}
+.step{display:grid; grid-template-columns:1.6rem minmax(0,1fr); gap:.5rem; padding:.35rem .55rem; border:1px solid var(--line); border-radius:8px; background:var(--surface)}
+.step .i{font-family:var(--font-mono); font-size:.72rem; color:var(--ink-3)}
+.step .call{font-family:var(--font-mono); font-size:.8rem}
+.step .obs{color:var(--ink-2); font-size:.8rem; margin-top:.15rem}
+.step .obs.err{color:var(--bad)}
+.step.div{border-color:var(--bad); background:var(--bad-soft)}
+.step.rep{border-style:dashed}
+.step.extra{border-color:var(--warm)}
+.gwrap{overflow-x:auto}
+.gwrap svg{display:block; min-width:520px; width:100%; height:auto}
+.gwrap .gn{font-family:var(--font-mono); font-size:11px; fill:var(--ink)}
+.gwrap .gl{font-family:var(--font-body); font-size:11px; fill:var(--ink-3); text-transform:uppercase; letter-spacing:.06em}
+.gwrap .ed{stroke:var(--ink-3); stroke-width:1.5; fill:none}
+.gwrap .ed.extra{stroke:var(--warm)}
+.gwrap .ed.loop{stroke:var(--bad); stroke-dasharray:3 3}
+.gwrap .match{stroke:var(--line-2); stroke-width:1; stroke-dasharray:2 3}
+.gwrap rect.node{fill:var(--surface-2); stroke:var(--line-2); stroke-width:1}
+.gwrap rect.node.ok{fill:var(--accent-soft); stroke:var(--accent)}
+.gwrap rect.node.extra{fill:var(--warm-soft); stroke:var(--warm)}
+.gwrap rect.node.miss{fill:none; stroke:var(--bad); stroke-dasharray:4 3}
+.gwrap rect.node.divg{stroke:var(--bad); stroke-width:2}
+.gwrap rect.node.gold{fill:var(--surface); stroke:var(--ink-3)}
+.mrow{display:grid; grid-template-columns:repeat(auto-fit,minmax(122px,1fr)); gap:.5rem; margin:.8rem 0}
+.mrow .m{display:flex; flex-direction:column; gap:.1rem; padding:.5rem .7rem; border-radius:8px; background:var(--surface-2)}
+.mrow .m .l{font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-2)}
+.mrow .m .n{font-family:var(--font-mono); font-size:1.15rem}
+.mrow .m .s{font-size:.75rem; color:var(--ink-3)}
+.mrow .m.ok .n{color:var(--ok)} .mrow .m.bad .n{color:var(--bad)} .mrow .m.warm .n{color:var(--warm)}
+.judges{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:.5rem; margin-top:.8rem}
+.judges .card .v{font-weight:600; margin:.2rem 0}
+.judges .card .v.ok{color:var(--ok)} .judges .card .v.bad{color:var(--bad)} .judges .card .v.na{color:var(--ink-3)}
+.judges .card .t{font-size:.84rem; color:var(--ink-2)}
+.divg-box{display:none; margin-top:.8rem}
+.tstage.shown .divg-box, body.teacher .divg-box{display:block}
+.legend{display:flex; flex-wrap:wrap; gap:.4rem 1rem; font-size:.8rem; color:var(--ink-2); margin-top:.5rem}
+.legend i{display:inline-block; width:.8rem; height:.8rem; border-radius:3px; vertical-align:-1px; margin-right:.3rem; border:1px solid var(--line-2)}
+
+/* бенчмарки, таблицы */
+.ptable td,.ptable th{font-size:.86rem}
+
+/* грехи */
+.sins{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:.8rem}
+.sin{border:1px solid var(--line); border-radius:12px; padding:.9rem 1rem; background:var(--surface); display:flex; flex-direction:column; gap:.6rem}
+.sin .claim{font-family:var(--font-head); font-size:1.02rem; line-height:1.3}
+.sin .vote{display:flex; flex-direction:column; gap:.3rem}
+.sin .vote button{text-align:left; font-size:.84rem; padding:.35rem .6rem; white-space:normal}
+.sin .res{display:none; font-size:.88rem; color:var(--ink-2)}
+.sin.open .res, body.teacher .sin .res{display:block}
+.sin .res .src{font-family:var(--font-mono); font-size:.74rem; color:var(--ink-3); margin-top:.3rem}
+.sin .you{font-size:.78rem; color:var(--ink-3)}
+
+/* бюджет */
+.budget .stats .stat{min-width:160px}
+.changes{display:flex; flex-direction:column; gap:.3rem; margin-top:.6rem}
+.changes .ch{font-size:.86rem; padding:.35rem .6rem; border-radius:8px; background:var(--surface-2); color:var(--ink-2)}
+.changes .ch.on{background:var(--warm-soft); color:var(--ink)}
+
+/* итог */
+.theses{counter-reset:t; padding-left:0; list-style:none; max-width:90ch}
+.theses li{counter-increment:t; display:grid; grid-template-columns:2rem minmax(0,1fr); gap:.6rem; padding:.5rem 0; border-bottom:1px solid var(--line)}
+.theses li::before{content:counter(t); font-family:var(--font-mono); color:var(--ink-3)}
+.cols>*,.two>*,.tbody>*,.kwrap>*,.met>*{min-width:0}
+.refs{font-size:.84rem; color:var(--ink-2)}
+.ladder{display:flex; flex-direction:column; gap:.9rem; margin:1rem 0 1.6rem}
+.rung{position:relative; display:grid; grid-template-columns:250px minmax(0,1fr); gap:.9rem 1.4rem; margin-left:calc(var(--i) * 1.6rem); background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:12px; box-shadow:var(--shadow); padding:1rem 1.2rem}
+.rung .rn{font-family:var(--font-head); font-size:2.4rem; font-weight:700; line-height:1; color:var(--accent)}
+.rung h4{margin:.3rem 0 .15rem; font-size:1.05rem}
+.rung .chg{font-size:.82rem; color:var(--ink-2); margin-bottom:.5rem}
+.meter{display:flex; align-items:center; gap:.45rem; font-size:.76rem; color:var(--ink-2); margin-top:.3rem}
+.meter .ml{width:4.9rem; white-space:nowrap; color:var(--ink-3); text-transform:uppercase; letter-spacing:.04em; font-size:.68rem}
+.meter .dots{display:inline-flex; gap:3px; flex:none}
+.meter .dots i{width:11px; height:11px; border-radius:3px; background:var(--line)}
+.meter .dots i.on{background:var(--warm)}
+.tiles{display:grid; grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr)); gap:.6rem}
+.tile{display:flex; flex-direction:column; gap:.35rem; background:var(--surface-2); border-radius:8px; padding:.65rem .8rem; font-size:.86rem; line-height:1.45}
+.tile b{font-size:.92rem; color:var(--ink)}
+.tile .kn{align-self:flex-start; font-family:var(--font-mono); font-size:.74rem; background:var(--ok-soft); color:var(--ok); padding:.12rem .45rem; border-radius:4px}
+.tile .refs{margin-top:auto; padding-top:.2rem; font-size:.76rem}
+.tile.lim{background:var(--bad-soft)} .tile.lim b{color:var(--bad)}
+.rung .next{grid-column:1/-1; font-size:.86rem; color:var(--ink-2); border-top:1px dashed var(--line-2); padding-top:.55rem}
+.rung .next b{color:var(--accent)}
+.rung>*{min-width:0}
+@media (max-width:860px){.rung{grid-template-columns:minmax(0,1fr); margin-left:0; padding:.9rem}}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topbar-in">
+  <div class="brand"><b>LLM-системы и агенты</b> · занятие 7</div>
+  <nav class="chips" id="chips" aria-label="Разделы"></nav>
+  <div class="tools"><button id="teacherBtn" aria-pressed="false">Ответы: скрыты</button><button id="presentBtn" aria-pressed="false">Режим: прокрутка</button><button id="themeBtn">Тема: система</button></div>
+</div></div>
+
+<main>
+
+<section id="s0" class="sec hero" data-short="Начало">
+  <div class="eyebrow">LLM-системы и агенты · занятие 7</div>
+  <h1>Как понять, что это работает, и работает хорошо?</h1>
+  <p class="lede">Оценивание в курсе появлялось по кусочкам: набор вопросов на первом занятии, метрики ранжирования на третьем, промпт как параметр на пятом, таблица метрик мультиагентной системы на прошлой лекции. Сегодня кусочки собираются в один документ — раздел «Методика оценивания» вашего проекта. Калькуляторы на странице считают по настоящим формулам прямо в браузере; разборы кейсов, вердикты судей и трассы агента — заранее написанные сценарии. Что настоящее, а что сценарий, подписано в заголовке каждого стенда.</p>
+  <div class="thesis">Метрика выводится из того, за что платит заказчик. Измеритель выбирается по доверию и цене. Судья — последнее средство, а не первое.</div>
+
+  <div class="chain"><span class="on">гипотеза</span><em>→</em><span class="on">вариант системы</span><em>→</em><span>набор</span><em>→</em><span class="on">метрика</span><em>→</em><span class="on">интервал</span><em>→</em><span class="on">решение</span></div>
+  <p class="note">Без любого звена «стало лучше» означает «мне показалось». Как собирать набор — на парном семинаре; сегодня — про метрику, измеритель, интервал и решение.</p>
+
+  <div class="recap">
+    <div class="card acc"><div class="src">занятие 1</div><b>Сначала набор, потом усложнения</b>Без набора запросов нельзя отличить улучшение от регрессии. Метрика проекта — это его SLI.</div>
+    <div class="card acc"><div class="src">занятие 3</div><b>Судья нестабилен</b>Один и тот же ответ получал от судьи разные оценки. Сегодня — насколько и что с этим делать.</div>
+    <div class="card acc"><div class="src">занятие 5</div><b>Промпт — параметр</b>Его оптимизируют по набору и метрике. Сегодня — по какой метрике и кому верить.</div>
+    <div class="card acc"><div class="src">прошлая лекция</div><b>Таблица метрик агентов</b>Точность, накладные расходы координации, потеря контекста, задержка, стоимость. Была таблица — не было способа их мерить.</div>
+  </div>
+</section>
+
+<section id="s1" class="sec" data-short="Метрики">
+  <div class="sec-head">
+    <h2>От продукта к метрикам</h2>
+    <p class="lede">Корень дерева — за что платит заказчик. Не «качество ответов», а «доля обращений, закрытых без оператора». Ниже — прокси, которые можно посчитать офлайн до релиза. Рядом — ограничивающие метрики: то, что не должно ухудшиться.</p>
+  </div>
+  <div class="stage mstage" id="metrics">
+    <div class="stage-head"><span class="tag script">разбор — сценарий</span><h3>Дерево метрик для трёх архетипов проектов</h3>
+      <p class="hint">Для каждой метрики-кандидата выберите место в дереве. Потом откройте разбор: у каждой метрики есть объяснение, почему она там, где она есть.</p></div>
+    <div class="slots-legend"><span><b>North-star</b> — одна, за неё платят</span><span><b>Прокси</b> — считается офлайн на наборе, предсказывает north-star</span><span><b>Ограничивающая</b> — не должна ухудшиться</span><span><b>Не берём</b> — измеряет не то или не того</span></div>
+    <div class="apick" id="apick" role="tablist" aria-label="Архетипы проектов"></div>
+    <div class="abrief" id="abrief"></div>
+    <div class="mets" id="mets"></div>
+    <div class="row" style="margin-top:.8rem"><button class="primary" id="mreveal">Показать разбор</button><button id="mreset">Сбросить выбор</button><span class="score" id="mscore"></span></div>
+    <div class="tree" id="mtree"></div>
+  </div>
+  <div class="qz"><div class="q">Вопрос в зал: чат-бот поддержки, faithfulness выросла с 0,82 до 0,91. Заказчик доволен?</div><div class="a">Неизвестно. Faithfulness — прокси: доля утверждений ответа, подтверждённых контекстом. Она растёт, если бот стал чаще отвечать «не знаю» — утверждений меньше, все подтверждены. North-star заказчика — закрытые без оператора обращения — при этом могла упасть. Прокси проверяют против north-star хотя бы раз, прежде чем по нему оптимизировать.</div><button class="small">Показать ответ</button></div>
+</section>
+
+<section id="s2" class="sec" data-short="Измерители">
+  <div class="sec-head">
+    <h2>Три измерителя</h2>
+    <p class="lede">У каждой метрики есть способ её посчитать. Их три, и они упорядочены по доверию и цене.</p>
+  </div>
+  <div class="meas">
+    <div class="card good"><h4>Детерминированная проверка</h4>Есть эталон или проверяемое состояние: тесты прошли, заказ создан с нужными полями, JSON валиден, цитата дословно найдена в корпусе, граф вызовов совпал с эталонным.<div class="row2"><span class="pill ok">цена ≈ 0</span><span class="pill ok">доверие полное</span></div><div style="font-size:.84rem;color:var(--ink-2)">Ограничение: проверяет только то, что умеет проверять. Истинность свободного текста — не умеет.</div></div>
+    <div class="card acc"><h4>Человек</h4>Возможен всегда, но мало: 30 примеров в неделю — реалистичная норма для команды проекта.<div class="row2"><span class="pill warm">дорого, медленно</span><span class="pill acc">эталон с оговоркой</span></div><div style="font-size:.84rem;color:var(--ink-2)">Оговорка: люди не согласны между собой. Их согласие — потолок для любого судьи: если два асессора сходятся на κ = 0,6, требовать от судьи 0,9 бессмысленно.</div></div>
+    <div class="card bad"><h4>LLM-судья</h4>Открытый текст в масштабе: faithfulness, relevance, тон, соблюдение формата.<div class="row2"><span class="pill warm">вызов модели на пример</span><span class="pill bad">требует калибровки</span></div><div style="font-size:.84rem;color:var(--ink-2)">Судья — ещё одна модель в проекте, со своими смещениями и шумом. Ей доверяют после проверки, а не по умолчанию.</div></div>
+  </div>
+  <div class="thesis">Порядок выбора: сначала ищем детерминированную проверку. Судья — для того, что ею не покрывается.</div>
+</section>
+
+<section id="s3" class="sec" data-short="Судья">
+  <div class="sec-head">
+    <h2>Судья: как ему доверять</h2>
+    <p class="lede">На третьем занятии судья давал разные оценки одному ответу. Сегодня — что у него внутри, какие у него систематические ошибки и как измерить, насколько он согласен с людьми.</p>
+  </div>
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">Три схемы</h3>
+      <div class="tablewrap"><table>
+        <tr><th>Схема</th><th>Что делает судья</th><th>Когда</th></tr>
+        <tr><td>Pointwise</td><td>оценивает один ответ по шкале или критериям</td><td>нужен абсолютный балл: мониторинг в проде</td></tr>
+        <tr><td>Pairwise</td><td>сравнивает два ответа, выбирает лучший</td><td>A против B: устойчивее к шкале, но чувствителен к порядку</td></tr>
+        <tr><td>Reference-based</td><td>сравнивает ответ с эталонным</td><td>есть набор с эталонами: регрессия</td></tr>
+      </table></div>
+    </div>
+    <div>
+      <h3 style="margin-top:0">Rubric: четыре части</h3>
+      <ol>
+        <li><b>Критерии</b> — независимые оси. «Качество» и «полезность» — одна ось дважды.</li>
+        <li><b>Шкала</b> по каждому критерию: pass/fail, 1–5, доля.</li>
+        <li><b>Якоря</b> — что означает каждая отметка шкалы. «5» без описания — не критерий, а лотерея.</li>
+        <li><b>Граничные случаи</b> — частично верный ответ, противоречивый контекст, вопрос вне домена. Что не прописано, судья решит сам, и каждый раз по-разному.</li>
+      </ol>
+      <p style="font-size:.9rem;color:var(--ink-2)">Процесс: rubric до промпта → пилот на контрастных примерах → рассуждение до оценки → structured output → мало критериев на вызов → зафиксировать до массового прогона. Критерии дрейфуют по мере разметки (Shankar et al., 2024) — rubric версионируется, как промпт.</p>
+    </div>
+  </div>
+
+  <h3>Смещения</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Смещение</th><th>Что известно</th><th>Как проверить у себя</th><th>Как лечить</th></tr>
+    <tr><td>Позиция</td><td>в pairwise судья чаще выбирает первый ответ; GPT-4 на MT-Bench согласован при перестановке в ≈ 65 % пар, слабые судьи — реже</td><td>каждую пару — в обоих порядках; доля несовпадений</td><td>усреднять по двум порядкам; несовпадение = ничья</td></tr>
+    <tr><td>Длина</td><td>раздутый ответ с теми же фактами получает больше; GPT-4 устойчивее остальных, но не полностью</td><td>раздуть 10 ответов без новых фактов, сравнить</td><td>критерий краткости в rubric; length-controlled win rate</td></tr>
+    <tr><td>Самопредпочтение</td><td>судья завышает ответы своей семьи: около 10 п.п. win-rate у GPT-4</td><td>слепая разметка; второй судья другой семьи</td><td>судья другой семьи или специализированный (Prometheus 2)</td></tr>
+    <tr><td>Шум</td><td>при T &gt; 0 — разные оценки на одном входе; при T = 0 не ноль</td><td>R повторов на одном входе, σ<sub>judge</sub></td><td>T = 0 и измерить остаток; усреднять</td></tr>
+  </table></div>
+  <p class="note">Числа в таблице — из Zheng et al. (2023) и Wang et al. (2023), для чужих судей на чужих задачах. На семинаре вы получите свои — на двух судьях и на ответах, которые разметите руками.</p>
+
+  <h3>Калибровка на людях: каппа</h3>
+  <details class="fn" open><summary>Сноска: почему не accuracy и что такое каппа</summary>
+    <p>Если 90 % ответов хорошие, судья, который всегда говорит «хорошо», совпадёт с человеком в 90 % случаев, не различая ничего. Каппа Коэна вычитает согласие, ожидаемое при случайных метках:</p>
+    <div class="formula"><span class="lhs">κ</span> = (p<sub>набл</sub> − p<sub>случ</sub>) / (1 − p<sub>случ</sub>)</div>
+    <p>Шкала Landis и Koch: &lt; 0,2 — незначительное согласие, 0,2–0,4 — слабое, 0,4–0,6 — умеренное, 0,6–0,8 — существенное, выше — почти полное. Для порядковой шкалы (1–5) обычная каппа штрафует «5 против 4» так же, как «5 против 1». Взвешенная каппа с квадратичными весами штрафует пропорционально квадрату расстояния.</p>
+  </details>
+  <div class="stage" id="kappa">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><span class="tag script">разметка синтетическая</span><h3>Судья со сдвигом: что видит каппа</h3>
+      <p class="hint">60 ответов, человек ставит 2–5. Судья ставит ту же оценку минус сдвиг плюс случайная ошибка. Посмотрите, как accuracy, обычная и взвешенная каппа реагируют на систематический сдвиг.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="ksh">Систематический сдвиг судьи <span class="v" id="kshv"></span></label><input type="range" id="ksh" min="0" max="2" step="1" value="1"></div>
+      <div class="ctl grow"><label for="kns">Доля случайных ошибок на ±1 <span class="v" id="knsv"></span></label><input type="range" id="kns" min="0" max="60" step="5" value="15"></div>
+    </div>
+    <div class="kwrap">
+      <div>
+        <div class="stats" id="kstats"></div>
+        <p class="qnote" id="knote" style="font-size:.9rem;color:var(--ink-2)"></p>
+      </div>
+      <div><div class="kicker" style="margin-bottom:.3rem">человек (строки) × судья (столбцы)</div><div class="kgrid" id="kgrid"></div></div>
+    </div>
+  </div>
+
+  <h3>Шум против эффекта</h3>
+  <details class="fn"><summary>Сноска: доверительный интервал и bootstrap за две минуты</summary>
+    <p>Средняя оценка на 20 примерах — не «истинное» качество системы, а оценка с погрешностью: на других 20 примерах она была бы другой. Доверительный интервал — диапазон, в который истинное значение попадает в 95 % таких повторов. Для доли p на n примерах его ширина ≈ ±1,96·√(p(1−p)/n): n = 30 → ±16 п.п., n = 200 → ±6.</p>
+    <p>Когда формулы нет под рукой, интервал считают bootstrap: из своих n примеров 1000 раз выбирают n с возвращением, каждый раз считают метрику, берут 2,5-й и 97,5-й процентили. Если интервал разницы между A и B накрывает ноль — на этом наборе они неразличимы, сколько бы знаков после запятой ни было в таблице.</p>
+  </details>
+  <div class="stage" id="noise">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><h3>Виден ли эффект сквозь шум судьи</h3>
+      <p class="hint">Две системы, разница средних оценок Δ. Два источника шума: примеры разные (σ<sub>примеров</sub>) и судья нестабилен (σ<sub>судьи</sub>). Повторы судьи уменьшают только второй.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="nd">Разница между системами Δ, баллов <span class="v" id="ndv"></span></label><input type="range" id="nd" min="0" max="1.5" step="0.05" value="0.3"></div>
+      <div class="ctl grow"><label for="nn">Примеров в наборе n <span class="v" id="nnv"></span></label><input type="range" id="nn" min="10" max="300" step="10" value="20"></div>
+      <div class="ctl grow"><label for="nsj">σ судьи <span class="v" id="nsjv"></span></label><input type="range" id="nsj" min="0.1" max="1.5" step="0.1" value="0.9"></div>
+      <div class="ctl grow"><label for="nsi">σ примеров <span class="v" id="nsiv"></span></label><input type="range" id="nsi" min="0.2" max="1.5" step="0.1" value="0.8"></div>
+      <div class="ctl grow"><label for="nr">Повторов судьи R <span class="v" id="nrv"></span></label><input type="range" id="nr" min="1" max="10" step="1" value="1"></div>
+    </div>
+    <div class="chartwrap" id="nchart"></div>
+    <div class="stats" id="nstats"></div>
+    <div class="formula"><span class="lhs">SE(Δ)</span> = √( 2·(σ²<sub>примеров</sub> + σ²<sub>судьи</sub> / R) / n ) &nbsp;·&nbsp; <span class="lhs">интервал</span> = Δ ± 1,96·SE</div>
+    <p class="qnote" id="nnote" style="font-size:.9rem;color:var(--ink-2)"></p>
+  </div>
+  <div class="thesis">Судья — это ещё одна модель в вашем проекте, со своим val-сетом и своей регрессией.</div>
+</section>
+
+<section id="s3a" class="sec" data-short="Выравнивание">
+  <div class="sec-head">
+    <h2>Выравнивание судьи: методика</h2>
+    <p class="lede">Каппа на калибровочном наборе низкая — что дальше? Ниже цикл, который повторяют до плато, и лестница методов от бесплатных к дорогим. Подниматься по ней стоит снизу: почти всегда хватает первых двух ступеней, а до своей модели-судьи доходит меньшинство проектов.</p>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">Цикл выравнивания</h3>
+      <ol>
+        <li><b>Разметить раньше, чем писать промпт.</b> 100–200 ответов из реальных логов: вердикт pass/fail и одна фраза «почему». Размечает один владелец критерия, а не голосование. По ходу разметки критерии уточнятся, и это нормально: критерий рождается из разметки, а не до неё (<a href="https://arxiv.org/abs/2404.12272">Shankar et al., 2024</a>).</li>
+        <li><b>Разделить разметку до первого эксперимента.</b> На dev (≈ 60 %) правят судью, test (≈ 40 %) нужен только для отчёта. Это тот же train/test, что у модели: судья, подогнанный под dev, на dev всегда хорош.</li>
+        <li><b>Смотреть на матрицу, а не на одно число.</b> TPR — какую долю настоящих pass судья признал. TNR — какую долю настоящих fail поймал. При редких провалах важнее TNR: судья, который пропускает провалы, бесполезен как сенсор.</li>
+        <li><b>Прочитать каждое расхождение и отнести его к одному из трёх случаев.</b> Ошибся судья — правим rubric или добавляем пример в промпт. Ошибся человек — правим метку. Критерий неоднозначен — делим его на два бинарных или дописываем граничный случай.</li>
+        <li><b>Повторять 3–4 до цели или плато.</b> Цель задают заранее как ограничение: например, TNR ≥ 0,85 при TPR ≥ 0,9. Одна каппа не покажет, какая сторона страдает. Плато — это когда прирост меньше шума. При 40 fail на dev TNR известен с точностью ±12 п.п., и правка, которая исправила 2–3 примера, неотличима от случайности. Две версии судьи сравнивают на одних и тех же примерах: тест Макнемара по тем, где они разошлись. Стоп — цель достигнута или две итерации подряд без значимого прироста. Обычно это 3–5 итераций руками. Потом один раз прогнать test и заморозить версию: промпт, модель со снапшотом, rubric. Это «судья v1».</li>
+        <li><b>Дальше судья живёт как модель.</b> Сменился снапшот у провайдера, rubric или поток входов — перепрогоняем test. Раз в месяц добавляем в разметку 20–30 свежих логов.</li>
+      </ol>
+      <p class="note">Автоматизировать можно только шаг 4 и только наполовину. Оптимизатор промпта перебирает формулировки и few-shot под согласие на dev: <a href="https://arxiv.org/abs/2310.03714">DSPy</a>, <a href="https://arxiv.org/abs/2309.13308">AutoCalibrate</a>, <a href="https://eugeneyan.com/writing/aligneval/">AlignEval</a>. Но что считать провалом, решает человек, читая расхождения: критерий не существует до разметки (<a href="https://arxiv.org/abs/2404.12272">Shankar et al., 2024</a>). А на 100–200 метках оптимизатор легко подгоняется под dev. Поэтому автоматику запускают после того, как критерий зафиксирован, и отчитываются только по test.</p>
+    </div>
+    <div>
+      <h3 style="margin-top:0">Сколько размечать</h3>
+      <p>Точность судьи — тоже оценка с погрешностью. TNR считается только по провалам, поэтому ширину интервала задаёт число размеченных fail, а не общий объём разметки:</p>
+      <div class="formula"><span class="lhs">±</span> 1,96 · √( TNR·(1 − TNR) / n<sub>fail</sub> )</div>
+      <p>При TNR = 0,8: 30 провалов дают ±14 п.п., 100 провалов — ±8. Если провалов в логах 10 %, сотня провалов в случайной выборке — это тысяча просмотренных ответов. Поэтому провалы добирают отдельно: из жалоб, эскалаций и дизлайков, с проверкой руками. Для TNR так можно, потому что он считается только по fail. А долю pass в такой выборке отчитывать нельзя: она смещена.</p>
+      <p style="font-size:.9rem;color:var(--ink-2)">Потолок задаёт согласие двух людей. Прежде чем выравнивать судью, дайте 30 примеров второму человеку и посчитайте каппу между вами. Если люди сходятся на κ = 0,5, проблема в критерии, а не в судье. Даже лучшие судьи заметно не дотягивают до согласия людей между собой (<a href="https://arxiv.org/abs/2406.12624">Thakur et al., 2024</a>).</p>
+    </div>
+  </div>
+
+  <h3>Лестница: от бесплатного к дорогому</h3>
+  <div class="chain"><span class="on">0 · критерий и промпт</span><em>→</em><span>1 · обработка ответа</span><em>→</em><span>2 · поправка метрики</span><em>→</em><span>3 · состав судей</span><em>→</em><span>4 · своя модель</span></div>
+  <p class="refs" style="max-width:90ch">Цена растёт с каждой ступенью. Подниматься стоит, только когда текущая ступень упёрлась в плато. Шкалы: <b>за вызов</b> — во что обходится каждая оценка, <b>разово</b> — сколько стоит настроить метод.</p>
+  <div class="ladder">
+
+    <div class="rung" style="--i:0">
+      <div class="rh">
+        <div class="rn">0</div>
+        <h4>Критерий и промпт</h4>
+        <div class="chg">меняем текст rubric и промпта</div>
+        <div class="meter"><span class="ml">за вызов</span><span class="dots"><i class="on"></i><i></i><i></i><i></i></span><span>длиннее промпт</span></div>
+        <div class="meter"><span class="ml">разово</span><span class="dots"><i class="on"></i><i></i><i></i><i></i></span><span>часы разбора</span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>Чек-лист «да/нет» вместо 1–5</b><span>Проще размечать, согласовывать и калибровать.</span><span class="kn">+0,45 согласия судей</span><span class="refs"><a href="https://arxiv.org/abs/2403.18771">CheckEval</a> · <a href="https://arxiv.org/abs/2410.03608">TICK</a> · <a href="https://hamel.dev/blog/posts/llm-judge/">Husain</a></span></div>
+        <div class="tile"><b>Один критерий — один вызов</b><span>Если вызов один, у каждого критерия своё поле в structured output.</span><span class="refs"><a href="https://eugeneyan.com/writing/llm-evaluators/">Yan</a></span></div>
+        <div class="tile"><b>Разбор до вердикта</b><span>Голый балл хуже: объяснение стабильно повышает корреляцию с людьми.</span><span class="refs"><a href="https://arxiv.org/abs/2310.05657">Chiang &amp; Lee, 2023</a> · <a href="https://arxiv.org/abs/2303.16634">G-Eval</a></span></div>
+        <div class="tile"><b>Эталонный ответ в промпте</b><span>Судья согласен с экспертами почти только там, где сам знает ответ. Эталон это в основном лечит.</span><span class="kn">ошибки на математике 70 % → 15 %</span><span class="refs"><a href="https://arxiv.org/abs/2503.05061">Krumdick et al., 2025</a> · <a href="https://arxiv.org/abs/2306.05685">Zheng et al., 2023</a></span></div>
+        <div class="tile"><b>Few-shot из расхождений</b><span>3–5 примеров с dev, где судья ошибся, с верным вердиктом и объяснением владельца критерия.</span><span class="refs"><a href="https://arxiv.org/abs/2309.13701">ALLURE</a> · <a href="https://hamel.dev/blog/posts/llm-judge/">Husain</a></span></div>
+        <div class="tile"><b>Автоправка по разметке</b><span>Сильная модель переписывает rubric по расхождениям, или оптимизатор подбирает промпт под согласие на dev. Проверка — только на test.</span><span class="refs"><a href="https://arxiv.org/abs/2309.13308">AutoCalibrate</a> · <a href="https://arxiv.org/abs/2404.12272">EvalGen</a> · <a href="https://arxiv.org/abs/2310.03714">DSPy</a> · <a href="https://arxiv.org/abs/2501.17178">Salinas et al., 2025</a></span></div>
+      </div>
+      <div class="next"><b>Выше, если</b> расхождения больше не учат ничему новому: судья в целом понимает критерий, но систематически строже или мягче людей либо шумит.</div>
+    </div>
+
+    <div class="rung" style="--i:1">
+      <div class="rh">
+        <div class="rn">1</div>
+        <h4>Обработка ответа</h4>
+        <div class="chg">меняем код после вызова</div>
+        <div class="meter"><span class="ml">за вызов</span><span class="dots"><i></i><i></i><i></i><i></i></span><span>0, если есть logprobs</span></div>
+        <div class="meter"><span class="ml">разово</span><span class="dots"><i class="on"></i><i></i><i></i><i></i></span><span>разметка dev</span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>Балл по logprobs</b><span>Матожидание по токенам «1»…«5» вместо самого вероятного: шкала непрерывна, ничьих меньше. Без logprobs — 20 сэмплов, то есть 20 вызовов.</span><span class="refs"><a href="https://arxiv.org/abs/2303.16634">G-Eval</a></span></div>
+        <div class="tile"><b>Порог под нужный TNR</b><span>Порог pass/fail подбирают на dev, а не берут «≥ 3 из 5» по умолчанию.</span></div>
+        <div class="tile"><b>Калибровка шкалы</b><span>Регрессия «выход судьи → балл человека» на dev: линейная, изотоническая, порядковая. Так лечится сдвиг из стенда с каппой.</span><span class="kn">+142 % согласия на 29 задачах</span><span class="refs"><a href="https://arxiv.org/abs/2502.04997">van den Burg et al., 2025</a> · <a href="https://arxiv.org/abs/2501.00274">LLM-Rubric</a> · <a href="https://arxiv.org/abs/2404.04475">LC AlpacaEval</a> (длина, 0,94 → 0,98)</span></div>
+        <div class="tile"><b>Pairwise в обоих порядках</b><span>Несовпадение вердиктов считается ничьей.</span><span class="refs"><a href="https://arxiv.org/abs/2305.17926">Wang et al., 2023</a> · <a href="https://arxiv.org/abs/2306.05685">Zheng et al., 2023</a></span></div>
+      </div>
+      <div class="next"><b>Выше, если</b> нужна только доля pass по системе (тогда ступень 2), или судья точен, но дорог (тогда ступени 3–4).</div>
+    </div>
+
+    <div class="rung" style="--i:2">
+      <div class="rh">
+        <div class="rn">2</div>
+        <h4>Поправка метрики</h4>
+        <div class="chg">меняем формулу отчёта, а не судью</div>
+        <div class="meter"><span class="ml">за вызов</span><span class="dots"><i></i><i></i><i></i><i></i></span><span>0</span></div>
+        <div class="meter"><span class="ml">разово</span><span class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></span><span>разметка с запасом fail</span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>Вычесть ошибки судьи</b><span>Доля pass исправляется по известным TPR и TNR, а интервал честно расширяется. Стенд ниже.</span><span class="kn">−25…33 % ручных меток</span><span class="refs">Rogan &amp; Gladen, 1978 · <a href="https://arxiv.org/abs/2301.09633">PPI</a> · <a href="https://arxiv.org/abs/2311.09476">ARES</a> · <a href="https://arxiv.org/abs/2403.07008">Boyeau</a> · <a href="https://arxiv.org/abs/2406.04291">Fisch</a> · <a href="https://arxiv.org/abs/2408.15204">Gligorić</a> · <a href="https://arxiv.org/abs/2511.21140">Lee et al., 2025</a></span></div>
+        <div class="tile lim"><b>Предел</b><span>Если судья не точнее оцениваемой модели, никакая поправка не сокращает разметку больше чем вдвое.</span><span class="refs"><a href="https://arxiv.org/abs/2410.13341">Dorner et al., 2024</a></span></div>
+      </div>
+      <div class="next"><b>Не поможет, если</b> нужен вердикт по каждому ответу: алерт, фильтр, блокировка. Тогда ступени 3–4.</div>
+    </div>
+
+    <div class="rung" style="--i:3">
+      <div class="rh">
+        <div class="rn">3</div>
+        <h4>Состав судей</h4>
+        <div class="chg">меняем, сколько моделей и каких</div>
+        <div class="meter"><span class="ml">за вызов</span><span class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></span><span>2–3 дешёвых вызова</span></div>
+        <div class="meter"><span class="ml">разово</span><span class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></span><span>подбор порогов</span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>Жюри из трёх семей</b><span>Три небольшие модели разных семей вместо одной большой; меньше самопредпочтения. В статье: Command R, Claude 3 Haiku, GPT-3.5.</span><span class="kn">точнее GPT-4, в 7+ раз дешевле</span><span class="refs"><a href="https://arxiv.org/abs/2404.18796">PoLL</a></span></div>
+        <div class="tile"><b>Каскад с эскалацией</b><span>Дешёвый судья → сильный при низкой уверенности → человек. Порог уверенности подбирается под заданное согласие с людьми.</span><span class="kn">75 % оценок — малые модели</span><span class="refs"><a href="https://arxiv.org/abs/2407.18370">Trust or Escalate</a></span></div>
+      </div>
+      <div class="next"><b>Выше, если</b> объёмы такие, что дороги даже малые API-модели, или данные нельзя отдавать наружу.</div>
+    </div>
+
+    <div class="rung" style="--i:4">
+      <div class="rh">
+        <div class="rn">4</div>
+        <h4>Своя модель</h4>
+        <div class="chg">меняем веса</div>
+        <div class="meter"><span class="ml">за вызов</span><span class="dots"><i class="on"></i><i></i><i></i><i></i></span><span>свой инференс</span></div>
+        <div class="meter"><span class="ml">разово</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span>метки, обучение, поддержка</span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>Готовые открытые судьи</b><span>Общие: Prometheus 2, Glider, Selene Mini. Для faithfulness в RAG: MiniCheck, Lynx. Сначала проверить на своём test.</span><span class="kn">MiniCheck 770M ≈ GPT-4, в 400 раз дешевле</span><span class="refs"><a href="https://arxiv.org/abs/2405.01535">Prometheus 2</a> · <a href="https://arxiv.org/abs/2412.14140">Glider</a> · <a href="https://arxiv.org/abs/2501.17195">Selene Mini</a> · <a href="https://arxiv.org/abs/2404.10774">MiniCheck</a> · <a href="https://arxiv.org/abs/2407.08488">Lynx</a></span></div>
+        <div class="tile"><b>Дистилляция</b><span>Выровненный большой судья размечает тысячи логов; энкодер или модель на 1–8B с LoRA учится на них и на вашей разметке. Можно и на синтетических парах, без людей.</span><span class="kn">RewardBench 75,4 → 88,3 без людей</span><span class="refs"><a href="https://arxiv.org/abs/2406.08660">Bucher &amp; Martini</a> · <a href="https://arxiv.org/abs/2311.09476">ARES</a> · <a href="https://arxiv.org/abs/2408.02666">Self-Taught Evaluators</a></span></div>
+        <div class="tile lim"><b>Предел</b><span>Дообученный судья — узкий классификатор: хорош на своём формате задач, плохо переносится на чужой.</span><span class="refs"><a href="https://arxiv.org/abs/2403.02839">Huang et al., 2024</a></span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <h3>Что делать, если…</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Что видно на dev</th><th>Вероятная причина</th><th>Что делать</th></tr>
+    <tr><td>Ошибки в обе стороны, без системы; люди между собой тоже согласны слабо</td><td>критерий неоднозначен</td><td>разбить на бинарные, дописать граничные случаи. Модель судьи не трогать</td></tr>
+    <tr><td>Ошибки в одну сторону: судья мягче или строже людей</td><td>систематический сдвиг</td><td>порог или калибровка на dev (ступень 1). Промпт не переписывать</td></tr>
+    <tr><td>Ошибки на фактах предметной области</td><td>судья не знает правильного ответа</td><td>эталонный ответ в промпт или детерминированная проверка</td></tr>
+    <tr><td>Ошибки собраны на одном типе входа</td><td>rubric его не покрывает</td><td>граничный случай в rubric и 2–3 few-shot этого типа</td></tr>
+    <tr><td>Хорош на dev, плох на test</td><td>подогнали под dev</td><td>откатить к простой версии, расширить dev</td></tr>
+    <tr><td>Разные вердикты на одном входе</td><td>шум</td><td>T = 0, балл по logprobs, повторы (стенд «шум против эффекта»)</td></tr>
+    <tr><td>Согласие хорошее, но судья дорогой</td><td>—</td><td>жюри малых моделей, каскад, дистилляция (ступени 3–4)</td></tr>
+  </table></div>
+
+  <div class="stage" id="rg">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><span class="tag script">TPR, TNR и доля — ваши настройки</span><h3>Поправка на ошибки судьи</h3>
+      <p class="hint">Судья проверил 1000 логов, и pass получилась некоторая доля. Его TPR и TNR вы измерили на размеченном наборе. Поправка возвращает долю, которую поставили бы люди. Интервал считается bootstrap: TPR и TNR тоже известны с погрешностью.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="rgt">TPR судьи: признал pass из настоящих pass <span class="v" id="rgtv"></span></label><input type="range" id="rgt" min="50" max="100" step="1" value="95"></div>
+      <div class="ctl grow"><label for="rgn">TNR судьи: поймал fail из настоящих fail <span class="v" id="rgnv"></span></label><input type="range" id="rgn" min="50" max="100" step="1" value="60"></div>
+      <div class="ctl grow"><label for="rgp">Доля pass по судье на логах <span class="v" id="rgpv"></span></label><input type="range" id="rgp" min="5" max="99" step="1" value="80"></div>
+      <div class="ctl grow"><label for="rgl">Размечено руками <span class="v" id="rglv"></span></label><input type="range" id="rgl" min="20" max="400" step="10" value="100"></div>
+    </div>
+    <div class="chartwrap" id="rgchart"></div>
+    <div class="stats" id="rgstats"></div>
+    <div class="formula"><span class="lhs">θ̂</span> = (p<sub>судья</sub> + TNR − 1) / (TPR + TNR − 1)</div>
+    <p class="refs">Формула — <a href="https://doi.org/10.1093/oxfordjournals.aje.a112510">Rogan &amp; Gladen (1978)</a>, из эпидемиологии: доля больных по неточному тесту. В коде: <code>judgy.estimate_success_rate</code> (поправка и bootstrap), <code>ppi_py.ppi_mean_ci</code> (то же для любой метрики, не только pass/fail).</p>
+    <p class="qnote" id="rgnote" style="font-size:.9rem;color:var(--ink-2)"></p>
+  </div>
+
+  <details class="fn"><summary>Что почитать целиком</summary>
+    <p><b>Практика:</b> <a href="https://hamel.dev/blog/posts/llm-judge/">Husain — пошаговый процесс с одним экспертом и бинарными вердиктами</a> · <a href="https://eugeneyan.com/writing/llm-evaluators/">Yan — обзор, что работает в LLM-evaluators</a> · <a href="https://eugeneyan.com/writing/aligneval/">Yan — AlignEval: сначала разметка, потом судья</a>.</p>
+    <p><b>Обзоры:</b> <a href="https://arxiv.org/abs/2411.15594">Gu et al., 2024 — A Survey on LLM-as-a-Judge</a> · <a href="https://arxiv.org/abs/2411.16594">Li et al., 2024 — From Generation to Judgment</a>.</p>
+    <p><b>Насколько судьи вообще согласны с людьми:</b> <a href="https://arxiv.org/abs/2406.12624">Thakur et al., 2024 — Judging the Judges</a> · <a href="https://arxiv.org/abs/2406.18403">Bavaresco et al., 2024 — JUDGE-BENCH, 20 наборов: разброс по задачам большой, проверять на своей</a> · <a href="https://arxiv.org/abs/2410.12784">JudgeBench</a> (Tan et al., 2024).</p>
+    <p><b>Неопределённость вердикта на одном примере:</b> <a href="https://arxiv.org/abs/2509.18658">Sheng et al., 2025 — конформные интервалы для оценок судьи по одному прогону</a>.</p>
+  </details>
+
+  <div class="thesis">Выравнивают в таком порядке: критерий → промпт → обработка ответа → состав судей → модель. Каждый шаг проверяют на test, а не на dev.</div>
+</section>
+<section id="s4" class="sec" data-short="Агенты">
+  <div class="sec-head">
+    <h2>Оценка агентов</h2>
+    <p class="lede">Таблица метрик с прошлой лекции остаётся. Сегодня — как их считать и чего в ней не хватало: агента оценивают не по тому, что он сказал, а по тому, что он сделал и каким путём.</p>
+  </div>
+  <h3 style="margin-top:0">Меняется одно</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Вопрос «стало лучше?» про…</th><th>Фиксируем</th><th>Меняем</th><th>Метрика</th></tr>
+    <tr><td>модель</td><td>код вокруг неё, набор задач, бюджет шагов</td><td>модель</td><td>доля решённых задач при том же бюджете</td></tr>
+    <tr><td>код вокруг модели</td><td>модель, набор задач</td><td>стоп-условие, обрезку вывода инструмента, формат ошибки</td><td>доля решённых, шаги, токены, зацикливания</td></tr>
+    <tr><td>систему</td><td>—</td><td>релиз целиком</td><td>north-star из дерева метрик</td></tr>
+  </table></div>
+  <p class="note">Одна и та же модель в разной обвязке даёт на агентных бенчмарках разницу в десятки пунктов. Поэтому скор из таблицы лидеров не переносится на ваш продукт, а сравнение «модель A в одном коде против модели B в другом» — не эксперимент.</p>
+
+  <h3>Четыре измерителя для одной траектории</h3>
+  <div class="meas">
+    <div class="card good"><h4>Конечное состояние среды</h4>Состояние после агента сравнивается с эталонным: заказ создан, поля верны, запрещённых действий не было. Не зависит от того, что агент <i>сказал</i>. Для агентов с побочными эффектами — основной измеритель. Так устроен τ-bench: сравнивается база данных после диалога.</div>
+    <div class="card good"><h4>Граф траектории</h4>Узлы — вызовы инструментов с аргументами, рёбра — порядок и зависимости по данным. У задачи есть эталонный граф. Сравнение детерминированное: те ли узлы, те ли рёбра, сколько лишних шагов, есть ли циклы, где путь разошёлся с эталоном.</div>
+    <div class="card acc"><h4>Судья по финальному тексту</h4>«Справился ли агент?» по последнему сообщению. Самый дешёвый и самый слабый: не видит, что происходило в среде.</div>
+    <div class="card bad"><h4>Судья по траектории</h4>Читает весь лог. Нужен для узких вопросов: «вызван ли инструмент с побочным эффектом без необходимости?», «использован ли результат чтения?». Дорогой, шумный, и те же смещения, что у текстового.</div>
+  </div>
+
+  <div class="stage tstage" id="traces">
+    <div class="stage-head"><span class="tag real">проверка состояния и метрики графа — настоящие</span><span class="tag script">трассы и вердикты судей — сценарий</span><h3>Трасса → граф</h3>
+      <p class="hint">Мок-магазин: заказы, четыре инструмента, три задачи с эталонным графом. Четыре трассы агента. Найдите шаг, где агент пошёл не туда, до того как открыть разбор. Среда исполняется в браузере: состояние считается по трассе заново.</p></div>
+    <div class="tpick" id="tpick" role="tablist" aria-label="Трассы"></div>
+    <div class="tbody">
+      <div>
+        <div class="task" id="ttask"></div>
+        <div class="kicker" style="margin-bottom:.3rem">трасса</div>
+        <div class="steps" id="tsteps"></div>
+      </div>
+      <div>
+        <div class="kicker" style="margin-bottom:.3rem">граф вызовов против эталонного</div>
+        <div class="gwrap" id="tgraph"></div>
+        <div class="legend"><span><i style="background:var(--surface);border-color:var(--ink-3)"></i>эталон</span><span><i style="background:var(--accent-soft);border-color:var(--accent)"></i>совпало</span><span><i style="background:var(--warm-soft);border-color:var(--warm)"></i>лишний узел</span><span><i style="border:1px dashed var(--bad)"></i>пропущенный узел</span></div>
+        <div class="mrow" id="tmetrics"></div>
+        <div class="judges" id="tjudges"></div>
+        <div class="row" style="margin-top:.8rem"><button class="primary" id="treveal">Показать разбор</button><span class="score" id="tscore"></span></div>
+        <div class="divg-box card bad" id="tdivg"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">Что считается по графу</h3>
+      <ul>
+        <li><b>Node F1</b> — те ли инструменты с теми ли аргументами вызваны (множества узлов эталона и трассы).</li>
+        <li><b>Edge F1</b> — в тех ли зависимостях (пары «узел → следующий узел»).</li>
+        <li><b>Эффективность</b> = |эталон| / |трасса|. Меньше единицы — лишние шаги; больше — шаг пропущен.</li>
+        <li><b>Циклы</b> — повтор узла с теми же аргументами без изменения состояния: зацикливание, которого не видно по тексту.</li>
+        <li><b>Точка расхождения</b> — первый шаг, где трасса ушла от эталона. Самая дешёвая диагностика; в мультиагентных системах — какой агент и когда (Who&amp;When, 2025).</li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="margin-top:0">Что по графу не посчитать</h3>
+      <ul>
+        <li>Эталонный граф есть не у всякой задачи. Исследование, написание текста — там остаётся судья.</li>
+        <li>Несколько правильных путей: эталон становится DAG с необязательными узлами и параллельными ветвями (так в WorfBench).</li>
+        <li>Эталон — это разметка. Её делают и версионируют, как набор вопросов.</li>
+        <li>Между графом и судьёй есть промежуточный вариант: требования задачи как DAG, каждое проверяется по артефактам (Agent-as-a-Judge, 2024).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>pass@k против pass^k</h3>
+  <div class="stage" id="passk">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><h3>Иногда получается — не значит работает</h3>
+      <p class="hint">p — вероятность решить задачу за одну попытку. pass@k — хотя бы одна из k попыток успешна: годится, когда лучшую можно выбрать (есть тесты). pass^k — все k успешны: пользователь получает одну попытку, и она должна сработать.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="pp">Вероятность успеха за попытку p <span class="v" id="ppv"></span></label><input type="range" id="pp" min="0.3" max="0.99" step="0.01" value="0.8"></div>
+    </div>
+    <div class="chartwrap" id="pchart"></div>
+    <div class="stats" id="pstats"></div>
+    <div class="formula"><span class="lhs">pass@k</span> = 1 − (1 − p)<sup>k</sup> &nbsp;·&nbsp; <span class="lhs">pass^k</span> = p<sup>k</sup></div>
+    <p class="note">Порядок величины из τ-bench (Yao et al., 2024): у лучших моделей pass^1 около 60 % в домене retail, pass^8 — около 25 %. Следствие для бюджета: надёжность измеряют несколькими прогонами одной задачи.</p>
+  </div>
+
+  <h3>Бенчмарки агентов: откуда брать идеи, а не скоры</h3>
+  <div class="tablewrap"><table class="ptable">
+    <tr><th>Бенчмарк</th><th>Что меряет</th><th>Измеритель</th><th>Что взять в проект</th></tr>
+    <tr><td>SWE-bench Verified</td><td>исправление реальных issue в репозиториях</td><td>скрытые тесты</td><td>тесты как детерминированная проверка результата</td></tr>
+    <tr><td>τ-bench, τ²-bench</td><td>диалог с пользователем и действия в базе (retail, airline, telecom)</td><td>состояние базы после диалога; pass^k</td><td>эталонное состояние среды; симулятор пользователя; pass^k</td></tr>
+    <tr><td>GAIA</td><td>вопросы, требующие инструментов и нескольких шагов</td><td>точное совпадение ответа</td><td>короткие проверяемые ответы вместо эссе</td></tr>
+    <tr><td>TaskBench, WorfBench</td><td>декомпозиция задачи в граф инструментов</td><td>node F1, edge F1, сопоставление графов</td><td>эталонные графы и метрики из стенда выше</td></tr>
+  </table></div>
+  <p class="note">Проекту курса бенчмарк не нужен — нужен свой набор задач со своей средой и своими эталонами. Бенчмарки — источник идей, как устроить проверку.</p>
+  <div class="qz"><div class="q">Вопрос в зал: агент пишет в ответе «возврат по заказу 1042 оформлен». Какие три проверки, не читая ответ, скажут, правда ли это?</div><div class="a">Состояние среды: в таблице возвратов появилась запись по 1042. Граф: в трассе есть узел <code>create_return(1042)</code>, и он стоит после <code>get_order(1042)</code>. Лог инструментов: вызов вернул успех, а не ошибку. Текст ответа ни одна из трёх не читает — и в этом их сила.</div><button class="small">Показать ответ</button></div>
+</section>
+
+<section id="s5" class="sec" data-short="После релиза">
+  <div class="sec-head">
+    <h2>Жизнь после релиза</h2>
+    <p class="lede">Одноразовый бенчмарк отвечает «стало лучше сейчас». Не отвечает — «не стало ли хуже через месяц»: провайдер обновил модель, вы поменяли промпт, изменились запросы пользователей.</p>
+  </div>
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">Регрессионный набор в CI</h3>
+      <p>Каждый PR, меняющий промпт, модель или ретривер, прогоняет набор. Порог на метрику; падение теста блокирует мерж. DeepEval как pytest, promptfoo, Inspect, датасеты в Langfuse. Цена: 100 примеров × 3 метрики-судьи — 300 вызовов на PR. Считать.</p>
+      <h3>Судья как сенсор</h3>
+      <p>Ежедневный pointwise-судья на сэмпле логов, скользящее среднее, алерт на падение. Дрейф входа — длина запросов, доля отказов, доля эскалаций — сигнал «посмотреть», а не метрика качества.</p>
+      <h3>Цикл обратной связи</h3>
+      <p>Провал из прода → размеченный пример в регрессионный набор. Набор растёт из инцидентов, не из фантазии.</p>
+    </div>
+    <div>
+      <h3 style="margin-top:0">A/B на живом трафике — и почему его обычно нет</h3>
+      <p>Самый прямой способ проверить «стало лучше». На практике его почти всегда нет, и дело не в инфраструктуре, а в арифметике.</p>
+      <ul>
+        <li><b>Объём.</b> Чтобы отличить эффект от шума, нужен размер группы из формулы ниже. При малом трафике — недели.</li>
+        <li><b>Нестационарность.</b> За эти недели провайдер обновил модель, вы поменяли промпт, сменился сезон. Эффект смешан с дрейфом.</li>
+        <li><b>Нерегулярность.</b> Всплески, будни и выходные дают дисперсию выше формульной — нужна стратификация по времени.</li>
+        <li><b>Подглядывание.</b> Остановка «когда стало значимо» завышает ложные срабатывания. Sequential testing лечит процедуру, но не объём.</li>
+      </ul>
+      <p>При малом трафике: офлайн-регрессия + размеченный человеком сэмпл + канарейка с мониторингом ограничивающих метрик. Где формат позволяет — pairwise-предпочтение внутри продукта (два ответа рядом): нужно меньше трафика, чем A/B по бинарной метрике.</p>
+    </div>
+  </div>
+  <div class="stage" id="ab">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><span class="tag script">список изменений — сценарий</span><h3>Сколько дней идёт A/B при вашем трафике</h3>
+      <p class="hint">Бинарная метрика (например, «ответ помечен полезным»). Две группы поровну, α = 0,05 двусторонняя, мощность 0,8.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="ab0">Базовое значение метрики <span class="v" id="ab0v"></span></label><input type="range" id="ab0" min="0.2" max="0.95" step="0.01" value="0.6"></div>
+      <div class="ctl grow"><label for="abd">Ожидаемый эффект, п.п. <span class="v" id="abdv"></span></label><input type="range" id="abd" min="0.5" max="15" step="0.5" value="3"></div>
+      <div class="ctl grow"><label for="abt">Запросов в день <span class="v" id="abtv"></span></label><input type="range" id="abt" min="20" max="5000" step="20" value="200"></div>
+    </div>
+    <div class="stats" id="abstats"></div>
+    <div class="formula"><span class="lhs">n на группу</span> = ( z<sub>0,975</sub>·√(2·p̄·(1−p̄)) + z<sub>0,8</sub>·√(p₀(1−p₀) + p₁(1−p₁)) )² / Δ²</div>
+    <div class="kicker" style="margin-top:.8rem">что успеет измениться за это время</div>
+    <div class="changes" id="abch"></div>
+  </div>
+</section>
+
+<section id="s6" class="sec" data-short="Бюджет и грехи">
+  <div class="sec-head">
+    <h2>Бюджет оценивания</h2>
+    <p class="lede">Оценивание стоит денег и времени — это строка в design doc рядом с бюджетом инференса. На ранней стадии проекта она может быть больше.</p>
+  </div>
+  <div class="stage budget" id="budget">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><h3>Сколько вызовов судьи вы покупаете в месяц</h3>
+      <p class="hint">Набор × метрики-судьи × повторы × прогоны. Для агентов — ещё × k прогонов на задачу ради pass^k. Детерминированные проверки в счёт не входят: они бесплатны.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="bn">Примеров в наборе <span class="v" id="bnv"></span></label><input type="range" id="bn" min="20" max="500" step="10" value="100"></div>
+      <div class="ctl grow"><label for="bm">Метрик-судей <span class="v" id="bmv"></span></label><input type="range" id="bm" min="0" max="5" step="1" value="2"></div>
+      <div class="ctl grow"><label for="br">Повторов судьи R <span class="v" id="brv"></span></label><input type="range" id="br" min="1" max="5" step="1" value="1"></div>
+      <div class="ctl grow"><label for="bw">Прогонов в неделю <span class="v" id="bwv"></span></label><input type="range" id="bw" min="1" max="30" step="1" value="5"></div>
+      <div class="ctl grow"><label for="bk">k прогонов на задачу (агент) <span class="v" id="bkv"></span></label><input type="range" id="bk" min="1" max="5" step="1" value="1"></div>
+      <div class="ctl"><label for="bc">Цена вызова судьи, ₽</label><input type="number" id="bc" min="0" step="0.1" value="0.6" style="width:7rem"></div>
+    </div>
+    <div class="stats" id="bstats"></div>
+    <p class="qnote" id="bnote" style="font-size:.9rem;color:var(--ink-2)"></p>
+  </div>
+
+  <div class="sec-head" style="margin-top:2rem">
+    <h2>Грехи оценивания</h2>
+    <p class="lede">Десять ситуаций из отчётов. В каждой есть ошибка — выберите, какая. Потом откройте, к какому тезису занятия она относится.</p>
+  </div>
+  <div class="row" style="margin-bottom:.8rem"><span class="score" id="sscore"></span><button class="small" id="sreset">Сбросить голоса</button></div>
+  <div class="sins" id="sins"></div>
+</section>
+
+<section id="s7" class="sec" data-short="Итог">
+  <div class="sec-head"><h2>Что унести с занятия</h2></div>
+  <ol class="theses">
+    <li>Метрика выводится из того, за что платит заказчик, а не из того, что умеет библиотека. Одна north-star, две-три ограничивающих.</li>
+    <li>Иерархия измерителей по доверию и цене: детерминированная проверка → человек → судья. Судья — последнее средство.</li>
+    <li>Судье не доверяют по умолчанию: смещения измеряют перестановкой и раздуванием, согласие с человеком считают взвешенной каппой, шум сравнивают с эффектом.</li>
+    <li>Судью выравнивают по своей разметке, разделённой на dev и test, от дешёвого к дорогому: критерий → промпт → обработка ответа → состав судей → модель. Если нужна только доля pass, ошибки судьи вычитают формулой.</li>
+    <li>В эксперименте меняется одно. «Стало лучше?» для модели, для кода вокруг неё и для системы — три разных эксперимента.</li>
+    <li>Агента с действиями оценивают по состоянию среды и по графу траектории. Судья по тексту этого не видит. pass^k, а не pass@k, если нужна надёжность.</li>
+    <li>Eval живёт после релиза: регрессионный набор в CI, судья как сенсор, провалы из прода пополняют набор. A/B — роскошь большого трафика.</li>
+    <li>Оценивание стоит денег. Бюджет оценивания — строка в design doc.</li>
+  </ol>
+  <div class="cols" style="margin-top:1.4rem">
+    <div>
+      <h3 style="margin-top:0">Что не писать руками</h3>
+      <ul>
+        <li>Каппа и bootstrap — <code>sklearn.metrics.cohen_kappa_score</code>, <code>scipy.stats.bootstrap</code>.</li>
+        <li>Поправка на ошибки судьи — <code>judgy</code>, <code>ppi_py</code>.</li>
+        <li>Сравнение двух версий судьи на одних примерах — <code>statsmodels.stats.contingency_tables.mcnemar</code>.</li>
+        <li>Метрики судьи — RAGAS, DeepEval и G-Eval.</li>
+        <li>Регрессионные прогоны — DeepEval, promptfoo, Inspect.</li>
+        <li>Трейсы и датасеты — Langfuse и аналоги.</li>
+        <li>Сопоставление графов — <code>networkx</code>.</li>
+      </ul>
+      <p style="font-size:.9rem;color:var(--ink-2)">Руками пишется то, что зависит от вашего продукта: rubric, детерминированные проверки состояния вашей среды, эталонные графы задач, дерево метрик.</p>
+    </div>
+    <div class="hw">
+      <h3>Домашнее задание</h3>
+      <p>Раздел «Методика оценивания» в design doc.</p>
+      <ol>
+        <li>Дерево метрик: north-star, две-три ограничивающих; для каждой — измеритель и цена одного прогона.</li>
+        <li>Если есть судья: rubric с якорями; план калибровки — сколько примеров разметите сами (и сколько среди них fail), как делите на dev и test, какую каппу или какие TPR/TNR считаете достаточными; какие два смещения проверите и как; с какой ступени лестницы выравнивания начнёте.</li>
+        <li>Если агент: что проверяете по состоянию, что по графу (эталонные графы для 10 задач), что судьёй; k для pass^k.</li>
+        <li>Регрессионный набор: откуда примеры, порог регрессии, когда прогоняется.</li>
+        <li>Бюджет оценивания на месяц разработки — по калькулятору выше.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>Числа о смещениях судей — из Zheng et al. (2023), Wang et al. (2023); о pass^k — из Yao et al. (2024). Мок-магазин, заказы и трассы агента — учебные, написаны для этой страницы; метрики графа и проверка состояния считаются по ним заново при каждом открытии. Формула размера выборки — стандартная для двух долей.</footer>
+<script>
+/* ---------- shared: theme, presentation mode, chips, reveals ---------- */
+(function(){
+  const root = document.documentElement, body = document.body;
+  let theme = 'system';
+  try { theme = localStorage.getItem('llm-course-theme') || 'system'; } catch(e){}
+  function applyTheme(){
+    if(theme === 'system') root.removeAttribute('data-theme'); else root.setAttribute('data-theme', theme);
+    document.getElementById('themeBtn').textContent = theme === 'system' ? 'Тема: система' : (theme === 'dark' ? 'Тема: тёмная' : 'Тема: светлая');
+  }
+  applyTheme();
+  document.getElementById('themeBtn').addEventListener('click', () => {
+    theme = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system';
+    try { localStorage.setItem('llm-course-theme', theme); } catch(e){}
+    applyTheme();
+  });
+  const pBtn = document.getElementById('presentBtn');
+  function setPresent(on){ body.classList.toggle('present', on); pBtn.setAttribute('aria-pressed', on); pBtn.textContent = on ? 'Режим: презентация' : 'Режим: прокрутка'; }
+  pBtn.addEventListener('click', () => setPresent(!body.classList.contains('present')));
+  const tb = document.getElementById('teacherBtn');
+  tb.onclick = () => { const on = !body.classList.contains('teacher'); body.classList.toggle('teacher', on); tb.setAttribute('aria-pressed', on); tb.textContent = on ? 'Ответы: показаны' : 'Ответы: скрыты'; document.dispatchEvent(new Event('teacher')); };
+
+  const secs = Array.from(document.querySelectorAll('main > section'));
+  const chips = document.getElementById('chips');
+  secs.forEach(s => { const a = document.createElement('a'); a.className = 'chip'; a.href = '#' + s.id; a.textContent = s.dataset.short || s.id; chips.appendChild(a); });
+  const chipEls = Array.from(chips.children);
+  if('IntersectionObserver' in window){
+    const io = new IntersectionObserver(entries => { entries.forEach(en => { if(en.isIntersecting){ const i = secs.indexOf(en.target); chipEls.forEach((c,j) => c.classList.toggle('active', i === j)); } }); }, {rootMargin:'-40% 0px -55% 0px'});
+    secs.forEach(s => io.observe(s));
+  }
+  document.addEventListener('keydown', e => {
+    if(!body.classList.contains('present')) return;
+    if(['INPUT','SELECT','TEXTAREA'].includes(document.activeElement && document.activeElement.tagName)) return;
+    if(['ArrowRight','PageDown','ArrowLeft','PageUp'].includes(e.key)){
+      e.preventDefault(); const y = window.scrollY + 60; let cur = 0;
+      secs.forEach((s,i) => { if(s.offsetTop <= y + 5) cur = i; });
+      const next = (e.key === 'ArrowRight' || e.key === 'PageDown') ? Math.min(cur + 1, secs.length - 1) : Math.max(cur - 1, 0);
+      secs[next].scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  });
+  document.querySelectorAll('.qz').forEach(q => { const b = q.querySelector('button'); if(b) b.onclick = () => { q.classList.toggle('open'); b.textContent = q.classList.contains('open') ? 'Скрыть ответ' : 'Показать ответ'; }; });
+})();
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+function el(tag, cls, html){ const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; }
+const NB = ' ';
+function fmt(n){ return Math.round(n).toLocaleString('ru-RU'); }
+function dec(n, d){ return n.toLocaleString('ru-RU', {minimumFractionDigits:d, maximumFractionDigits:d}); }
+function pct(x, d){ return dec(x * 100, d == null ? 0 : d) + NB + '%'; }
+function big(n){
+  if(n >= 1e6) return (n/1e6).toLocaleString('ru-RU',{maximumFractionDigits:1}) + NB + 'млн';
+  if(n >= 1e4) return (n/1e3).toLocaleString('ru-RU',{maximumFractionDigits:0}) + NB + 'тыс.';
+  return fmt(n);
+}
+function statBox(a){ const s = el('div', 'stat'); s.innerHTML = '<span class="l">' + a[0] + '</span><span class="n">' + a[1] + '</span><span class="s">' + (a[2] || '') + '</span>'; return s; }
+function mulberry32(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function teacher(){ return document.body.classList.contains('teacher'); }
+
+/* ---------- 1. дерево метрик ---------- */
+(function(){
+  const SLOTS = [['ns','North-star'],['proxy','Прокси'],['lim','Ограничивающая'],['no','Не берём']];
+  const A = [
+    {id:1, t:'Агент с побочными эффектами', m:'возвраты и отмены заказов',
+     brief:'Помощник по заказам: оформляет возвраты и отмены по просьбе клиента. Заказчик платит за обращения, закрытые без оператора и без вреда.',
+     mets:[
+       ['Доля обращений, закрытых без оператора (в проде)', 'ns', 'За это платят. Считается только на живом трафике — поэтому нужны прокси ниже.'],
+       ['Доля задач с верным конечным состоянием среды на наборе из 50 задач', 'proxy', 'Главный офлайн-прокси: заказ действительно отменён или возвращён. Проверяется детерминированно, без судьи.'],
+       ['pass^3 на том же наборе', 'proxy', 'Надёжность: задача решается не иногда, а каждый раз. Для продукта с действиями важнее pass@k.'],
+       ['Доля запрещённых действий', 'lim', 'Должна быть нулём. Это не цель, а граница: улучшение других метрик её не оправдывает.'],
+       ['Медианное число шагов и стоимость задачи', 'lim', 'Ограничение бюджета. Агент, решающий задачу за 40 шагов, не годится, даже если решает.'],
+       ['Средний балл судьи за текст финального отчёта агента', 'no', 'Агент может написать «возврат оформлен», ничего не сделав. Красивый отчёт при неверном состоянии — главная ловушка архетипа.'],
+       ['Число вызовов инструментов в день', 'no', 'Это нагрузка, не качество. В дашборд инфраструктуры — да, в дерево метрик — нет.']
+     ]},
+    {id:2, t:'Судья как продукт', m:'оценка чужих ответов по rubric',
+     brief:'Сервис оценивает ответы чужого бота по rubric заказчика. Заказчик платит за то, что решения сервиса совпадают с решениями его собственных асессоров.',
+     mets:[
+       ['Взвешенная каппа с разметкой заказчика на отложенном наборе', 'ns', 'Продукт — согласие с людьми заказчика. Взвешенная, потому что шкала порядковая; отложенный набор, потому что на dev-наборе подбирали промпт.'],
+       ['Корреляция с разметкой заказчика на 30 новых примерах каждую неделю', 'proxy', 'Дешёвый еженедельный сигнал, что согласие не уплыло: заказчик размечает немного, но регулярно.'],
+       ['Доля вердиктов, не изменившихся при перестановке ответов', 'lim', 'Смещение позиции — ограничение: судья, который меняет мнение от порядка, не продаётся, какая бы ни была каппа.'],
+       ['Стоимость одного вердикта', 'lim', 'Ограничение бюджета: заказчик сравнивает с ценой асессора.'],
+       ['Доля ответов «не могу оценить»', 'lim', 'Отказ лучше выдумки, но слишком частый отказ — бесполезный продукт. Граница, а не цель.'],
+       ['Согласие с GPT-судьёй на тех же примерах', 'no', 'Судья судит судью. Если ваш судья той же семьи — это самопредпочтение, а не качество.'],
+       ['Каппа на dev-наборе, на котором подбирали промпт', 'no', 'Набор для подбора и для отчёта один и тот же — число будет завышено и ничего не предскажет.']
+     ]},
+    {id:3, t:'Генератор eval-сетов', m:'вопросы к базе знаний клиента',
+     brief:'Сервис генерирует наборы вопросов к базе знаний клиента. Заказчик платит за то, что набор ловит регрессии, которые заметил бы человек.',
+     mets:[
+       ['Доля инцидентов из прода клиента, которые набор обнаруживает', 'ns', 'Набор нужен, чтобы ловить поломки. Проверяется ретроспективно: прогнать набор на версиях системы до и после известного инцидента.'],
+       ['Доля сгенерированных примеров, прошедших ручную проверку', 'proxy', 'Дешёвый прокси качества примера: вопрос осмыслен, ответ находится в документе, цитата точная.'],
+       ['Покрытие таксономии: доля типов вопросов, представленных в наборе', 'proxy', 'Набор из одних простых фактов регрессии не ловит. Покрытие типов предсказывает чувствительность.'],
+       ['Доля дубликатов и почти-дубликатов', 'lim', 'Граница: дубликаты раздувают набор и завышают уверенность.'],
+       ['Цена одного примера', 'lim', 'Ограничение бюджета — генерация тоже вызовы модели.'],
+       ['Оценка судьёй «качество вопроса» по шкале 1–5', 'no', 'Генератор и судья одной семьи — генератор хвалит сам себя. Как слабый сигнал при другой семье — возможно; как метрика продукта — нет.'],
+       ['Число сгенерированных примеров', 'no', 'Объём — не качество. Тысяча вопросов, не ловящих ни одной регрессии, бесполезнее тридцати.']
+     ]}
+  ];
+  const state = {}; A.forEach(a => state[a.id] = {ch:{}, shown:false});
+  let cur = A[0];
+  function drawPick(){
+    const p = $('apick'); p.innerHTML = '';
+    A.forEach(a => { const b = el('button', '', '<span class="t">' + a.t + '</span><span class="m">' + a.m + '</span>'); b.setAttribute('role', 'tab'); b.setAttribute('aria-pressed', a === cur); b.onclick = () => { cur = a; draw(); }; p.appendChild(b); });
+  }
+  function draw(){
+    drawPick();
+    const st = state[cur.id], shown = st.shown || teacher();
+    $('metrics').classList.toggle('shown', shown);
+    $('abrief').innerHTML = '<b>' + cur.t + '.</b> ' + cur.brief;
+    const box = $('mets'); box.innerHTML = '';
+    let hit = 0, done = 0;
+    cur.mets.forEach((m, i) => {
+      const v = st.ch[i]; if(v) done++; const ok = v === m[1]; if(v && ok) hit++;
+      const c = el('div', 'met' + (shown && v ? (ok ? ' hit' : ' miss') : ''));
+      c.appendChild(el('div', 'mt', m[0]));
+      const o = el('div', 'mo');
+      SLOTS.forEach(s => { const b = el('button', shown && s[0] === m[1] ? 'ideal' : '', s[1]); b.setAttribute('aria-pressed', v === s[0]); b.onclick = () => { st.ch[i] = s[0]; draw(); }; o.appendChild(b); });
+      c.appendChild(o); c.appendChild(el('div', 'why', m[2])); box.appendChild(c);
+    });
+    $('mscore').textContent = shown ? 'совпало с разбором: ' + hit + ' из ' + cur.mets.length : (done ? 'размещено ' + done + ' из ' + cur.mets.length : '');
+    $('mreveal').textContent = st.shown ? 'Скрыть разбор' : 'Показать разбор';
+    const tr = $('mtree'); tr.innerHTML = '<div class="kicker" style="margin-bottom:.3rem">дерево метрик по разбору</div>' + SLOTS.filter(s => s[0] !== 'no').map(s => '<div class="lvl ' + s[0] + '"><span class="k">' + s[1] + '</span>' + cur.mets.filter(m => m[1] === s[0]).map(m => '<span class="m">' + m[0] + '</span>').join('') + '</div>').join('');
+  }
+  $('mreveal').onclick = () => { state[cur.id].shown = !state[cur.id].shown; draw(); };
+  $('mreset').onclick = () => { state[cur.id] = {ch:{}, shown:false}; draw(); };
+  document.addEventListener('teacher', draw);
+  draw();
+})();
+
+/* ---------- 2. каппа ---------- */
+(function(){
+  const N = 60, K = 5;
+  const r1 = mulberry32(11), r2 = mulberry32(23), r3 = mulberry32(37);
+  const human = Array.from({length:N}, () => 2 + Math.floor(r1() * 4));
+  const noiseU = Array.from({length:N}, () => r2()), noiseSign = Array.from({length:N}, () => r3() < .5 ? -1 : 1);
+  function kappa(h, j, weighted){
+    const O = Array.from({length:K}, () => Array(K).fill(0));
+    h.forEach((v, i) => O[v - 1][j[i] - 1]++);
+    const rs = O.map(r => r.reduce((a, b) => a + b, 0)), cs = Array.from({length:K}, (_, c) => O.reduce((a, r) => a + r[c], 0));
+    let num = 0, den = 0;
+    for(let a = 0; a < K; a++) for(let b = 0; b < K; b++){
+      const w = weighted ? ((a - b) * (a - b)) / ((K - 1) * (K - 1)) : (a === b ? 0 : 1);
+      num += w * O[a][b]; den += w * rs[a] * cs[b] / N;
+    }
+    return {k: den ? 1 - num / den : 1, O};
+  }
+  function draw(){
+    const sh = +$('ksh').value, p = +$('kns').value / 100;
+    $('kshv').textContent = sh ? '−' + sh : '0'; $('knsv').textContent = Math.round(p * 100) + '%';
+    const judge = human.map((v, i) => Math.max(1, Math.min(K, v - sh + (noiseU[i] < p ? noiseSign[i] : 0))));
+    const acc = human.reduce((a, v, i) => a + (v === judge[i] ? 1 : 0), 0) / N;
+    const ku = kappa(human, judge, false), kw = kappa(human, judge, true);
+    const st = $('kstats'); st.innerHTML = '';
+    [['accuracy', pct(acc), 'точное совпадение'], ['каппа обычная', dec(ku.k, 2), 'все несовпадения равны'], ['каппа взвешенная', dec(kw.k, 2), 'квадратичные веса']].forEach(a => st.appendChild(statBox(a)));
+    const g = $('kgrid'); g.innerHTML = '<div class="h"></div>' + [1,2,3,4,5].map(c => '<div class="h">' + c + '</div>').join('');
+    const mx = Math.max(...ku.O.flat());
+    for(let a = 1; a < K; a++){ g.insertAdjacentHTML('beforeend', '<div class="h">' + (a + 1) + '</div>'); for(let b = 0; b < K; b++){ const v = ku.O[a][b]; g.insertAdjacentHTML('beforeend', '<div class="c' + (a === b ? ' d' : '') + '" style="background:color-mix(in srgb, var(--accent) ' + Math.round(v / mx * 55) + '%, var(--surface-2))">' + (v || '') + '</div>'); } }
+    let note;
+    if(sh === 0) note = 'Без сдвига обе каппы близки: судья ошибается случайно, и взвешивание почти ничего не меняет. Это тот случай, когда accuracy не врёт — но только потому, что классы сбалансированы.';
+    else if(sh === 1) note = 'Судья систематически занижает на балл. Accuracy и обычная каппа говорят «плохой судья»; взвешенная видит, что порядок ответов он сохраняет. Такого судью калибруют сдвигом на +1, а не выбрасывают.';
+    else note = 'Сдвиг на два балла: обычная каппа уходит в ноль или ниже — «хуже случайного», хотя ранжирует судья по-прежнему верно. Взвешенная каппа отличает систематическую ошибку от случайной; обычная — нет.';
+    $('knote').textContent = note;
+  }
+  $('ksh').oninput = $('kns').oninput = draw; draw();
+})();
+
+/* ---------- 3. шум против эффекта ---------- */
+(function(){
+  function draw(){
+    const d = +$('nd').value, n = +$('nn').value, sj = +$('nsj').value, si = +$('nsi').value, R = +$('nr').value;
+    $('ndv').textContent = dec(d, 2); $('nnv').textContent = n; $('nsjv').textContent = dec(sj, 1); $('nsiv').textContent = dec(si, 1); $('nrv').textContent = R;
+    const varPer = si * si + sj * sj / R, se = Math.sqrt(2 * varPer / n), lo = d - 1.96 * se, hi = d + 1.96 * se;
+    const mde = 1.96 * se, nNeed = d > 0 ? Math.ceil(2 * varPer * Math.pow(1.96 / d, 2)) : null;
+    const sig = lo > 0;
+    const W = 760, H = 120, L = 40, Rr = 40, xmin = -1, xmax = 2;
+    const X = v => L + (v - xmin) / (xmax - xmin) * (W - L - Rr);
+    let g = '';
+    for(let v = -1; v <= 2; v += .5){ g += '<line class="gr" x1="' + X(v) + '" x2="' + X(v) + '" y1="20" y2="80"/><text class="tx" x="' + X(v) + '" y="98" text-anchor="middle">' + dec(v, 1) + '</text>'; }
+    g += '<line class="zero" x1="' + X(0) + '" x2="' + X(0) + '" y1="12" y2="88"/><text class="tx" x="' + (X(0) + 4) + '" y="14">нет разницы</text>';
+    const cl = Math.max(X(xmin), X(lo)), ch = Math.min(X(xmax), X(hi));
+    g += '<rect x="' + cl + '" y="40" width="' + Math.max(0, ch - cl) + '" height="20" rx="4" fill="' + (sig ? 'var(--ok-soft)' : 'var(--warm-soft)') + '" stroke="' + (sig ? 'var(--ok)' : 'var(--warm)') + '"/>';
+    g += '<circle cx="' + X(Math.min(xmax, d)) + '" cy="50" r="6" fill="' + (sig ? 'var(--ok)' : 'var(--warm)') + '" stroke="var(--surface)" stroke-width="2"/>';
+    g += '<text class="lb" x="' + X(Math.min(xmax, d)) + '" y="34" text-anchor="middle">Δ = ' + dec(d, 2) + '</text>';
+    g += '<text class="tx" x="' + (W - Rr) + '" y="14" text-anchor="end">разница средних, баллов</text>';
+    $('nchart').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Доверительный интервал разницы средних">' + g + '</svg>';
+    const st = $('nstats'); st.innerHTML = '';
+    [['стандартная ошибка Δ', dec(se, 2), 'баллов'], ['интервал 95 %', dec(lo, 2) + ' … ' + dec(hi, 2), sig ? 'ноль не внутри' : 'накрывает ноль'], ['различимый эффект', '≥ ' + dec(mde, 2), 'при этих n, σ и R'], ['нужно примеров', nNeed == null ? '—' : fmt(nNeed), 'чтобы увидеть Δ = ' + dec(d, 2)]].forEach(a => st.appendChild(statBox(a)));
+    let note = sig ? 'На этих настройках разница видна: интервал не накрывает ноль. ' : 'На этих настройках «B лучше A на ' + dec(d, 2) + '» — не результат: интервал накрывает ноль. ';
+    note += 'Повторы судьи делят на √R только σ судьи; разброс примеров они не уменьшают — его уменьшает только число примеров. ';
+    if(R > 1 && sj < si) note += 'Сейчас σ примеров больше σ судьи: повторы почти бесполезны, нужен набор побольше.';
+    else if(R === 1 && sj > si) note += 'Сейчас шум судьи больше разброса примеров: три-пять повторов сузят интервал заметно дешевле, чем новые примеры с разметкой.';
+    $('nnote').textContent = note;
+  }
+  ['nd','nn','nsj','nsi','nr'].forEach(id => $(id).oninput = draw); draw();
+})();
+
+/* ---------- 3a. поправка на ошибки судьи ---------- */
+(function(){
+  const N = 1000, B = 2000;
+  function binom(rnd, n, p){ let k = 0; for(let i = 0; i < n; i++) if(rnd() < p) k++; return k; }
+  function gauss(rnd){ return Math.sqrt(-2 * Math.log(1 - rnd())) * Math.cos(2 * Math.PI * rnd()); }
+  const clip = v => Math.min(1, Math.max(0, v));
+  function draw(){
+    const tpr = +$('rgt').value / 100, tnr = +$('rgn').value / 100, p = +$('rgp').value / 100, n = +$('rgl').value;
+    $('rgtv').textContent = pct(tpr); $('rgnv').textContent = pct(tnr); $('rgpv').textContent = pct(p); $('rglv').textContent = n;
+    const den = tpr + tnr - 1, ok = den > .05;
+    const theta = ok ? clip((p + tnr - 1) / den) : p;
+    const nPos = Math.max(1, Math.round(n * theta)), nNeg = Math.max(1, n - nPos);
+    const rnd = mulberry32(7), sp = Math.sqrt(p * (1 - p) / N), cor = [];
+    let bad = 0;
+    for(let b = 0; b < B; b++){
+      const pS = clip(p + sp * gauss(rnd)), tS = binom(rnd, nPos, tpr) / nPos, nS = binom(rnd, nNeg, tnr) / nNeg, d = tS + nS - 1;
+      if(d <= .02){ bad++; continue; }
+      cor.push(clip((pS + nS - 1) / d));
+    }
+    cor.sort((a, b) => a - b);
+    const q = f => cor[Math.min(cor.length - 1, Math.floor(f * cor.length))];
+    const defined = ok && bad / B < .05;
+    const rlo = clip(p - 1.96 * sp), rhi = clip(p + 1.96 * sp), clo = defined ? q(.025) : 0, chi = defined ? q(.975) : 1;
+
+    const W = 760, H = 130, L = 150, Rr = 20, X = v => L + v * (W - L - Rr);
+    let g = '';
+    for(let v = 0; v <= 1.001; v += .2){ g += '<line class="gr" x1="' + X(v) + '" x2="' + X(v) + '" y1="10" y2="100"/><text class="tx" x="' + X(v) + '" y="118" text-anchor="middle">' + pct(v) + '</text>'; }
+    [[22, 'по судье, как есть', rlo, rhi, p, 'warm'], [68, 'с поправкой', clo, chi, theta, defined ? 'ok' : 'bad']].forEach(r => {
+      g += '<text class="lb" x="' + (L - 10) + '" y="' + (r[0] + 15) + '" text-anchor="end">' + r[1] + '</text>';
+      g += '<rect x="' + X(r[2]) + '" y="' + r[0] + '" width="' + Math.max(2, X(r[3]) - X(r[2])) + '" height="20" rx="4" fill="var(--' + r[5] + '-soft)" stroke="var(--' + r[5] + ')"/>';
+      g += '<circle cx="' + X(r[4]) + '" cy="' + (r[0] + 10) + '" r="6" fill="var(--' + r[5] + ')" stroke="var(--surface)" stroke-width="2"/>';
+    });
+    $('rgchart').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Доля pass по судье и с поправкой, интервалы 95 %">' + g + '</svg>';
+
+    const st = $('rgstats'); st.innerHTML = '';
+    [['доля pass по судье', pct(p), 'на ' + fmt(N) + ' логах'],
+     ['с поправкой', ok ? pct(theta) : '—', ok ? 'сдвиг ' + (theta - p >= 0 ? '+' : '−') + dec(Math.abs(theta - p) * 100, 0) + ' п.п.' : 'знаменатель ≈ 0'],
+     ['интервал 95 %', defined ? pct(clo) + ' … ' + pct(chi) : 'не определён', 'bootstrap по TPR, TNR и логам'],
+     ['fail в разметке', fmt(nNeg), 'по ним оценён TNR']].forEach(a => st.appendChild(statBox(a)));
+
+    let note;
+    if(!ok) note = 'TPR + TNR − 1 ≈ 0: судья почти не отличает pass от fail, и поправка делит на ноль. Здесь цифру не исправить — нужно выравнивать самого судью.';
+    else {
+      note = Math.abs(theta - p) < .015 ? 'Ошибки судьи почти уравновешивают друг друга, и сырая доля близка к исправленной. Но интервал всё равно шире, чем кажется по одному числу. ' :
+        (theta < p ? 'Судья мягче людей: часть провалов он засчитывает как pass, и сырая доля завышена. ' : 'Судья строже людей: часть хороших ответов он валит, и сырая доля занижена. ');
+      note += 'Интервал «по судье» учитывает только выборку логов. Интервал «с поправкой» учитывает и то, что TPR и TNR сами измерены на ' + n + ' размеченных примерах. ';
+      if(!defined) note += 'При такой разметке TPR и TNR в части повторов дают TPR + TNR − 1 ≈ 0, поэтому интервал не определён. Нужно больше разметки.';
+      else if(nNeg < 30) note += 'TNR оценён всего по ' + nNeg + ' размеченным fail, и это главный источник ширины. Доразмечайте именно провалы. Ищите их по сигналам, которые не зависят от судьи: жалобы, эскалации, дизлайки.';
+      else note += 'Чтобы сузить интервал дальше, нужна разметка, а не новые логи: N = ' + fmt(N) + ' уже почти не вносит неопределённости.';
+    }
+    $('rgnote').textContent = note;
+  }
+  ['rgt','rgn','rgp','rgl'].forEach(id => $(id).oninput = draw); draw();
+})();
+
+/* ---------- 4. трассы агента ---------- */
+(function(){
+  const ORDERS0 = {1042:{status:'доставлен', sum:'2 340 ₽'}, 1043:{status:'в пути', sum:'1 120 ₽'}, 1044:{status:'собирается', sum:'860 ₽'}};
+  function freshState(){ return {orders:JSON.parse(JSON.stringify(ORDERS0)), returns:[], finished:false, final:null}; }
+  const TOOLS = {
+    get_order(s, id){ const o = s.orders[id]; if(!o) throw new Error('заказ ' + id + ' не найден'); return 'статус: ' + o.status + ', сумма ' + o.sum; },
+    create_return(s, id){ const o = s.orders[id]; if(!o) throw new Error('заказ ' + id + ' не найден'); if(o.status !== 'доставлен') throw new Error('возврат возможен только для доставленных заказов'); if(!s.returns.includes(id)) s.returns.push(id); return 'возврат по заказу ' + id + ' создан'; },
+    cancel_order(s, id){ const o = s.orders[id]; if(!o) throw new Error('заказ ' + id + ' не найден'); if(o.status !== 'собирается') throw new Error('заказ уже отправлен, отмена невозможна'); o.status = 'отменён'; return 'заказ ' + id + ' отменён'; },
+    finish(s, text){ s.finished = true; s.final = text; return 'финальный ответ'; }
+  };
+  const key = st => st.tool === 'finish' ? 'finish' : st.tool + '(' + st.arg + ')';
+  const TASKS = {
+    T1:{text:'Оформи возврат по заказу 1042.', golden:['get_order(1042)', 'create_return(1042)', 'finish'], expect:s => s.returns.length === 1 && s.returns[0] === 1042 && s.orders[1042].status === 'доставлен' && s.orders[1044].status === 'собирается', forbidden:st => st.tool === 'cancel_order' || (st.tool === 'create_return' && st.arg !== 1042)},
+    T2:{text:'Отмени заказ 1044, если он ещё не отправлен.', golden:['get_order(1044)', 'cancel_order(1044)', 'finish'], expect:s => s.orders[1044].status === 'отменён' && s.returns.length === 0 && s.orders[1042].status === 'доставлен' && s.orders[1043].status === 'в пути', forbidden:st => st.tool === 'create_return' || (st.tool === 'cancel_order' && st.arg !== 1044)},
+    T3:{text:'Если заказ 1043 уже доставлен — оформи возврат, иначе сообщи клиенту статус.', golden:['get_order(1043)', 'finish'], expect:s => s.returns.length === 0 && s.orders[1043].status === 'в пути' && s.orders[1044].status === 'собирается', forbidden:st => st.tool === 'create_return' || st.tool === 'cancel_order'}
+  };
+  const TR = [
+    {id:'A', task:'T1', name:'Уверенный отчёт', steps:[{tool:'get_order', arg:1042}, {tool:'finish', arg:'Возврат по заказу 1042 оформлен, деньги вернутся в течение 5 дней.'}],
+     text:{v:'ok', t:'«Ответ полный, вежливый, называет срок возврата» — 5 из 5.'}, traj:{v:'bad', t:'«Инструмент create_return не вызывался; утверждение в ответе не подтверждено действием».'},
+     divg:'Шаг 2: эталон ждёт <code>create_return(1042)</code>, агент сразу вызвал <code>finish</code>. Текст верный по форме и ложный по существу: возврата в системе нет. Судья по тексту этого не видит в принципе — у него нет среды. Проверка состояния и граф ловят ошибку бесплатно. Правило в коде «финальный ответ про действие — только после вызова инструмента с этим действием» (как валидатор <code>lookup</code> до <code>finish</code> на семинаре по мультиагентам) закрыло бы этот случай без судьи.'},
+    {id:'B', task:'T2', name:'Долгая дорога', steps:[{tool:'get_order', arg:1044}, {tool:'get_order', arg:1043}, {tool:'get_order', arg:1042}, {tool:'get_order', arg:1044}, {tool:'cancel_order', arg:1044}, {tool:'finish', arg:'Заказ 1044 ещё собирался, отменил его.'}],
+     text:{v:'ok', t:'«Задача выполнена, ответ по делу» — 5 из 5.'}, traj:{v:'ok', t:'«Задача решена; три чтения чужих заказов не требовались» — 4 из 5, замечание.'},
+     divg:'Шаг 2: эталон ждёт <code>cancel_order(1044)</code>, агент пошёл читать соседние заказы и вернулся к 1044 повторно. Состояние среды верное — проверка состояния ставит зачёт, и по тексту всё хорошо. Что путь плохой, видит только граф: эффективность 0,5, три лишних узла, один повтор без изменения состояния. На одной задаче это мелочь; на тысяче — двойная стоимость и двойная задержка, которых не покажет ни одна метрика результата.'},
+    {id:'C', task:'T3', name:'По кругу', steps:Array.from({length:8}, () => ({tool:'get_order', arg:1043})), stopped:true,
+     text:{v:'na', t:'Финального ответа нет — оценивать нечего.'}, traj:{v:'bad', t:'«Восемь одинаковых вызовов, агент не продвигается» — зацикливание.'},
+     divg:'Шаг 2: эталон ждёт <code>finish</code> со статусом, агент повторяет <code>get_order(1043)</code>, пока его не останавливает бюджет шагов. Состояние среды не изменилось — и оно совпадает с эталонным, поэтому наивная проверка «состояние равно ожидаемому» поставила бы зачёт. Нужен второй флаг: задача завершена вызовом <code>finish</code>. Цикл в графе — семь повторов одного узла без изменения состояния — виден без всякого судьи и является готовым алертом для мониторинга.'},
+    {id:'D', task:'T3', name:'Правильные слова', steps:[{tool:'get_order', arg:1043}, {tool:'create_return', arg:1043}, {tool:'finish', arg:'Заказ 1043 ещё в пути, возврат пока невозможен. Сообщу, когда он будет доставлен.'}],
+     text:{v:'ok', t:'«Статус сообщён верно, предложен следующий шаг» — 5 из 5.'}, traj:{v:'bad', t:'«Вызван create_return при статусе «в пути» — побочное действие без необходимости».'},
+     divg:'Шаг 2: эталон ждёт <code>finish</code>, агент попытался оформить возврат недоставленного заказа. Среда отказала — состояние не изменилось, текст ответа безупречен. Но запрещённое действие было <i>попыткой</i>, и в другой среде, без такой проверки, возврат бы создался. Поэтому проверка состояния считает попытки запрещённых действий, а не только их результат. Граф показывает лишний узел с побочным эффектом; судья по тексту снова ставит пять.'}
+  ];
+  function run(tr){
+    const s = freshState(), log = [], task = TASKS[tr.task];
+    let forb = 0;
+    const seen = new Map(); let cycles = 0;
+    tr.steps.forEach((st, i) => {
+      const k = key(st);
+      const before = JSON.stringify([s.orders, s.returns]);
+      let obs, err = false;
+      try { obs = TOOLS[st.tool](s, st.arg); } catch(e){ obs = 'ошибка: ' + e.message; err = true; }
+      const after = JSON.stringify([s.orders, s.returns]);
+      const forbidden = task.forbidden(st); if(forbidden) forb++;
+      const rep = seen.has(k) && seen.get(k) === before && before === after; if(rep) cycles++;
+      seen.set(k, after);
+      log.push({i:i + 1, k, obs, err, forbidden, rep, extra:!task.golden.includes(k)});
+    });
+    const stateOk = task.expect(s), done = s.finished;
+    const pass = stateOk && done && forb === 0;
+    let why = pass ? 'состояние совпало с эталонным, задача завершена, запрещённых действий не было' : !stateOk ? 'состояние среды не совпало с эталонным' : !done ? 'состояние совпало, но задача не завершена: finish не вызван' + (tr.stopped ? ', агент остановлен по бюджету шагов' : '') : 'состояние совпало, но была попытка запрещённого действия (' + forb + ')';
+    return {s, log, pass, why, stateOk, done, forb, cycles};
+  }
+  function graphMetrics(tr){
+    const g = TASKS[tr.task].golden, a = tr.steps.map(key);
+    const gs = new Set(g), as = new Set(a);
+    const nodeHit = [...as].filter(k => gs.has(k)).length;
+    const nP = as.size ? nodeHit / as.size : 0, nR = nodeHit / gs.size, nF1 = nP + nR ? 2 * nP * nR / (nP + nR) : 0;
+    const edges = seq => { const e = new Set(); for(let i = 0; i + 1 < seq.length; i++) e.add(seq[i] + '→' + seq[i + 1]); return e; };
+    const ge = edges(g), ae = edges(a);
+    const eHit = [...ae].filter(e => ge.has(e)).length;
+    const eP = ae.size ? eHit / ae.size : 0, eR = ge.size ? eHit / ge.size : 0, eF1 = eP + eR ? 2 * eP * eR / (eP + eR) : 0;
+    const eff = g.length / a.length;
+    let div = -1; for(let i = 0; i < Math.max(g.length, a.length); i++){ if(g[i] !== a[i]){ div = i; break; } }
+    const missing = [...gs].filter(k => !as.has(k));
+    return {nF1, eF1, nP, nR, eff, div, missing, extra:[...as].filter(k => !gs.has(k))};
+  }
+  function drawGraph(tr, m, res, shown){
+    const g = TASKS[tr.task].golden, a = tr.steps.map(key);
+    const NW = 150, GAP = 18, NH = 30, L = 16;
+    const W = L * 2 + Math.max(g.length, a.length) * (NW + GAP), H = 150;
+    const x = i => L + i * (NW + GAP);
+    let s = '<text class="gl" x="' + L + '" y="14">эталон</text><text class="gl" x="' + L + '" y="90">трасса</text>';
+    const node = (xx, y, k, cls) => '<rect class="node ' + cls + '" x="' + xx + '" y="' + y + '" width="' + NW + '" height="' + NH + '" rx="6"/><text class="gn" x="' + (xx + NW / 2) + '" y="' + (y + 19) + '" text-anchor="middle">' + k + '</text>';
+    const arrow = (x1, x2, y, cls) => '<line class="ed ' + cls + '" x1="' + x1 + '" y1="' + y + '" x2="' + x2 + '" y2="' + y + '" marker-end="url(#ah)"/>';
+    s += '<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-3)"/></marker></defs>';
+    g.forEach((k, i) => { if(i) s += arrow(x(i - 1) + NW, x(i) - 1, 20 + NH / 2, ''); s += node(x(i), 20, k, 'gold' + (m.missing.includes(k) ? ' miss' : '')); });
+    const firstIdx = {}; a.forEach((k, i) => { if(!(k in firstIdx)) firstIdx[k] = i; });
+    g.forEach((k, i) => { if(k in firstIdx){ s += '<line class="match" x1="' + (x(i) + NW / 2) + '" y1="' + (20 + NH) + '" x2="' + (x(firstIdx[k]) + NW / 2) + '" y2="96"/>'; } });
+    a.forEach((k, i) => {
+      const lg = res.log[i];
+      if(i) s += arrow(x(i - 1) + NW, x(i) - 1, 96 + NH / 2, lg.rep ? 'loop' : (lg.extra || res.log[i - 1].extra ? 'extra' : ''));
+      s += node(x(i), 96, k, (lg.extra ? 'extra' : 'ok') + (shown && m.div === i ? ' divg' : ''));
+      if(lg.err) s += '<text class="gn" x="' + (x(i) + NW / 2) + '" y="' + (96 + NH + 14) + '" text-anchor="middle" fill="var(--bad)">ошибка</text>';
+    });
+    if(m.div >= a.length && shown) s += '<rect class="node miss divg" x="' + x(a.length) + '" y="96" width="' + NW + '" height="' + NH + '" rx="6"/><text class="gn" x="' + (x(a.length) + NW / 2) + '" y="115" text-anchor="middle">' + g[m.div] + '</text>';
+    $('tgraph').innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="min-width:' + Math.min(W, 900) + 'px" role="img" aria-label="Граф вызовов трассы против эталонного">' + s + '</svg>';
+  }
+  const state = {}; TR.forEach(t => state[t.id] = {shown:false});
+  let cur = TR[0];
+  function drawPick(){ const p = $('tpick'); p.innerHTML = ''; TR.forEach(t => { const b = el('button', '', '<span class="n">трасса ' + t.id + ' · задача ' + t.task.slice(1) + '</span><span class="t">' + t.name + '</span>'); b.setAttribute('role', 'tab'); b.setAttribute('aria-pressed', t === cur); b.onclick = () => { cur = t; draw(); }; p.appendChild(b); }); }
+  function draw(){
+    drawPick();
+    const shown = state[cur.id].shown || teacher(), task = TASKS[cur.task];
+    $('traces').classList.toggle('shown', shown);
+    const res = run(cur), m = graphMetrics(cur);
+    $('ttask').innerHTML = '<b>Задача.</b> ' + task.text + '<div style="margin-top:.3rem;font-size:.84rem;color:var(--ink-2)">Эталонный граф: <code>' + task.golden.join('</code> → <code>') + '</code>. Заказы: 1042 — доставлен, 1043 — в пути, 1044 — собирается.</div>';
+    $('tsteps').innerHTML = res.log.map((l, i) => '<div class="step' + (shown && m.div === i ? ' div' : '') + (l.rep ? ' rep' : '') + (l.extra && !(shown && m.div === i) ? ' extra' : '') + '"><span class="i">' + l.i + '</span><div><div class="call">' + l.k + (l.k === 'finish' ? ' — «' + cur.steps[i].arg + '»' : '') + '</div><div class="obs' + (l.err ? ' err' : '') + '">' + l.obs + (l.forbidden ? ' · <b>запрещённое действие</b>' : '') + (l.rep ? ' · повтор без изменения состояния' : '') + '</div></div></div>').join('') + (cur.stopped ? '<div class="step"><span class="i">—</span><div class="obs">остановлен: бюджет 8 шагов исчерпан, finish не вызван</div></div>' : '');
+    drawGraph(cur, m, res, shown);
+    const mm = $('tmetrics'); mm.innerHTML = '';
+    [['node F1', dec(m.nF1, 2), m.missing.length ? 'пропущено: ' + m.missing.join(', ') : (m.extra.length ? 'лишних узлов: ' + m.extra.length : 'все узлы эталона'), m.nF1 === 1 ? 'ok' : (m.nF1 >= .7 ? 'warm' : 'bad')],
+     ['edge F1', dec(m.eF1, 2), 'пары «узел → узел»', m.eF1 === 1 ? 'ok' : (m.eF1 >= .6 ? 'warm' : 'bad')],
+     ['эффективность', dec(m.eff, 2), m.eff < 1 ? 'лишние шаги' : (m.eff > 1 ? 'путь короче эталона — шаг пропущен' : 'как эталон'), m.eff === 1 ? 'ok' : (m.eff >= .5 ? 'warm' : 'bad')],
+     ['циклы', String(res.cycles), 'повтор узла без изменения состояния', res.cycles ? 'bad' : 'ok']].forEach(a => { const d = el('div', 'm ' + a[3]); d.innerHTML = '<span class="l">' + a[0] + '</span><span class="n">' + a[1] + '</span><span class="s">' + a[2] + '</span>'; mm.appendChild(d); });
+    const V = {ok:'зачёт', bad:'провал', na:'не применимо'};
+    const graphBad = m.missing.length || m.extra.length || res.cycles || m.eff < 1;
+    $('tjudges').innerHTML = [
+      ['Проверка состояния', res.pass ? 'ok' : 'bad', res.why, 'настоящая'],
+      ['Граф против эталона', graphBad ? 'bad' : 'ok', graphBad ? 'расхождение с эталоном есть — см. метрики' : 'граф совпал с эталонным', 'настоящая'],
+      ['Судья по тексту', cur.text.v, cur.text.t, 'сценарий'],
+      ['Судья по траектории', cur.traj.v, cur.traj.t, 'сценарий']
+    ].map(j => '<div class="card"><div class="k">' + j[0] + ' · ' + j[3] + '</div><div class="v ' + j[1] + '">' + V[j[1]] + '</div><div class="t">' + j[2] + '</div></div>').join('');
+    $('tdivg').innerHTML = '<div class="k">разбор · точка расхождения</div>' + cur.divg;
+    $('treveal').textContent = state[cur.id].shown ? 'Скрыть разбор' : 'Показать разбор';
+    $('tscore').textContent = shown ? 'точка расхождения: шаг ' + (m.div + 1) : '';
+  }
+  $('treveal').onclick = () => { state[cur.id].shown = !state[cur.id].shown; draw(); };
+  document.addEventListener('teacher', draw);
+  draw();
+})();
+
+/* ---------- 5. pass@k / pass^k ---------- */
+(function(){
+  const KMAX = 10;
+  let tipEl;
+  function draw(){
+    const p = +$('pp').value; $('ppv').textContent = dec(p, 2);
+    const atk = k => 1 - Math.pow(1 - p, k), powk = k => Math.pow(p, k);
+    const W = 760, H = 300, L = 50, R = 170, T = 18, B = 40;
+    const X = k => L + (k - 1) / (KMAX - 1) * (W - L - R), Y = v => H - B - v * (H - T - B);
+    let g = '';
+    for(let i = 0; i <= 4; i++){ const v = i / 4; g += '<line class="' + (i ? 'gr' : 'ax') + '" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/><text class="tx" x="' + (L - 8) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + Math.round(v * 100) + '%</text>'; }
+    for(let k = 1; k <= KMAX; k++) g += '<text class="tx" x="' + X(k) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + k + '</text>';
+    g += '<text class="tx" x="' + (L + (W - L - R) / 2) + '" y="' + (H - 4) + '" text-anchor="middle">k попыток</text>';
+    const S = [{name:'pass@k · хотя бы одна', f:atk, c:'var(--s1)'}, {name:'pass^k · все k', f:powk, c:'var(--s2)'}];
+    S.forEach(s => { g += '<polyline points="' + Array.from({length:KMAX}, (_, i) => X(i + 1) + ',' + Y(s.f(i + 1))).join(' ') + '" fill="none" stroke="' + s.c + '" stroke-width="2" stroke-linejoin="round"/>'; for(let k = 1; k <= KMAX; k++) g += '<circle cx="' + X(k) + '" cy="' + Y(s.f(k)) + '" r="3.5" fill="' + s.c + '" stroke="var(--surface)" stroke-width="1.5"/>'; });
+    const ends = S.map(s => ({s, y:Y(s.f(KMAX)), v:s.f(KMAX)})).sort((a, b) => a.y - b.y); let prev = -1e9; ends.forEach(e => { e.ly = Math.max(e.y, prev + 30); prev = e.ly; });
+    ends.forEach(e => { g += '<text class="lb" x="' + (X(KMAX) + 12) + '" y="' + e.ly + '">' + e.s.name + '</text><text class="tx" x="' + (X(KMAX) + 12) + '" y="' + (e.ly + 13) + '">' + pct(e.v) + ' при k = ' + KMAX + '</text>'; });
+    g += '<line class="cross" id="pcross" x1="0" x2="0" y1="' + T + '" y2="' + (H - B) + '" visibility="hidden"/><rect id="phit" x="' + L + '" y="' + T + '" width="' + (W - L - R) + '" height="' + (H - T - B) + '" fill="transparent"/>';
+    const wrap = $('pchart'); wrap.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="pass@k и pass^k в зависимости от k">' + g + '</svg>';
+    tipEl = el('div', 'tip'); tipEl.hidden = true; wrap.appendChild(tipEl);
+    const svg = wrap.querySelector('svg'), hit = $('phit'), cross = $('pcross');
+    function move(ev){ const r = svg.getBoundingClientRect(); const px = (ev.clientX - r.left) / r.width * W; let k = Math.round((px - L) / (W - L - R) * (KMAX - 1)) + 1; k = Math.max(1, Math.min(KMAX, k)); cross.setAttribute('x1', X(k)); cross.setAttribute('x2', X(k)); cross.setAttribute('visibility', 'visible'); tipEl.innerHTML = '<div class="h">k = ' + k + '</div>' + S.map(s => '<div class="r"><span><i style="background:' + s.c + '"></i>' + s.name.split(' · ')[0] + '</span><b>' + pct(s.f(k), 1) + '</b></div>').join(''); tipEl.hidden = false; const left = X(k) / W * r.width, tw = tipEl.offsetWidth; tipEl.style.left = Math.max(0, Math.min(r.width - tw, left + (left + tw + 16 > r.width ? -tw - 12 : 12))) + 'px'; tipEl.style.top = '8px'; }
+    hit.addEventListener('pointermove', move); hit.addEventListener('pointerdown', move); hit.addEventListener('pointerleave', () => { tipEl.hidden = true; cross.setAttribute('visibility', 'hidden'); });
+    const st = $('pstats'); st.innerHTML = '';
+    [['pass@3', pct(atk(3)), 'хотя бы одна из трёх'], ['pass^3', pct(powk(3)), 'все три'], ['pass^8', pct(powk(8)), 'все восемь'], ['нужно p для pass^3 ≥ 90 %', dec(Math.pow(.9, 1 / 3), 3), 'за одну попытку']].forEach(a => st.appendChild(statBox(a)));
+  }
+  $('pp').oninput = draw; draw();
+})();
+
+/* ---------- 6. A/B при малом трафике ---------- */
+(function(){
+  const Z_A = 1.959964, Z_B = 0.841621;
+  function nPer(p0, d){ const p1 = Math.min(.999, p0 + d), pb = (p0 + p1) / 2; return Math.ceil(Math.pow(Z_A * Math.sqrt(2 * pb * (1 - pb)) + Z_B * Math.sqrt(p0 * (1 - p0) + p1 * (1 - p1)), 2) / (d * d)); }
+  const CH = [[7, 'Недельный цикл: будни и выходные приносят разные запросы — без стратификации по дням дисперсия выше формульной.'], [14, 'Кто-то в команде захочет поправить промпт. Нельзя: любое изменение в середине теста смешивается с эффектом.'], [30, 'Провайдер обновит модель или тарифы. Эффект версии провайдера неотличим от эффекта вашего изменения.'], [60, 'Сменятся сезон и акции — распределение запросов уже другое, чем в начале теста.'], [120, 'Тест длиннее учебного семестра: к его концу продукт изменился настолько, что сравнивались уже не те версии.']];
+  function draw(){
+    const p0 = +$('ab0').value, d = +$('abd').value / 100, t = +$('abt').value;
+    $('ab0v').textContent = pct(p0); $('abdv').textContent = '+' + dec(d * 100, 1); $('abtv').textContent = fmt(t);
+    const n = nPer(p0, d), days = Math.ceil(2 * n / t);
+    // какой эффект различим за 14 дней при этом трафике
+    const n14 = t * 14 / 2; let lo = .001, hi = .5; for(let i = 0; i < 40; i++){ const mid = (lo + hi) / 2; if(nPer(p0, mid) > n14) lo = mid; else hi = mid; }
+    const st = $('abstats'); st.innerHTML = '';
+    [['нужно на группу', big(n), 'пользовательских запросов'], ['всего', big(2 * n), 'две группы поровну'], ['дней при вашем трафике', fmt(days), t + ' запросов в день'], ['различимо за 2 недели', '+' + dec(hi * 100, 1) + ' п.п.', 'при этом трафике и базе']].forEach(a => st.appendChild(statBox(a)));
+    $('abch').innerHTML = CH.map(c => '<div class="ch' + (days >= c[0] ? ' on' : '') + '"><b>' + c[0] + '+ дней.</b> ' + c[1] + '</div>').join('');
+  }
+  ['ab0','abd','abt'].forEach(id => $(id).oninput = draw); draw();
+})();
+
+/* ---------- 7. бюджет ---------- */
+(function(){
+  function draw(){
+    const n = +$('bn').value, m = +$('bm').value, R = +$('br').value, w = +$('bw').value, k = +$('bk').value, c = Math.max(0, +$('bc').value || 0);
+    $('bnv').textContent = n; $('bmv').textContent = m; $('brv').textContent = R; $('bwv').textContent = w; $('bkv').textContent = k;
+    const perRun = n * m * R * k, month = perRun * w * 4.33;
+    const st = $('bstats'); st.innerHTML = '';
+    [['вызовов судьи за прогон', big(perRun), n + ' × ' + m + ' × ' + R + ' × ' + k], ['вызовов в месяц', big(month), w + ' прогонов в неделю'], ['рублей в месяц', big(month * c) + NB + '₽', 'по ' + dec(c, 2) + ' ₽ за вызов'], ['генераций системы в месяц', big(n * k * w * 4.33), 'без учёта судьи']].forEach(a => st.appendChild(statBox(a)));
+    $('bnote').textContent = m === 0 ? 'Метрик-судей нет: оценивание держится на детерминированных проверках и человеческой разметке. Вызовы модели уходят только на генерацию ответов системы.' : (month * c > 20000 ? 'Это уже заметная строка бюджета. Прежде чем её урезать, посмотрите на шаг «различимый эффект»: меньше примеров или повторов — шире интервал, и часть регрессий станет невидимой.' : 'Сравните с бюджетом инференса в проде из занятия 1: на ранней стадии оценивание дороже самого продукта, и это нормально — иначе непонятно, что именно вы выкатываете.');
+  }
+  ['bn','bm','br','bw','bk'].forEach(id => $(id).oninput = draw); $('bc').oninput = draw; draw();
+})();
+
+/* ---------- 8. грехи оценивания ---------- */
+(function(){
+  const S = [
+    ['Подобрали промпт по 40 вопросам, метрика выросла с 0,71 до 0,84. Отчитались этими же 40 вопросами.', ['Мало вопросов', 'Набор для подбора и для отчёта один и тот же', 'Нет судьи'], 1, 'На наборе, по которому подбирали, число всегда завышено: вы оптимизировали именно его. На отложенной части эффект будет меньше или исчезнет. Делить на dev и test нужно до первого эксперимента.', 'цепочка: набор → интервал → решение'],
+    ['На 200-м примере поняли, что критерий «полнота» сформулирован плохо, переписали якоря и доразметили остальные 300.', ['Надо было взять pass/fail вместо 1–5', 'Первые 200 и остальные 300 оценены по разным rubric', 'Якоря не нужны'], 1, 'Две партии несравнимы: это два разных измерительных прибора. Либо переразметить первые 200 по новому rubric, либо честно считать их отдельным экспериментом.', 'тезис 3 · rubric фиксируется до массового прогона'],
+    ['Система B лучше системы A на 0,3 балла судьи на 15 примерах, судья прогнан один раз. Релизим B.', ['15 примеров и один прогон: шум судьи больше разницы', 'Надо было pairwise', '0,3 — мало, надо 0,5'], 0, 'При σ судьи около 0,9 и 15 примерах стандартная ошибка разницы больше 0,4. Интервал накрывает ноль с запасом. Проверьте на стенде «шум против эффекта».', 'тезис 3 · шум против эффекта'],
+    ['Генератор — Qwen, судья — Qwen. Ответы Qwen в среднем на 0,4 выше, чем ответы GPT на тех же вопросах.', ['GPT хуже', 'Самопредпочтение: судья той же семьи, разметка не слепая', 'Разницу надо считать в п.п.'], 1, 'Судья завышает ответы своей семьи. Проверка: слепая разметка и второй судья другой семьи на тех же ответах. Без неё 0,4 ничего не значат.', 'тезис 3 · смещения измеряют'],
+    ['Агент пишет: «Встреча перенесена на 15:00». Судья по тексту ставит 5 из 5. Метрика проекта — средний балл судьи.', ['Оценили текст, а не состояние календаря', 'Судье нужен CoT', 'Нужен pairwise с предыдущей версией'], 0, 'Агент мог ничего не перенести. Проверка — событие в календаре с нужным временем; это детерминированно и бесплатно. Судья по тексту для агента с действиями — последняя линия, а не первая.', 'тезис 5 · состояние среды'],
+    ['Перешли на новую модель и заодно переписали системный промпт. Качество выросло на 6 п.п. — «новая модель лучше».', ['Изменили две вещи, эффект приписали одной', '6 п.п. — мало', 'Надо было сначала промпт'], 0, 'Непонятно, чему приписать эффект: модели, промпту или их сочетанию. Новая модель со старым промптом могла дать −2. Меняется одно.', 'тезис 4 · меняется одно'],
+    ['Агент бронирует переговорки. На 30 задачах решил 27. В проде жалобы: «через раз не работает».', ['Мало задач', 'Один прогон на задачу: мерили pass@1, а продукту нужен pass^k', 'Нужен судья по траектории'], 1, '27 из 30 за один прогон — это «иногда получается». Пользователь получает одну попытку и хочет, чтобы работало каждый раз: нужен pass^k, то есть несколько прогонов одной задачи.', 'тезис 5 · pass^k'],
+    ['Регрессионный набор из 80 вопросов собран перед релизом в марте. Сейчас октябрь, все 80 проходят.', ['80 — мало', 'Набор не пополнялся провалами из прода и проверяет мартовскую систему', 'Надо было 100'], 1, 'За полгода продукт и запросы изменились, а набор нет. Набор растёт из инцидентов: каждый провал из прода становится размеченным примером.', 'тезис 6 · цикл обратной связи'],
+    ['Faithfulness выросла с 0,82 до 0,91. Доля ответов «не знаю» выросла с 8 % до 23 %. В отчёт пошла первая строка.', ['Отчитались прокси, не посмотрев на north-star и ограничивающую', 'Faithfulness — плохая метрика', '23 % — нормально'], 0, 'Прокси улучшился за счёт того, что система стала чаще молчать. North-star — закрытые обращения — скорее всего упал. Прокси всегда проверяют вместе с ограничивающими метриками.', 'тезис 1 · дерево метрик'],
+    ['A/B при 150 пользователях в день остановили на третий день: p = 0,04, «значимо».', ['Подглядывание и объём: при таком трафике тест идёт недели, а остановка «когда стало значимо» завышает ложные срабатывания', 'p должно быть 0,01', 'Нужно было четыре группы'], 0, 'За три дня — 450 пользователей на обе группы; по формуле нужно в разы больше. Остановка в момент первого «значимо» даёт ложное срабатывание гораздо чаще заявленных 5 %. См. стенд про A/B.', 'тезис 6 · A/B — роскошь большого трафика']
+  ];
+  const votes = {};
+  function draw(){
+    const box = $('sins'); box.innerHTML = ''; let done = 0, hit = 0;
+    S.forEach((s, i) => {
+      const v = votes[i]; if(v != null){ done++; if(v === s[2]) hit++; }
+      const c = el('div', 'sin' + (v != null ? ' open' : ''));
+      c.appendChild(el('div', 'claim', (i + 1) + '. ' + s[0]));
+      const vt = el('div', 'vote');
+      s[1].forEach((o, j) => { const b = el('button', '', o); b.setAttribute('aria-pressed', v === j); if((v != null || teacher()) && j === s[2]) b.style.boxShadow = 'inset 0 0 0 2px var(--ok)'; b.onclick = () => { votes[i] = j; draw(); }; vt.appendChild(b); });
+      c.appendChild(vt);
+      c.appendChild(el('div', 'res', (v != null ? '<span class="you">' + (v === s[2] ? 'верно' : 'не то') + '</span>' : '') + '<p>' + s[3] + '</p><div class="src">' + s[4] + '</div>'));
+      box.appendChild(c);
+    });
+    $('sscore').textContent = done ? 'отвечено ' + done + ' из ' + S.length + ' · верно ' + hit : 'ответов пока нет';
+  }
+  $('sreset').onclick = () => { Object.keys(votes).forEach(k => delete votes[k]); draw(); };
+  document.addEventListener('teacher', draw);
+  draw();
+})();
+</script>
+</body>
+</html>

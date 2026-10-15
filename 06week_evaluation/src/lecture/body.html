@@ -1,0 +1,492 @@
+<div class="topbar"><div class="topbar-in">
+  <div class="brand"><b>LLM-системы и агенты</b> · занятие 7</div>
+  <nav class="chips" id="chips" aria-label="Разделы"></nav>
+  <div class="tools"><button id="teacherBtn" aria-pressed="false">Ответы: скрыты</button><button id="presentBtn" aria-pressed="false">Режим: прокрутка</button><button id="themeBtn">Тема: система</button></div>
+</div></div>
+
+<main>
+
+<section id="s0" class="sec hero" data-short="Начало">
+  <div class="eyebrow">LLM-системы и агенты · занятие 7</div>
+  <h1>Как понять, что это работает, и работает хорошо?</h1>
+  <p class="lede">Оценивание в курсе появлялось по кусочкам: набор вопросов на первом занятии, метрики ранжирования на третьем, промпт как параметр на пятом, таблица метрик мультиагентной системы на прошлой лекции. Сегодня кусочки собираются в один документ — раздел «Методика оценивания» вашего проекта. Калькуляторы на странице считают по настоящим формулам прямо в браузере; разборы кейсов, вердикты судей и трассы агента — заранее написанные сценарии. Что настоящее, а что сценарий, подписано в заголовке каждого стенда.</p>
+  <div class="thesis">Метрика выводится из того, за что платит заказчик. Измеритель выбирается по доверию и цене. Судья — последнее средство, а не первое.</div>
+
+  <div class="chain"><span class="on">гипотеза</span><em>→</em><span class="on">вариант системы</span><em>→</em><span>набор</span><em>→</em><span class="on">метрика</span><em>→</em><span class="on">интервал</span><em>→</em><span class="on">решение</span></div>
+  <p class="note">Без любого звена «стало лучше» означает «мне показалось». Как собирать набор — на парном семинаре; сегодня — про метрику, измеритель, интервал и решение.</p>
+
+  <div class="recap">
+    <div class="card acc"><div class="src">занятие 1</div><b>Сначала набор, потом усложнения</b>Без набора запросов нельзя отличить улучшение от регрессии. Метрика проекта — это его SLI.</div>
+    <div class="card acc"><div class="src">занятие 3</div><b>Судья нестабилен</b>Один и тот же ответ получал от судьи разные оценки. Сегодня — насколько и что с этим делать.</div>
+    <div class="card acc"><div class="src">занятие 5</div><b>Промпт — параметр</b>Его оптимизируют по набору и метрике. Сегодня — по какой метрике и кому верить.</div>
+    <div class="card acc"><div class="src">прошлая лекция</div><b>Таблица метрик агентов</b>Точность, накладные расходы координации, потеря контекста, задержка, стоимость. Была таблица — не было способа их мерить.</div>
+  </div>
+</section>
+
+<section id="s1" class="sec" data-short="Метрики">
+  <div class="sec-head">
+    <h2>От продукта к метрикам</h2>
+    <p class="lede">Корень дерева — за что платит заказчик. Не «качество ответов», а «доля обращений, закрытых без оператора». Ниже — прокси, которые можно посчитать офлайн до релиза. Рядом — ограничивающие метрики: то, что не должно ухудшиться.</p>
+  </div>
+  <div class="stage mstage" id="metrics">
+    <div class="stage-head"><span class="tag script">разбор — сценарий</span><h3>Дерево метрик для трёх архетипов проектов</h3>
+      <p class="hint">Для каждой метрики-кандидата выберите место в дереве. Потом откройте разбор: у каждой метрики есть объяснение, почему она там, где она есть.</p></div>
+    <div class="slots-legend"><span><b>North-star</b> — одна, за неё платят</span><span><b>Прокси</b> — считается офлайн на наборе, предсказывает north-star</span><span><b>Ограничивающая</b> — не должна ухудшиться</span><span><b>Не берём</b> — измеряет не то или не того</span></div>
+    <div class="apick" id="apick" role="tablist" aria-label="Архетипы проектов"></div>
+    <div class="abrief" id="abrief"></div>
+    <div class="mets" id="mets"></div>
+    <div class="row" style="margin-top:.8rem"><button class="primary" id="mreveal">Показать разбор</button><button id="mreset">Сбросить выбор</button><span class="score" id="mscore"></span></div>
+    <div class="tree" id="mtree"></div>
+  </div>
+  <div class="qz"><div class="q">Вопрос в зал: чат-бот поддержки, faithfulness выросла с 0,82 до 0,91. Заказчик доволен?</div><div class="a">Неизвестно. Faithfulness — прокси: доля утверждений ответа, подтверждённых контекстом. Она растёт, если бот стал чаще отвечать «не знаю» — утверждений меньше, все подтверждены. North-star заказчика — закрытые без оператора обращения — при этом могла упасть. Прокси проверяют против north-star хотя бы раз, прежде чем по нему оптимизировать.</div><button class="small">Показать ответ</button></div>
+</section>
+
+<section id="s2" class="sec" data-short="Измерители">
+  <div class="sec-head">
+    <h2>Три измерителя</h2>
+    <p class="lede">У каждой метрики есть способ её посчитать. Их три, и они упорядочены по доверию и цене.</p>
+  </div>
+  <div class="meas">
+    <div class="card good"><h4>Детерминированная проверка</h4>Есть эталон или проверяемое состояние: тесты прошли, заказ создан с нужными полями, JSON валиден, цитата дословно найдена в корпусе, граф вызовов совпал с эталонным.<div class="row2"><span class="pill ok">цена ≈ 0</span><span class="pill ok">доверие полное</span></div><div style="font-size:.84rem;color:var(--ink-2)">Ограничение: проверяет только то, что умеет проверять. Истинность свободного текста — не умеет.</div></div>
+    <div class="card acc"><h4>Человек</h4>Возможен всегда, но мало: 30 примеров в неделю — реалистичная норма для команды проекта.<div class="row2"><span class="pill warm">дорого, медленно</span><span class="pill acc">эталон с оговоркой</span></div><div style="font-size:.84rem;color:var(--ink-2)">Оговорка: люди не согласны между собой. Их согласие — потолок для любого судьи: если два асессора сходятся на κ = 0,6, требовать от судьи 0,9 бессмысленно.</div></div>
+    <div class="card bad"><h4>LLM-судья</h4>Открытый текст в масштабе: faithfulness, relevance, тон, соблюдение формата.<div class="row2"><span class="pill warm">вызов модели на пример</span><span class="pill bad">требует калибровки</span></div><div style="font-size:.84rem;color:var(--ink-2)">Судья — ещё одна модель в проекте, со своими смещениями и шумом. Ей доверяют после проверки, а не по умолчанию.</div></div>
+  </div>
+  <div class="thesis">Порядок выбора: сначала ищем детерминированную проверку. Судья — для того, что ею не покрывается.</div>
+</section>
+
+<section id="s3" class="sec" data-short="Судья">
+  <div class="sec-head">
+    <h2>Судья: как ему доверять</h2>
+    <p class="lede">На третьем занятии судья давал разные оценки одному ответу. Сегодня — что у него внутри, какие у него систематические ошибки и как измерить, насколько он согласен с людьми.</p>
+  </div>
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">Три схемы</h3>
+      <div class="tablewrap"><table>
+        <tr><th>Схема</th><th>Что делает судья</th><th>Когда</th></tr>
+        <tr><td>Pointwise</td><td>оценивает один ответ по шкале или критериям</td><td>нужен абсолютный балл: мониторинг в проде</td></tr>
+        <tr><td>Pairwise</td><td>сравнивает два ответа, выбирает лучший</td><td>A против B: устойчивее к шкале, но чувствителен к порядку</td></tr>
+        <tr><td>Reference-based</td><td>сравнивает ответ с эталонным</td><td>есть набор с эталонами: регрессия</td></tr>
+      </table></div>
+    </div>
+    <div>
+      <h3 style="margin-top:0">Rubric: четыре части</h3>
+      <ol>
+        <li><b>Критерии</b> — независимые оси. «Качество» и «полезность» — одна ось дважды.</li>
+        <li><b>Шкала</b> по каждому критерию: pass/fail, 1–5, доля.</li>
+        <li><b>Якоря</b> — что означает каждая отметка шкалы. «5» без описания — не критерий, а лотерея.</li>
+        <li><b>Граничные случаи</b> — частично верный ответ, противоречивый контекст, вопрос вне домена. Что не прописано, судья решит сам, и каждый раз по-разному.</li>
+      </ol>
+      <p style="font-size:.9rem;color:var(--ink-2)">Процесс: rubric до промпта → пилот на контрастных примерах → рассуждение до оценки → structured output → мало критериев на вызов → зафиксировать до массового прогона. Критерии дрейфуют по мере разметки (Shankar et al., 2024) — rubric версионируется, как промпт.</p>
+    </div>
+  </div>
+
+  <h3>Смещения — измеренные, не нарисованные</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Смещение</th><th>Что известно</th><th>Как проверить у себя</th><th>Как лечить</th></tr>
+    <tr><td>Позиция</td><td>в pairwise судья чаще выбирает первый ответ; GPT-4 на MT-Bench согласован при перестановке в ≈ 65 % пар, слабые судьи — реже</td><td>каждую пару — в обоих порядках; доля несовпадений</td><td>усреднять по двум порядкам; несовпадение = ничья</td></tr>
+    <tr><td>Длина</td><td>раздутый ответ с теми же фактами получает больше; GPT-4 устойчивее остальных, но не полностью</td><td>раздуть 10 ответов без новых фактов, сравнить</td><td>критерий краткости в rubric; length-controlled win rate</td></tr>
+    <tr><td>Самопредпочтение</td><td>судья завышает ответы своей семьи: около 10 п.п. win-rate у GPT-4</td><td>слепая разметка; второй судья другой семьи</td><td>судья другой семьи или специализированный (Prometheus 2)</td></tr>
+    <tr><td>Шум</td><td>при T &gt; 0 — разные оценки на одном входе; при T = 0 не ноль</td><td>R повторов на одном входе, σ<sub>judge</sub></td><td>T = 0 и измерить остаток; усреднять</td></tr>
+  </table></div>
+  <p class="note">Числа в таблице — из Zheng et al. (2023) и Wang et al. (2023), для чужих судей на чужих задачах. На семинаре вы получите свои — на двух судьях и на ответах, которые разметите руками.</p>
+
+  <h3>Калибровка на людях: каппа</h3>
+  <details class="fn" open><summary>Сноска: почему не accuracy и что такое каппа</summary>
+    <p>Если 90 % ответов хорошие, судья, который всегда говорит «хорошо», совпадёт с человеком в 90 % случаев, не различая ничего. Каппа Коэна вычитает согласие, ожидаемое при случайных метках:</p>
+    <div class="formula"><span class="lhs">κ</span> = (p<sub>набл</sub> − p<sub>случ</sub>) / (1 − p<sub>случ</sub>)</div>
+    <p>Шкала Landis и Koch: &lt; 0,2 — незначительное согласие, 0,2–0,4 — слабое, 0,4–0,6 — умеренное, 0,6–0,8 — существенное, выше — почти полное. Для порядковой шкалы (1–5) обычная каппа штрафует «5 против 4» так же, как «5 против 1». Взвешенная каппа с квадратичными весами штрафует пропорционально квадрату расстояния.</p>
+  </details>
+  <div class="stage" id="kappa">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><span class="tag script">разметка синтетическая</span><h3>Судья со сдвигом: что видит каппа</h3>
+      <p class="hint">60 ответов, человек ставит 2–5. Судья ставит ту же оценку минус сдвиг плюс случайная ошибка. Посмотрите, как accuracy, обычная и взвешенная каппа реагируют на систематический сдвиг.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="ksh">Систематический сдвиг судьи <span class="v" id="kshv"></span></label><input type="range" id="ksh" min="0" max="2" step="1" value="1"></div>
+      <div class="ctl grow"><label for="kns">Доля случайных ошибок на ±1 <span class="v" id="knsv"></span></label><input type="range" id="kns" min="0" max="60" step="5" value="15"></div>
+    </div>
+    <div class="kwrap">
+      <div>
+        <div class="stats" id="kstats"></div>
+        <p class="qnote" id="knote" style="font-size:.9rem;color:var(--ink-2)"></p>
+      </div>
+      <div><div class="kicker" style="margin-bottom:.3rem">человек (строки) × судья (столбцы)</div><div class="kgrid" id="kgrid"></div></div>
+    </div>
+  </div>
+
+  <h3>Шум против эффекта</h3>
+  <details class="fn"><summary>Сноска: доверительный интервал и bootstrap за две минуты</summary>
+    <p>Средняя оценка на 20 примерах — не «истинное» качество системы, а оценка с погрешностью: на других 20 примерах она была бы другой. Доверительный интервал — диапазон, в который истинное значение попадает в 95 % таких повторов. Для доли p на n примерах его ширина ≈ ±1,96·√(p(1−p)/n): n = 30 → ±16 п.п., n = 200 → ±6.</p>
+    <p>Когда формулы нет под рукой, интервал считают bootstrap: из своих n примеров 1000 раз выбирают n с возвращением, каждый раз считают метрику, берут 2,5-й и 97,5-й процентили. Если интервал разницы между A и B накрывает ноль — на этом наборе они неразличимы, сколько бы знаков после запятой ни было в таблице.</p>
+  </details>
+  <div class="stage" id="noise">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><h3>Виден ли эффект сквозь шум судьи</h3>
+      <p class="hint">Две системы, разница средних оценок Δ. Два источника шума: примеры разные (σ<sub>примеров</sub>) и судья нестабилен (σ<sub>судьи</sub>). Повторы судьи уменьшают только второй.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="nd">Разница между системами Δ, баллов <span class="v" id="ndv"></span></label><input type="range" id="nd" min="0" max="1.5" step="0.05" value="0.3"></div>
+      <div class="ctl grow"><label for="nn">Примеров в наборе n <span class="v" id="nnv"></span></label><input type="range" id="nn" min="10" max="300" step="10" value="20"></div>
+      <div class="ctl grow"><label for="nsj">σ судьи <span class="v" id="nsjv"></span></label><input type="range" id="nsj" min="0.1" max="1.5" step="0.1" value="0.9"></div>
+      <div class="ctl grow"><label for="nsi">σ примеров <span class="v" id="nsiv"></span></label><input type="range" id="nsi" min="0.2" max="1.5" step="0.1" value="0.8"></div>
+      <div class="ctl grow"><label for="nr">Повторов судьи R <span class="v" id="nrv"></span></label><input type="range" id="nr" min="1" max="10" step="1" value="1"></div>
+    </div>
+    <div class="chartwrap" id="nchart"></div>
+    <div class="stats" id="nstats"></div>
+    <div class="formula"><span class="lhs">SE(Δ)</span> = √( 2·(σ²<sub>примеров</sub> + σ²<sub>судьи</sub> / R) / n ) &nbsp;·&nbsp; <span class="lhs">интервал</span> = Δ ± 1,96·SE</div>
+    <p class="qnote" id="nnote" style="font-size:.9rem;color:var(--ink-2)"></p>
+  </div>
+  <div class="thesis">Судья — это ещё одна модель в вашем проекте, со своим val-сетом и своей регрессией.</div>
+</section>
+
+<section id="s3a" class="sec" data-short="Выравнивание">
+  <div class="sec-head">
+    <h2>Выравнивание судьи: методика</h2>
+    <p class="lede">Каппа на калибровочном наборе низкая — что дальше? Ниже цикл, который повторяют до плато, и лестница методов от бесплатных к дорогим. Подниматься по ней стоит снизу: почти всегда хватает первых двух ступеней, а до своей модели-судьи доходит меньшинство проектов.</p>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">Цикл выравнивания</h3>
+      <ol>
+        <li><b>Разметить раньше, чем писать промпт.</b> 100–200 ответов из реальных логов: вердикт pass/fail и одна фраза «почему». Размечает один владелец критерия, а не голосование. По ходу разметки критерии уточнятся, и это нормально: критерий рождается из разметки, а не до неё (<a href="https://arxiv.org/abs/2404.12272">Shankar et al., 2024</a>).</li>
+        <li><b>Разделить разметку до первого эксперимента.</b> На dev (≈ 60 %) правят судью, test (≈ 40 %) нужен только для отчёта. Это тот же train/test, что у модели: судья, подогнанный под dev, на dev всегда хорош.</li>
+        <li><b>Смотреть на матрицу, а не на одно число.</b> TPR — какую долю настоящих pass судья признал. TNR — какую долю настоящих fail поймал. При редких провалах важнее TNR: судья, который пропускает провалы, бесполезен как сенсор.</li>
+        <li><b>Прочитать каждое расхождение и отнести его к одному из трёх случаев.</b> Ошибся судья — правим rubric или добавляем пример в промпт. Ошибся человек — правим метку. Критерий неоднозначен — делим его на два бинарных или дописываем граничный случай.</li>
+        <li><b>Повторять 3–4 до цели или плато.</b> Цель задают заранее как ограничение: например, TNR ≥ 0,85 при TPR ≥ 0,9. Одна каппа не покажет, какая сторона страдает. Плато — это когда прирост меньше шума. При 40 fail на dev TNR известен с точностью ±12 п.п., и правка, которая исправила 2–3 примера, неотличима от случайности. Две версии судьи сравнивают на одних и тех же примерах: тест Макнемара по тем, где они разошлись. Стоп — цель достигнута или две итерации подряд без значимого прироста. Обычно это 3–5 итераций руками. Потом один раз прогнать test и заморозить версию: промпт, модель со снапшотом, rubric. Это «судья v1».</li>
+        <li><b>Дальше судья живёт как модель.</b> Сменился снапшот у провайдера, rubric или поток входов — перепрогоняем test. Раз в месяц добавляем в разметку 20–30 свежих логов.</li>
+      </ol>
+      <p class="note">Автоматизировать можно только шаг 4 и только наполовину. Оптимизатор промпта перебирает формулировки и few-shot под согласие на dev: <a href="https://arxiv.org/abs/2310.03714">DSPy</a>, <a href="https://arxiv.org/abs/2309.13308">AutoCalibrate</a>, <a href="https://eugeneyan.com/writing/aligneval/">AlignEval</a>. Но что считать провалом, решает человек, читая расхождения: критерий не существует до разметки (<a href="https://arxiv.org/abs/2404.12272">Shankar et al., 2024</a>). А на 100–200 метках оптимизатор легко подгоняется под dev. Поэтому автоматику запускают после того, как критерий зафиксирован, и отчитываются только по test.</p>
+    </div>
+    <div>
+      <h3 style="margin-top:0">Сколько размечать</h3>
+      <p>Точность судьи — тоже оценка с погрешностью. TNR считается только по провалам, поэтому ширину интервала задаёт число размеченных fail, а не общий объём разметки:</p>
+      <div class="formula"><span class="lhs">±</span> 1,96 · √( TNR·(1 − TNR) / n<sub>fail</sub> )</div>
+      <p>При TNR = 0,8: 30 провалов дают ±14 п.п., 100 провалов — ±8. Если провалов в логах 10 %, сотня провалов в случайной выборке — это тысяча просмотренных ответов. Поэтому провалы добирают отдельно: из жалоб, эскалаций и дизлайков, с проверкой руками. Для TNR так можно, потому что он считается только по fail. А долю pass в такой выборке отчитывать нельзя: она смещена.</p>
+      <p style="font-size:.9rem;color:var(--ink-2)">Потолок задаёт согласие двух людей. Прежде чем выравнивать судью, дайте 30 примеров второму человеку и посчитайте каппу между вами. Если люди сходятся на κ = 0,5, проблема в критерии, а не в судье. Даже лучшие судьи заметно не дотягивают до согласия людей между собой (<a href="https://arxiv.org/abs/2406.12624">Thakur et al., 2024</a>).</p>
+    </div>
+  </div>
+
+  <h3>Лестница: от бесплатного к дорогому</h3>
+  <div class="chain"><span class="on">0 · критерий и промпт</span><em>→</em><span>1 · обработка ответа</span><em>→</em><span>2 · поправка метрики</span><em>→</em><span>3 · состав судей</span><em>→</em><span>4 · своя модель</span></div>
+  <p class="refs" style="max-width:90ch">Цена растёт с каждой ступенью. Подниматься стоит, только когда текущая ступень упёрлась в плато. Шкалы: <b>за вызов</b> — во что обходится каждая оценка, <b>разово</b> — сколько стоит настроить метод.</p>
+  <div class="ladder">
+
+    <div class="rung" style="--i:0">
+      <div class="rh">
+        <div class="rn">0</div>
+        <h4>Критерий и промпт</h4>
+        <div class="chg">меняем текст rubric и промпта</div>
+        <div class="meter"><span class="ml">за вызов</span><span class="dots"><i class="on"></i><i></i><i></i><i></i></span><span>длиннее промпт</span></div>
+        <div class="meter"><span class="ml">разово</span><span class="dots"><i class="on"></i><i></i><i></i><i></i></span><span>часы разбора</span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>Чек-лист «да/нет» вместо 1–5</b><span>Проще размечать, согласовывать и калибровать.</span><span class="kn">+0,45 согласия судей</span><span class="refs"><a href="https://arxiv.org/abs/2403.18771">CheckEval</a> · <a href="https://arxiv.org/abs/2410.03608">TICK</a> · <a href="https://hamel.dev/blog/posts/llm-judge/">Husain</a></span></div>
+        <div class="tile"><b>Один критерий — один вызов</b><span>Если вызов один, у каждого критерия своё поле в structured output.</span><span class="refs"><a href="https://eugeneyan.com/writing/llm-evaluators/">Yan</a></span></div>
+        <div class="tile"><b>Разбор до вердикта</b><span>Голый балл хуже: объяснение стабильно повышает корреляцию с людьми.</span><span class="refs"><a href="https://arxiv.org/abs/2310.05657">Chiang &amp; Lee, 2023</a> · <a href="https://arxiv.org/abs/2303.16634">G-Eval</a></span></div>
+        <div class="tile"><b>Эталонный ответ в промпте</b><span>Судья согласен с экспертами почти только там, где сам знает ответ. Эталон это в основном лечит.</span><span class="kn">ошибки на математике 70 % → 15 %</span><span class="refs"><a href="https://arxiv.org/abs/2503.05061">Krumdick et al., 2025</a> · <a href="https://arxiv.org/abs/2306.05685">Zheng et al., 2023</a></span></div>
+        <div class="tile"><b>Few-shot из расхождений</b><span>3–5 примеров с dev, где судья ошибся, с верным вердиктом и объяснением владельца критерия.</span><span class="refs"><a href="https://arxiv.org/abs/2309.13701">ALLURE</a> · <a href="https://hamel.dev/blog/posts/llm-judge/">Husain</a></span></div>
+        <div class="tile"><b>Автоправка по разметке</b><span>Сильная модель переписывает rubric по расхождениям, или оптимизатор подбирает промпт под согласие на dev. Проверка — только на test.</span><span class="refs"><a href="https://arxiv.org/abs/2309.13308">AutoCalibrate</a> · <a href="https://arxiv.org/abs/2404.12272">EvalGen</a> · <a href="https://arxiv.org/abs/2310.03714">DSPy</a> · <a href="https://arxiv.org/abs/2501.17178">Salinas et al., 2025</a></span></div>
+      </div>
+      <div class="next"><b>Выше, если</b> расхождения больше не учат ничему новому: судья в целом понимает критерий, но систематически строже или мягче людей либо шумит.</div>
+    </div>
+
+    <div class="rung" style="--i:1">
+      <div class="rh">
+        <div class="rn">1</div>
+        <h4>Обработка ответа</h4>
+        <div class="chg">меняем код после вызова</div>
+        <div class="meter"><span class="ml">за вызов</span><span class="dots"><i></i><i></i><i></i><i></i></span><span>0, если есть logprobs</span></div>
+        <div class="meter"><span class="ml">разово</span><span class="dots"><i class="on"></i><i></i><i></i><i></i></span><span>разметка dev</span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>Балл по logprobs</b><span>Матожидание по токенам «1»…«5» вместо самого вероятного: шкала непрерывна, ничьих меньше. Без logprobs — 20 сэмплов, то есть 20 вызовов.</span><span class="refs"><a href="https://arxiv.org/abs/2303.16634">G-Eval</a></span></div>
+        <div class="tile"><b>Порог под нужный TNR</b><span>Порог pass/fail подбирают на dev, а не берут «≥ 3 из 5» по умолчанию.</span></div>
+        <div class="tile"><b>Калибровка шкалы</b><span>Регрессия «выход судьи → балл человека» на dev: линейная, изотоническая, порядковая. Так лечится сдвиг из стенда с каппой.</span><span class="kn">+142 % согласия на 29 задачах</span><span class="refs"><a href="https://arxiv.org/abs/2502.04997">van den Burg et al., 2025</a> · <a href="https://arxiv.org/abs/2501.00274">LLM-Rubric</a> · <a href="https://arxiv.org/abs/2404.04475">LC AlpacaEval</a> (длина, 0,94 → 0,98)</span></div>
+        <div class="tile"><b>Pairwise в обоих порядках</b><span>Несовпадение вердиктов считается ничьей.</span><span class="refs"><a href="https://arxiv.org/abs/2305.17926">Wang et al., 2023</a> · <a href="https://arxiv.org/abs/2306.05685">Zheng et al., 2023</a></span></div>
+      </div>
+      <div class="next"><b>Выше, если</b> нужна только доля pass по системе (тогда ступень 2), или судья точен, но дорог (тогда ступени 3–4).</div>
+    </div>
+
+    <div class="rung" style="--i:2">
+      <div class="rh">
+        <div class="rn">2</div>
+        <h4>Поправка метрики</h4>
+        <div class="chg">меняем формулу отчёта, а не судью</div>
+        <div class="meter"><span class="ml">за вызов</span><span class="dots"><i></i><i></i><i></i><i></i></span><span>0</span></div>
+        <div class="meter"><span class="ml">разово</span><span class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></span><span>разметка с запасом fail</span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>Вычесть ошибки судьи</b><span>Доля pass исправляется по известным TPR и TNR, а интервал честно расширяется. Стенд ниже.</span><span class="kn">−25…33 % ручных меток</span><span class="refs">Rogan &amp; Gladen, 1978 · <a href="https://arxiv.org/abs/2301.09633">PPI</a> · <a href="https://arxiv.org/abs/2311.09476">ARES</a> · <a href="https://arxiv.org/abs/2403.07008">Boyeau</a> · <a href="https://arxiv.org/abs/2406.04291">Fisch</a> · <a href="https://arxiv.org/abs/2408.15204">Gligorić</a> · <a href="https://arxiv.org/abs/2511.21140">Lee et al., 2025</a></span></div>
+        <div class="tile lim"><b>Предел</b><span>Если судья не точнее оцениваемой модели, никакая поправка не сокращает разметку больше чем вдвое.</span><span class="refs"><a href="https://arxiv.org/abs/2410.13341">Dorner et al., 2024</a></span></div>
+      </div>
+      <div class="next"><b>Не поможет, если</b> нужен вердикт по каждому ответу: алерт, фильтр, блокировка. Тогда ступени 3–4.</div>
+    </div>
+
+    <div class="rung" style="--i:3">
+      <div class="rh">
+        <div class="rn">3</div>
+        <h4>Состав судей</h4>
+        <div class="chg">меняем, сколько моделей и каких</div>
+        <div class="meter"><span class="ml">за вызов</span><span class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></span><span>2–3 дешёвых вызова</span></div>
+        <div class="meter"><span class="ml">разово</span><span class="dots"><i class="on"></i><i class="on"></i><i></i><i></i></span><span>подбор порогов</span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>Жюри из трёх семей</b><span>Три небольшие модели разных семей вместо одной большой; меньше самопредпочтения. В статье: Command R, Claude 3 Haiku, GPT-3.5.</span><span class="kn">точнее GPT-4, в 7+ раз дешевле</span><span class="refs"><a href="https://arxiv.org/abs/2404.18796">PoLL</a></span></div>
+        <div class="tile"><b>Каскад с эскалацией</b><span>Дешёвый судья → сильный при низкой уверенности → человек. Порог уверенности подбирается под заданное согласие с людьми.</span><span class="kn">75 % оценок — малые модели</span><span class="refs"><a href="https://arxiv.org/abs/2407.18370">Trust or Escalate</a></span></div>
+      </div>
+      <div class="next"><b>Выше, если</b> объёмы такие, что дороги даже малые API-модели, или данные нельзя отдавать наружу.</div>
+    </div>
+
+    <div class="rung" style="--i:4">
+      <div class="rh">
+        <div class="rn">4</div>
+        <h4>Своя модель</h4>
+        <div class="chg">меняем веса</div>
+        <div class="meter"><span class="ml">за вызов</span><span class="dots"><i class="on"></i><i></i><i></i><i></i></span><span>свой инференс</span></div>
+        <div class="meter"><span class="ml">разово</span><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span>метки, обучение, поддержка</span></div>
+      </div>
+      <div class="tiles">
+        <div class="tile"><b>Готовые открытые судьи</b><span>Общие: Prometheus 2, Glider, Selene Mini. Для faithfulness в RAG: MiniCheck, Lynx. Сначала проверить на своём test.</span><span class="kn">MiniCheck 770M ≈ GPT-4, в 400 раз дешевле</span><span class="refs"><a href="https://arxiv.org/abs/2405.01535">Prometheus 2</a> · <a href="https://arxiv.org/abs/2412.14140">Glider</a> · <a href="https://arxiv.org/abs/2501.17195">Selene Mini</a> · <a href="https://arxiv.org/abs/2404.10774">MiniCheck</a> · <a href="https://arxiv.org/abs/2407.08488">Lynx</a></span></div>
+        <div class="tile"><b>Дистилляция</b><span>Выровненный большой судья размечает тысячи логов; энкодер или модель на 1–8B с LoRA учится на них и на вашей разметке. Можно и на синтетических парах, без людей.</span><span class="kn">RewardBench 75,4 → 88,3 без людей</span><span class="refs"><a href="https://arxiv.org/abs/2406.08660">Bucher &amp; Martini</a> · <a href="https://arxiv.org/abs/2311.09476">ARES</a> · <a href="https://arxiv.org/abs/2408.02666">Self-Taught Evaluators</a></span></div>
+        <div class="tile lim"><b>Предел</b><span>Дообученный судья — узкий классификатор: хорош на своём формате задач, плохо переносится на чужой.</span><span class="refs"><a href="https://arxiv.org/abs/2403.02839">Huang et al., 2024</a></span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <h3>Что делать, если…</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Что видно на dev</th><th>Вероятная причина</th><th>Что делать</th></tr>
+    <tr><td>Ошибки в обе стороны, без системы; люди между собой тоже согласны слабо</td><td>критерий неоднозначен</td><td>разбить на бинарные, дописать граничные случаи. Модель судьи не трогать</td></tr>
+    <tr><td>Ошибки в одну сторону: судья мягче или строже людей</td><td>систематический сдвиг</td><td>порог или калибровка на dev (ступень 1). Промпт не переписывать</td></tr>
+    <tr><td>Ошибки на фактах предметной области</td><td>судья не знает правильного ответа</td><td>эталонный ответ в промпт или детерминированная проверка</td></tr>
+    <tr><td>Ошибки собраны на одном типе входа</td><td>rubric его не покрывает</td><td>граничный случай в rubric и 2–3 few-shot этого типа</td></tr>
+    <tr><td>Хорош на dev, плох на test</td><td>подогнали под dev</td><td>откатить к простой версии, расширить dev</td></tr>
+    <tr><td>Разные вердикты на одном входе</td><td>шум</td><td>T = 0, балл по logprobs, повторы (стенд «шум против эффекта»)</td></tr>
+    <tr><td>Согласие хорошее, но судья дорогой</td><td>—</td><td>жюри малых моделей, каскад, дистилляция (ступени 3–4)</td></tr>
+  </table></div>
+
+  <div class="stage" id="rg">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><span class="tag script">TPR, TNR и доля — ваши настройки</span><h3>Поправка на ошибки судьи</h3>
+      <p class="hint">Судья проверил 1000 логов, и pass получилась некоторая доля. Его TPR и TNR вы измерили на размеченном наборе. Поправка возвращает долю, которую поставили бы люди. Интервал считается bootstrap: TPR и TNR тоже известны с погрешностью.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="rgt">TPR судьи: признал pass из настоящих pass <span class="v" id="rgtv"></span></label><input type="range" id="rgt" min="50" max="100" step="1" value="95"></div>
+      <div class="ctl grow"><label for="rgn">TNR судьи: поймал fail из настоящих fail <span class="v" id="rgnv"></span></label><input type="range" id="rgn" min="50" max="100" step="1" value="60"></div>
+      <div class="ctl grow"><label for="rgp">Доля pass по судье на логах <span class="v" id="rgpv"></span></label><input type="range" id="rgp" min="5" max="99" step="1" value="80"></div>
+      <div class="ctl grow"><label for="rgl">Размечено руками <span class="v" id="rglv"></span></label><input type="range" id="rgl" min="20" max="400" step="10" value="100"></div>
+    </div>
+    <div class="chartwrap" id="rgchart"></div>
+    <div class="stats" id="rgstats"></div>
+    <div class="formula"><span class="lhs">θ̂</span> = (p<sub>судья</sub> + TNR − 1) / (TPR + TNR − 1)</div>
+    <p class="refs">Формула — <a href="https://doi.org/10.1093/oxfordjournals.aje.a112510">Rogan &amp; Gladen (1978)</a>, из эпидемиологии: доля больных по неточному тесту. В коде: <code>judgy.estimate_success_rate</code> (поправка и bootstrap), <code>ppi_py.ppi_mean_ci</code> (то же для любой метрики, не только pass/fail).</p>
+    <p class="qnote" id="rgnote" style="font-size:.9rem;color:var(--ink-2)"></p>
+  </div>
+
+  <details class="fn"><summary>Что почитать целиком</summary>
+    <p><b>Практика:</b> <a href="https://hamel.dev/blog/posts/llm-judge/">Husain — пошаговый процесс с одним экспертом и бинарными вердиктами</a> · <a href="https://eugeneyan.com/writing/llm-evaluators/">Yan — обзор, что работает в LLM-evaluators</a> · <a href="https://eugeneyan.com/writing/aligneval/">Yan — AlignEval: сначала разметка, потом судья</a>.</p>
+    <p><b>Обзоры:</b> <a href="https://arxiv.org/abs/2411.15594">Gu et al., 2024 — A Survey on LLM-as-a-Judge</a> · <a href="https://arxiv.org/abs/2411.16594">Li et al., 2024 — From Generation to Judgment</a>.</p>
+    <p><b>Насколько судьи вообще согласны с людьми:</b> <a href="https://arxiv.org/abs/2406.12624">Thakur et al., 2024 — Judging the Judges</a> · <a href="https://arxiv.org/abs/2406.18403">Bavaresco et al., 2024 — JUDGE-BENCH, 20 наборов: разброс по задачам большой, проверять на своей</a> · <a href="https://arxiv.org/abs/2410.12784">JudgeBench</a> (Tan et al., 2024).</p>
+    <p><b>Неопределённость вердикта на одном примере:</b> <a href="https://arxiv.org/abs/2509.18658">Sheng et al., 2025 — конформные интервалы для оценок судьи по одному прогону</a>.</p>
+  </details>
+
+  <div class="thesis">Выравнивают в таком порядке: критерий → промпт → обработка ответа → состав судей → модель. Каждый шаг проверяют на test, а не на dev.</div>
+</section>
+<section id="s4" class="sec" data-short="Агенты">
+  <div class="sec-head">
+    <h2>Оценка агентов</h2>
+    <p class="lede">Таблица метрик с прошлой лекции остаётся. Сегодня — как их считать и чего в ней не хватало: агента оценивают не по тому, что он сказал, а по тому, что он сделал и каким путём.</p>
+  </div>
+  <h3 style="margin-top:0">Меняется одно</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Вопрос «стало лучше?» про…</th><th>Фиксируем</th><th>Меняем</th><th>Метрика</th></tr>
+    <tr><td>модель</td><td>код вокруг неё, набор задач, бюджет шагов</td><td>модель</td><td>доля решённых задач при том же бюджете</td></tr>
+    <tr><td>код вокруг модели</td><td>модель, набор задач</td><td>стоп-условие, обрезку вывода инструмента, формат ошибки</td><td>доля решённых, шаги, токены, зацикливания</td></tr>
+    <tr><td>систему</td><td>—</td><td>релиз целиком</td><td>north-star из дерева метрик</td></tr>
+  </table></div>
+  <p class="note">Одна и та же модель в разной обвязке даёт на агентных бенчмарках разницу в десятки пунктов. Поэтому скор из таблицы лидеров не переносится на ваш продукт, а сравнение «модель A в одном коде против модели B в другом» — не эксперимент.</p>
+
+  <h3>Четыре измерителя для одной траектории</h3>
+  <div class="meas">
+    <div class="card good"><h4>Конечное состояние среды</h4>Состояние после агента сравнивается с эталонным: заказ создан, поля верны, запрещённых действий не было. Не зависит от того, что агент <i>сказал</i>. Для агентов с побочными эффектами — основной измеритель. Так устроен τ-bench: сравнивается база данных после диалога.</div>
+    <div class="card good"><h4>Граф траектории</h4>Узлы — вызовы инструментов с аргументами, рёбра — порядок и зависимости по данным. У задачи есть эталонный граф. Сравнение детерминированное: те ли узлы, те ли рёбра, сколько лишних шагов, есть ли циклы, где путь разошёлся с эталоном.</div>
+    <div class="card acc"><h4>Судья по финальному тексту</h4>«Справился ли агент?» по последнему сообщению. Самый дешёвый и самый слабый: не видит, что происходило в среде.</div>
+    <div class="card bad"><h4>Судья по траектории</h4>Читает весь лог. Нужен для узких вопросов: «вызван ли инструмент с побочным эффектом без необходимости?», «использован ли результат чтения?». Дорогой, шумный, и те же смещения, что у текстового.</div>
+  </div>
+
+  <div class="stage tstage" id="traces">
+    <div class="stage-head"><span class="tag real">проверка состояния и метрики графа — настоящие</span><span class="tag script">трассы и вердикты судей — сценарий</span><h3>Трасса → граф</h3>
+      <p class="hint">Мок-магазин: заказы, четыре инструмента, три задачи с эталонным графом. Четыре трассы агента. Найдите шаг, где агент пошёл не туда, до того как открыть разбор. Среда исполняется в браузере: состояние считается по трассе заново.</p></div>
+    <div class="tpick" id="tpick" role="tablist" aria-label="Трассы"></div>
+    <div class="tbody">
+      <div>
+        <div class="task" id="ttask"></div>
+        <div class="kicker" style="margin-bottom:.3rem">трасса</div>
+        <div class="steps" id="tsteps"></div>
+      </div>
+      <div>
+        <div class="kicker" style="margin-bottom:.3rem">граф вызовов против эталонного</div>
+        <div class="gwrap" id="tgraph"></div>
+        <div class="legend"><span><i style="background:var(--surface);border-color:var(--ink-3)"></i>эталон</span><span><i style="background:var(--accent-soft);border-color:var(--accent)"></i>совпало</span><span><i style="background:var(--warm-soft);border-color:var(--warm)"></i>лишний узел</span><span><i style="border:1px dashed var(--bad)"></i>пропущенный узел</span></div>
+        <div class="mrow" id="tmetrics"></div>
+        <div class="judges" id="tjudges"></div>
+        <div class="row" style="margin-top:.8rem"><button class="primary" id="treveal">Показать разбор</button><span class="score" id="tscore"></span></div>
+        <div class="divg-box card bad" id="tdivg"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">Что считается по графу</h3>
+      <ul>
+        <li><b>Node F1</b> — те ли инструменты с теми ли аргументами вызваны (множества узлов эталона и трассы).</li>
+        <li><b>Edge F1</b> — в тех ли зависимостях (пары «узел → следующий узел»).</li>
+        <li><b>Эффективность</b> = |эталон| / |трасса|. Меньше единицы — лишние шаги; больше — шаг пропущен.</li>
+        <li><b>Циклы</b> — повтор узла с теми же аргументами без изменения состояния: зацикливание, которого не видно по тексту.</li>
+        <li><b>Точка расхождения</b> — первый шаг, где трасса ушла от эталона. Самая дешёвая диагностика; в мультиагентных системах — какой агент и когда (Who&amp;When, 2025).</li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="margin-top:0">Что по графу не посчитать</h3>
+      <ul>
+        <li>Эталонный граф есть не у всякой задачи. Исследование, написание текста — там остаётся судья.</li>
+        <li>Несколько правильных путей: эталон становится DAG с необязательными узлами и параллельными ветвями (так в WorfBench).</li>
+        <li>Эталон — это разметка. Её делают и версионируют, как набор вопросов.</li>
+        <li>Между графом и судьёй есть промежуточный вариант: требования задачи как DAG, каждое проверяется по артефактам (Agent-as-a-Judge, 2024).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>pass@k против pass^k</h3>
+  <div class="stage" id="passk">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><h3>Иногда получается — не значит работает</h3>
+      <p class="hint">p — вероятность решить задачу за одну попытку. pass@k — хотя бы одна из k попыток успешна: годится, когда лучшую можно выбрать (есть тесты). pass^k — все k успешны: пользователь получает одну попытку, и она должна сработать.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="pp">Вероятность успеха за попытку p <span class="v" id="ppv"></span></label><input type="range" id="pp" min="0.3" max="0.99" step="0.01" value="0.8"></div>
+    </div>
+    <div class="chartwrap" id="pchart"></div>
+    <div class="stats" id="pstats"></div>
+    <div class="formula"><span class="lhs">pass@k</span> = 1 − (1 − p)<sup>k</sup> &nbsp;·&nbsp; <span class="lhs">pass^k</span> = p<sup>k</sup></div>
+    <p class="note">Порядок величины из τ-bench (Yao et al., 2024): у лучших моделей pass^1 около 60 % в домене retail, pass^8 — около 25 %. Следствие для бюджета: надёжность измеряют несколькими прогонами одной задачи.</p>
+  </div>
+
+  <h3>Бенчмарки агентов: откуда брать идеи, а не скоры</h3>
+  <div class="tablewrap"><table class="ptable">
+    <tr><th>Бенчмарк</th><th>Что меряет</th><th>Измеритель</th><th>Что взять в проект</th></tr>
+    <tr><td>SWE-bench Verified</td><td>исправление реальных issue в репозиториях</td><td>скрытые тесты</td><td>тесты как детерминированная проверка результата</td></tr>
+    <tr><td>τ-bench, τ²-bench</td><td>диалог с пользователем и действия в базе (retail, airline, telecom)</td><td>состояние базы после диалога; pass^k</td><td>эталонное состояние среды; симулятор пользователя; pass^k</td></tr>
+    <tr><td>GAIA</td><td>вопросы, требующие инструментов и нескольких шагов</td><td>точное совпадение ответа</td><td>короткие проверяемые ответы вместо эссе</td></tr>
+    <tr><td>TaskBench, WorfBench</td><td>декомпозиция задачи в граф инструментов</td><td>node F1, edge F1, сопоставление графов</td><td>эталонные графы и метрики из стенда выше</td></tr>
+  </table></div>
+  <p class="note">Проекту курса бенчмарк не нужен — нужен свой набор задач со своей средой и своими эталонами. Бенчмарки — источник идей, как устроить проверку.</p>
+  <div class="qz"><div class="q">Вопрос в зал: агент пишет в ответе «возврат по заказу 1042 оформлен». Какие три проверки, не читая ответ, скажут, правда ли это?</div><div class="a">Состояние среды: в таблице возвратов появилась запись по 1042. Граф: в трассе есть узел <code>create_return(1042)</code>, и он стоит после <code>get_order(1042)</code>. Лог инструментов: вызов вернул успех, а не ошибку. Текст ответа ни одна из трёх не читает — и в этом их сила.</div><button class="small">Показать ответ</button></div>
+</section>
+
+<section id="s5" class="sec" data-short="После релиза">
+  <div class="sec-head">
+    <h2>Жизнь после релиза</h2>
+    <p class="lede">Одноразовый бенчмарк отвечает «стало лучше сейчас». Не отвечает — «не стало ли хуже через месяц»: провайдер обновил модель, вы поменяли промпт, изменились запросы пользователей.</p>
+  </div>
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:0">Регрессионный набор в CI</h3>
+      <p>Каждый PR, меняющий промпт, модель или ретривер, прогоняет набор. Порог на метрику; падение теста блокирует мерж. DeepEval как pytest, promptfoo, Inspect, датасеты в Langfuse. Цена: 100 примеров × 3 метрики-судьи — 300 вызовов на PR. Считать.</p>
+      <h3>Судья как сенсор</h3>
+      <p>Ежедневный pointwise-судья на сэмпле логов, скользящее среднее, алерт на падение. Дрейф входа — длина запросов, доля отказов, доля эскалаций — сигнал «посмотреть», а не метрика качества.</p>
+      <h3>Цикл обратной связи</h3>
+      <p>Провал из прода → размеченный пример в регрессионный набор. Набор растёт из инцидентов, не из фантазии.</p>
+    </div>
+    <div>
+      <h3 style="margin-top:0">A/B на живом трафике — и почему его обычно нет</h3>
+      <p>Самый прямой способ проверить «стало лучше». На практике его почти всегда нет, и дело не в инфраструктуре, а в арифметике.</p>
+      <ul>
+        <li><b>Объём.</b> Чтобы отличить эффект от шума, нужен размер группы из формулы ниже. При малом трафике — недели.</li>
+        <li><b>Нестационарность.</b> За эти недели провайдер обновил модель, вы поменяли промпт, сменился сезон. Эффект смешан с дрейфом.</li>
+        <li><b>Нерегулярность.</b> Всплески, будни и выходные дают дисперсию выше формульной — нужна стратификация по времени.</li>
+        <li><b>Подглядывание.</b> Остановка «когда стало значимо» завышает ложные срабатывания. Sequential testing лечит процедуру, но не объём.</li>
+      </ul>
+      <p>При малом трафике: офлайн-регрессия + размеченный человеком сэмпл + канарейка с мониторингом ограничивающих метрик. Где формат позволяет — pairwise-предпочтение внутри продукта (два ответа рядом): нужно меньше трафика, чем A/B по бинарной метрике.</p>
+    </div>
+  </div>
+  <div class="stage" id="ab">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><span class="tag script">список изменений — сценарий</span><h3>Сколько дней идёт A/B при вашем трафике</h3>
+      <p class="hint">Бинарная метрика (например, «ответ помечен полезным»). Две группы поровну, α = 0,05 двусторонняя, мощность 0,8.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="ab0">Базовое значение метрики <span class="v" id="ab0v"></span></label><input type="range" id="ab0" min="0.2" max="0.95" step="0.01" value="0.6"></div>
+      <div class="ctl grow"><label for="abd">Ожидаемый эффект, п.п. <span class="v" id="abdv"></span></label><input type="range" id="abd" min="0.5" max="15" step="0.5" value="3"></div>
+      <div class="ctl grow"><label for="abt">Запросов в день <span class="v" id="abtv"></span></label><input type="range" id="abt" min="20" max="5000" step="20" value="200"></div>
+    </div>
+    <div class="stats" id="abstats"></div>
+    <div class="formula"><span class="lhs">n на группу</span> = ( z<sub>0,975</sub>·√(2·p̄·(1−p̄)) + z<sub>0,8</sub>·√(p₀(1−p₀) + p₁(1−p₁)) )² / Δ²</div>
+    <div class="kicker" style="margin-top:.8rem">что успеет измениться за это время</div>
+    <div class="changes" id="abch"></div>
+  </div>
+</section>
+
+<section id="s6" class="sec" data-short="Бюджет и грехи">
+  <div class="sec-head">
+    <h2>Бюджет оценивания</h2>
+    <p class="lede">Оценивание стоит денег и времени — это строка в design doc рядом с бюджетом инференса. На ранней стадии проекта она может быть больше.</p>
+  </div>
+  <div class="stage budget" id="budget">
+    <div class="stage-head"><span class="tag real">расчёт настоящий</span><h3>Сколько вызовов судьи вы покупаете в месяц</h3>
+      <p class="hint">Набор × метрики-судьи × повторы × прогоны. Для агентов — ещё × k прогонов на задачу ради pass^k. Детерминированные проверки в счёт не входят: они бесплатны.</p></div>
+    <div class="controls">
+      <div class="ctl grow"><label for="bn">Примеров в наборе <span class="v" id="bnv"></span></label><input type="range" id="bn" min="20" max="500" step="10" value="100"></div>
+      <div class="ctl grow"><label for="bm">Метрик-судей <span class="v" id="bmv"></span></label><input type="range" id="bm" min="0" max="5" step="1" value="2"></div>
+      <div class="ctl grow"><label for="br">Повторов судьи R <span class="v" id="brv"></span></label><input type="range" id="br" min="1" max="5" step="1" value="1"></div>
+      <div class="ctl grow"><label for="bw">Прогонов в неделю <span class="v" id="bwv"></span></label><input type="range" id="bw" min="1" max="30" step="1" value="5"></div>
+      <div class="ctl grow"><label for="bk">k прогонов на задачу (агент) <span class="v" id="bkv"></span></label><input type="range" id="bk" min="1" max="5" step="1" value="1"></div>
+      <div class="ctl"><label for="bc">Цена вызова судьи, ₽</label><input type="number" id="bc" min="0" step="0.1" value="0.6" style="width:7rem"></div>
+    </div>
+    <div class="stats" id="bstats"></div>
+    <p class="qnote" id="bnote" style="font-size:.9rem;color:var(--ink-2)"></p>
+  </div>
+
+  <div class="sec-head" style="margin-top:2rem">
+    <h2>Грехи оценивания</h2>
+    <p class="lede">Десять ситуаций из отчётов. В каждой есть ошибка — выберите, какая. Потом откройте, к какому тезису занятия она относится.</p>
+  </div>
+  <div class="row" style="margin-bottom:.8rem"><span class="score" id="sscore"></span><button class="small" id="sreset">Сбросить голоса</button></div>
+  <div class="sins" id="sins"></div>
+</section>
+
+<section id="s7" class="sec" data-short="Итог">
+  <div class="sec-head"><h2>Что унести с занятия</h2></div>
+  <ol class="theses">
+    <li>Метрика выводится из того, за что платит заказчик, а не из того, что умеет библиотека. Одна north-star, две-три ограничивающих.</li>
+    <li>Иерархия измерителей по доверию и цене: детерминированная проверка → человек → судья. Судья — последнее средство.</li>
+    <li>Судье не доверяют по умолчанию: смещения измеряют перестановкой и раздуванием, согласие с человеком считают взвешенной каппой, шум сравнивают с эффектом.</li>
+    <li>Судью выравнивают по своей разметке, разделённой на dev и test, от дешёвого к дорогому: критерий → промпт → обработка ответа → состав судей → модель. Если нужна только доля pass, ошибки судьи вычитают формулой.</li>
+    <li>В эксперименте меняется одно. «Стало лучше?» для модели, для кода вокруг неё и для системы — три разных эксперимента.</li>
+    <li>Агента с действиями оценивают по состоянию среды и по графу траектории. Судья по тексту этого не видит. pass^k, а не pass@k, если нужна надёжность.</li>
+    <li>Eval живёт после релиза: регрессионный набор в CI, судья как сенсор, провалы из прода пополняют набор. A/B — роскошь большого трафика.</li>
+    <li>Оценивание стоит денег. Бюджет оценивания — строка в design doc.</li>
+  </ol>
+  <div class="cols" style="margin-top:1.4rem">
+    <div>
+      <h3 style="margin-top:0">Что не писать руками</h3>
+      <ul>
+        <li>Каппа и bootstrap — <code>sklearn.metrics.cohen_kappa_score</code>, <code>scipy.stats.bootstrap</code>.</li>
+        <li>Поправка на ошибки судьи — <code>judgy</code>, <code>ppi_py</code>.</li>
+        <li>Сравнение двух версий судьи на одних примерах — <code>statsmodels.stats.contingency_tables.mcnemar</code>.</li>
+        <li>Метрики судьи — RAGAS, DeepEval и G-Eval.</li>
+        <li>Регрессионные прогоны — DeepEval, promptfoo, Inspect.</li>
+        <li>Трейсы и датасеты — Langfuse и аналоги.</li>
+        <li>Сопоставление графов — <code>networkx</code>.</li>
+      </ul>
+      <p style="font-size:.9rem;color:var(--ink-2)">Руками пишется то, что зависит от вашего продукта: rubric, детерминированные проверки состояния вашей среды, эталонные графы задач, дерево метрик.</p>
+    </div>
+    <div class="hw">
+      <h3>Домашнее задание</h3>
+      <p>Раздел «Методика оценивания» в design doc.</p>
+      <ol>
+        <li>Дерево метрик: north-star, две-три ограничивающих; для каждой — измеритель и цена одного прогона.</li>
+        <li>Если есть судья: rubric с якорями; план калибровки — сколько примеров разметите сами (и сколько среди них fail), как делите на dev и test, какую каппу или какие TPR/TNR считаете достаточными; какие два смещения проверите и как; с какой ступени лестницы выравнивания начнёте.</li>
+        <li>Если агент: что проверяете по состоянию, что по графу (эталонные графы для 10 задач), что судьёй; k для pass^k.</li>
+        <li>Регрессионный набор: откуда примеры, порог регрессии, когда прогоняется.</li>
+        <li>Бюджет оценивания на месяц разработки — по калькулятору выше.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>Числа о смещениях судей — из Zheng et al. (2023), Wang et al. (2023); о pass^k — из Yao et al. (2024). Мок-магазин, заказы и трассы агента — учебные, написаны для этой страницы; метрики графа и проверка состояния считаются по ним заново при каждом открытии. Формула размера выборки — стандартная для двух долей.</footer>
