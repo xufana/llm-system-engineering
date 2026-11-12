@@ -1,0 +1,59 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.15
+    restart: always
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+
+#  bot:
+#   build: .
+#   environment:
+#     QDRANT_HOST: "${QDRANT_HOST:-qdrant:6333}"
+#     QDRANT_COLLECTION: "${QDRANT_COLLECTION:-AITH}"
+#
+#     LLM__NAME: "${LLM__NAME}"
+#     LLM__BASE_URL: "${LLM__BASE_URL}"
+#     LLM__KEY: "${LLM__KEY:-}"
+#
+#     EMBEDDER__NAME: "${EMBEDDER__NAME}"
+#     EMBEDDER__BASE_URL: "${EMBEDDER__BASE_URL}"
+#     EMBEDDER__KEY: "${EMBEDDER__KEY:-}"
+#   ports:
+#     - "8080:8080"
+#   depends_on:
+#     - qdrant
+#   healthcheck:
+#     test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+#     interval: 30s
+#     timeout: 10s
+#     retries: 5
+#     start_period: 10s
+
+  grafana:
+    image: grafana/grafana:12.4.5
+    ports:
+     - '3000:3000'
+    user: "0"
+    volumes:
+     - ./grafana_data:/var/lib/grafana
+#    network_mode: "host"
+
+  prometheus:
+    image: prom/prometheus:v3.13.1
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus_data:/prometheus
+    user: "0"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    ports:
+     - "9090:9090"
+    extra_hosts:
+     - "host.docker.internal:host-gateway"
+#    network_mode: "host"

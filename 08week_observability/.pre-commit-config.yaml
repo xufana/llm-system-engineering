@@ -1,0 +1,38 @@
+repos:
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.24
+    hooks:
+      - id: validate-pyproject
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+    -   id: check-ast
+    -   id: check-added-large-files
+    -   id: check-case-conflict
+    -   id: mixed-line-ending
+    -   id: name-tests-test
+    -   id: check-builtin-literals
+    -   id: check-yaml
+    -   id: check-json
+    -   id: check-toml
+    -   id: pretty-format-json
+        args:
+          - "--autofix"
+          - "--indent=4"
+          - "--no-sort-keys"
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.38.1
+    hooks:
+    - id: typos
+      args: ["--diff"]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.6
+    hooks:
+      - id: ruff-check
+        args: [ --fix ]
+      - id: ruff-format

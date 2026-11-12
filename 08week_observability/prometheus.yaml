@@ -1,0 +1,23 @@
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'bot-monitoring'
+
+scrape_configs:
+  - job_name: 'chat_api'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+        - "host.docker.internal:8080"
+        - "localhost:8080"
+        - "bot"
+
+  - job_name: 'vllm'
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+        - "host.docker.internal:8005"
+        - "host.docker.internal:8088"
+        - "localhost:8005"
+        - "localhost:8088"

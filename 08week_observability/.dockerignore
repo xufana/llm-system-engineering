@@ -1,0 +1,4 @@
+.venv
+grafana_data
+qdrant_data
+prometheus_data
